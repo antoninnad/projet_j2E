@@ -26,92 +26,45 @@ La page d'accueil est disponible sur <http://localhost:8080/>.
 
 ## Modèle de données
 
-| Entité    | Hérite de | Rôle                                              |
-|-----------|-----------|---------------------------------------------------|
-| `User`    | n/a       | Utilisateur de l'application                      |
-| `Admin`   | `User`    | Utilisateur avec privilèges d'administration      |
-| `Profile` | n/a       | Informations de profil d'un utilisateur           |
-| `Folder`  | n/a       | Dossier (racine, sous-dossier ou coffre)          |
-| `Vault`   | `Folder`  | Coffre personnel d'un utilisateur                 |
-| `File`    | n/a       | Fichier contenu dans un dossier                   |
-
-```mermaid
-classDiagram
-    User <|-- Admin
-    Folder <|-- Vault
-    User "1" -- "1" Profile
-    User "1" -- "1" Vault
-    User "1" --> "*" Folder : crée
-    User "1" --> "*" File : crée
-    Folder "*" -- "*" User : contributeurs
-    File "*" -- "*" User : contributeurs
-```
-
----
-
-## Contrôle d'accès
-
-L'accès d'un utilisateur à un dossier ou un fichier dépend de **deux critères**.
-
-### Côté utilisateur
-
-| Attribut        | Type       | Description                                                                                                   |
-|-----------------|------------|---------------------------------------------------------------------------------------------------------------|
-| `departements`  | `String[]` | Un utilisateur peut appartenir à **plusieurs départements**. Équivaut à pouvoir consulter les fichiers d'un dossier racine portant le nom du département. |
-| `level`         | `int`      | Niveau d'accès, à partir de **0 = niveau le plus élevé**.                                                     |
-
-### Côté dossier / fichier
-
-Chaque `Folder` et chaque `File` possède :
-
-- un **nom de département**
-- un **niveau d'accès**
-
-### Droits d'édition
-
-> Créer un dossier ou un fichier **ne donne pas automatiquement** le droit de le modifier aux autres utilisateurs du même niveau.
-> Ils doivent être ajoutés explicitement comme **contributeurs**.
-
----
-
-## Constructeurs de `Folder`
-
-| Constructeur                     | Cas d'usage                                                        |
-|----------------------------------|--------------------------------------------------------------------|
-| `Folder(Folder parent)`          | Le dossier est inclus dans un autre dossier (sous-dossier)         |
-| `Folder(String departementName)` | Dossier **racine** : équivaut à la création d'un département       |
-| `Folder(User u)`                 | Utilisé par `Vault` (via `super(u)`) : dossier racine personnel appartenant à l'utilisateur |
-
-> `Vault` hérite de `Folder` : le coffre d'un utilisateur se crée avec `new Vault(user)`, qui appelle `Folder(User u)`.
-
+![Alt text](./graphs/diagramClass.jpg)
 ---
 
 ## Relations
-
-### Relations 1-1
-
-| Entité | Relation | Entité    |
-|--------|----------|-----------|
-| `User` | 1 — 1    | `Profile` |
-| `User` | 1 — 1    | `Vault`   |
-
-### Propriété (qui a créé quoi)
-
-| Entité | Relation | Entité   |
-|--------|----------|----------|
-| `User` | 1 — N    | `Folder` |
-| `User` | 1 — N    | `File`   |
-
-### Édition (contributeurs)
-
-| Entité   | Relation | Entité |
-|----------|----------|--------|
-| `Folder` | N — N    | `User` |
-| `File`   | N — N    | `User` |
+| Type | Relation |
+|------|----------|
+| **1-1** | `User` ↔ `Profile` ; `Department` ↔ `Folder` racine |
+| **1-N** | `Folder` → `Node` (enfants) ; `User` → `Node` (propriétaire) ; `Department` → `Membership` |
+| **N-N** | `User` ↔ `Department` (via `Membership`, avec attribut `accessLevel`) ; `User` ↔ `Node` (contributeurs) |
+ 
+Entités : `User`, `Profile`, `Department`, `Membership`, `Node` (`Folder`, `File`) → plus de 5.
+ 
+Associer/dissocier graphiquement : ajouter/retirer un utilisateur d'un département (avec niveau), ajouter/retirer un contributeur d'un fichier/dossier, déplacer un nœud dans un dossier.
+ 
+JPA : `Node` en `@Inheritance(strategy = SINGLE_TABLE)` ou `JOINED`. La relation `parent` (`@ManyToOne`) vit dans `Node`, `children` (`@OneToMany(mappedBy="parent")`) dans `Folder`.
 La page d’accueil est disponible sur <http://localhost:8080/>.
 
 
-
+## Regle de permission
+Soit `L` = niveau de l'utilisateur dans le département du nœud (via `Membership`), `M` = `minAccessLevel` du nœud.
+ 
+| Situation | Voir | Modifier | Supprimer | Ajouter un contributeur |
+|-----------|:----:|:--------:|:---------:|:-----------------------:|
+| `L < M` | non (invisible) | non | non | non |
+| `L == M`, simple utilisateur | oui | non | non | non |
+| `L == M`, **contributeur** | oui | oui | à décider | non |
+| `L == M`, **propriétaire** | oui | oui | oui | oui |
+| `L > M` | oui | oui | oui | oui |
+| `ADMIN` global | tout | tout | tout | tout |
+ 
+Règles d'intégrité à implémenter dans le service :
+- Un dossier **sans parent** est créé comme racine : création automatique du `Department` associé (nom = nom du dossier).
+- `minAccessLevel` d'un enfant **≥** celui du parent (sinon un fichier serait accessible dans un dossier invisible).
+- Un utilisateur ne peut définir un `minAccessLevel` **supérieur à son propre niveau** (à décider).
+- Interdire de déplacer un dossier dans l'un de ses descendants (cycle).
+- Suppression d'un dossier : cascade sur les enfants.
+Toute la logique doit être centralisée dans un `PermissionService` (`canView`, `canEdit`, `canDelete`, `canAddContributor`), idéalement testé unitairement.
+ 
+---
 ## Securité
 
 ### Gestion Connexion
