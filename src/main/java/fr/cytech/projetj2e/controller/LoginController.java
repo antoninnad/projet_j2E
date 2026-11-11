@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpSession;
 
 
 @Controller
-public class Login{
+public class LoginController{
 
     @Autowired
     UserRepository userRepository;
@@ -33,9 +33,9 @@ public class Login{
 
     @PostMapping ("/login")
     String login(@ModelAttribute User user, RedirectAttributes redirectAttributes, HttpSession session ){
-        Optional<User> userOptional = userRepository.findByUsernameAndPassword(user.getUsername(), user.getPassword());
+        Optional<User> userOptional = userRepository.findByUsername(user.getUsername());
 
-        if( userOptional.isPresent() ) {
+        if( userOptional.isPresent() && userOptional.get().isActive() ) {
             session.setAttribute("user", userOptional.get());
             return "redirect:/welcomePage";
         } else {
