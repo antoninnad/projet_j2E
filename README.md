@@ -80,3 +80,9 @@ Le nom du patter est le `pattern access token / refresh token`.
 Comme demandé on ajoutera dans la classe `User` associé à la table `User` le paramètre `salt`.
 
 On hashera le mdp avec du sha256(`mot de passe` + `salt`)
+
+### Account creation
+
+Each account is created by the user on the registration form, but a boolean will remain false until the admin approves the account. without the approval, login in should be automatically denied.
+
+
