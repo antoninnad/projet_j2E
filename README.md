@@ -110,6 +110,8 @@ Attributs du diagramme : `id` (`Long`), `firstName` (`String`), `lastName` (`Str
 
 Un utilisateur possède un profil, peut être propriétaire ou contributeur de plusieurs `Node`, et peut avoir plusieurs `Membership` et `RefreshToken`.
 
+La classe Java `fr.cytech.projetj2e.model.User` est un exemple JPA repris de `compte-client` ; elle utilise `username` et `password` et ne correspond pas encore aux attributs du diagramme.
+
 La section Sécurité prévoit aussi un `salt` et l'approbation des comptes, mais ces éléments ne figurent pas dans le diagramme et ne sont donc pas listés comme attributs confirmés ici.
 
 ### Profile
