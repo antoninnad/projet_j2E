@@ -86,3 +86,66 @@ On hashera le mdp avec du sha256(`mot de passe` + `salt`)
 Each account is created by the user on the registration form, but a boolean will remain false until the admin approves the account. without the approval, login in should be automatically denied.
 
 
+# Projet J2EE
+
+Application Spring Boot avec Thymeleaf, structurée comme les projets de `dev_JEE`.
+
+## Démarrer
+
+Depuis ce dossier :
+
+```bash
+./mvnw spring-boot:run
+```
+
+La page d’accueil est disponible sur <http://localhost:8080/>.
+
+## Entité
+
+### User
+Diagramme de la table
+
+```mermaid
+classDiagram
+    class User {
+        +UUID id
+        +String email
+        +Sring salt
+    }
+
+    class RefreshToken {
+        <<table>>
+        +UUID id
+        +UUID user_id
+        +String token_hash
+        +DateTime created_at
+        +DateTime expires_at
+        +DateTime revoked_at
+    }
+
+    User "1" --> "0..*" RefreshToken : possède
+```
+
+## Folder
+L'entité `Folder` représente l'arborescence des fichiers de l'entreprise. Chaque département constitue un dossier racine, puis les fichiers et sous-dossiers sont organisés par niveaux :
+
+| Niveau | Description |
+| --- | --- |
+| 0 | Dossier racine correspondant à un département, par exemple `Finance`. |
+| 1 | Fichier ou dossier directement contenu dans le département, par exemple `Paie`. |
+| 2 et plus | Fichier ou sous-dossier imbriqué dans un élément du niveau précédent. |
+
+La portée d'accès dépend du niveau accordé : le niveau 0 donne accès à tous les départements, le niveau 1 aux fichiers du département concerné et le niveau 2 aux sous-dossiers de niveau 2 de ce département.
+
+Le mode `Contributeur` permet de limiter les droits de contribution à un élément précis, par exemple un seul fichier situé au bout de l'arborescence.
+
+Exemple d'arborescence allant du niveau 0 au niveau 4 :
+
+```mermaid
+flowchart TD
+    D["Finance — département, niveau 0"] --> P["Paie — niveau 1"]
+    P --> A["2026 — niveau 2"]
+    A --> M["Mars — niveau 3"]
+    M --> F["bulletin-001.pdf — niveau 4"]
+```
+
