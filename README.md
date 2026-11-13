@@ -14,6 +14,8 @@ Application **Spring Boot** avec **Thymeleaf**, structurée comme les projets de
 
 ## Démarrer
 
+Prérequis : Java 17, Node.js 22.12 ou supérieur et npm 10 ou supérieur. Maven construit aussi le frontend avant de lancer Spring Boot.
+
 Depuis ce dossier :
 
 ```bash
@@ -170,3 +172,57 @@ Associe un `User` à un `Department` et porte son niveau d'accès. Le diagramme 
 
 Cette entité est décrite dans le README, mais n'apparaît pas dans le diagramme UML. Elle représente un jeton de renouvellement associé à un utilisateur. Les champs actuellement documentés sont `id` (`UUID`), `user_id` (`UUID`), `token_hash` (`String`), `created_at`, `expires_at` et `revoked_at` (`DateTime`). Un utilisateur peut posséder plusieurs jetons. Le type `UUID` de `user_id` diverge du type `Long` de `User.id` dans le diagramme et reste à harmoniser.
 
+
+## Frontend React et shadcn/ui
+
+L’exemple dans `frontend/src/App.tsx` utilise `Card` et `Button` de shadcn/ui pour afficher « Hello world » et un compteur. Le header réutilise `SiteMenu`, construit avec `NavigationMenu` de shadcn/ui.
+
+### Développement avec actualisation à chaud sur Spring Boot
+
+Prérequis : Node.js 22.12 ou supérieur. Dans un premier terminal :
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite démarre sur `http://localhost:5173` (port fixe). Dans un second terminal, à la racine du projet :
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev -Dfrontend.skip=true
+```
+
+Ouvrir **http://localhost:8080/**. Après l’activation initiale du profil `dev`, les modifications des composants React et des styles s’affichent sur cette page sans recharger manuellement le navigateur ni relancer Spring Boot. React Fast Refresh conserve généralement l’état des composants, comme le compteur. Les modifications du code Java nécessitent une relance.
+
+Le profil `dev` charge les modules depuis Vite ; les deux serveurs doivent rester actifs. `frontend.skip=true` évite l’installation et le build frontend Maven pendant cette session. Le template partagé injecte le client Vite et le préambule React nécessaires à Fast Refresh. Le frontend peut aussi être ouvert directement sur `http://localhost:5173`.
+
+Si le port 8080 est déjà occupé, arrêter l’ancienne instance ou ajouter `-Dspring-boot.run.arguments=--server.port=8082` à la commande Maven, puis ouvrir `http://localhost:8082/`. Le port Vite reste 5173.
+
+### Build et lancement normal
+
+```bash
+./mvnw spring-boot:run
+# Ou pour produire le JAR :
+./mvnw package
+```
+
+Sans le profil `dev`, Spring sert les fichiers compilés localement. Maven exécute `npm ci` et `npm run build`. Les fichiers `app.js` et `app.css` sont générés dans `target/classes/static/ui/` et inclus dans le JAR ; Vite n’a pas besoin de tourner en production.
+
+### Réutilisation et composants
+
+`index.html` fournit le point de montage React `#root`. L’URL de base transmise par Thymeleaf respecte le chemin de contexte Spring. Pour inclure uniquement le header dans un autre template :
+
+```html
+<head th:replace="~{fragments/head :: head('Titre de la page')}"></head>
+<header th:replace="~{fragments/header :: header('accueil')}"></header>
+```
+
+Pour ajouter un composant shadcn/ui :
+
+```bash
+cd frontend
+npx shadcn@latest add nom-du-composant
+```
+
+Les styles sont dans `frontend/src/styles.css`, et la configuration shadcn/ui dans `frontend/components.json`.

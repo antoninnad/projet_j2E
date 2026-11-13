@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header(activePage)" data-site-header th:attr="data-base-url=@{/},data-active-page=${activePage}"
+        class="border-b">
+    <nav aria-label="Menu principal" class="mx-auto flex min-h-16 max-w-5xl items-center justify-between px-6">
+        <a th:href="@{/}" class="font-semibold">Mon projet React</a>
+        <a th:href="@{/}">Accueil</a>
+    </nav>
+</header>
+</body>
+</html>

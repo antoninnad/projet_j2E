@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' · Projet J2EE'">Projet J2EE</title>
+    <th:block th:if="${!#strings.isEmpty(viteDevServerUrl)}">
+        <!-- Preambule React requis lorsque le HTML est servi par Spring, et non par Vite. -->
+        <script type="module" th:inline="javascript">
+            import RefreshRuntime from /*[[${viteReactRefreshUrl}]]*/ 'http://localhost:5173/@react-refresh';
+            RefreshRuntime.injectIntoGlobalHook(window);
+            window.$RefreshReg$ = () => {};
+            window.$RefreshSig$ = () => (type) => type;
+            window.__vite_plugin_react_preamble_installed__ = true;
+        </script>
+        <script type="module" th:src="${viteClientUrl}"></script>
+        <script type="module" th:src="${viteEntryUrl}"></script>
+    </th:block>
+    <th:block th:if="${#strings.isEmpty(viteDevServerUrl)}">
+        <link rel="stylesheet" th:href="@{/ui/app.css}">
+        <script type="module" th:src="@{/ui/app.js}"></script>
+    </th:block>
+</head>
+</html>

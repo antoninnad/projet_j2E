@@ -28,3 +28,6 @@ target/
 .vscode/
 /projet_pau_fc/
 
+
+# Dépendances du frontend
+frontend/node_modules/
