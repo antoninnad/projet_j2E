@@ -5,13 +5,14 @@ import viteLogo from './assets/vite.svg'
 import './App.css'
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
+import RegistrationPage from "./pages/RegistrationPage";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/createAccount" element={<div>TODO</div>} />
+      <Route path="/createAccount" element={<RegistrationPage />} />
       <Route path="/dashboard" element={<div>TODO</div>} />
     </Routes>
   );
