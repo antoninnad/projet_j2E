@@ -1,11 +1,12 @@
-package fr.cytech.projetj2e.controller;
+package fr.cytech.projetj2e.api;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import fr.cytech.projetj2e.dto.UserDto;
@@ -13,19 +14,20 @@ import fr.cytech.projetj2e.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Controller
+@RestController
+@RequestMapping ("/api/register")
 @RequiredArgsConstructor
 public class RegisterController {
 
     private final UserService userService;
 
-    @GetMapping("/register")
+    @GetMapping("/")
     public String form(Model model) {
         model.addAttribute("userDto", new UserDto());
         return "register";
     }
 
-    @PostMapping("/register")
+    @PostMapping("/")
     public String submit(@Valid @ModelAttribute UserDto dto,
                          BindingResult result,
                          RedirectAttributes redirect) {

@@ -1,12 +1,13 @@
-package fr.cytech.projetj2e.controller;
+package fr.cytech.projetj2e.api;
 
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import fr.cytech.projetj2e.model.User;
@@ -18,7 +19,8 @@ import jakarta.servlet.http.HttpSession;
 
 
 
-@Controller
+@RestController
+@RequestMapping ("/api/login")
 public class LoginController{
 
     @Autowired
@@ -26,21 +28,21 @@ public class LoginController{
     @Autowired
     UserProfileRepository userProfileRepository;
 
-    @GetMapping ("/login")
+    @GetMapping ("/")
     String login(@ModelAttribute("success") String success) {
         return "loginPage";
     }
 
-    @PostMapping ("/login")
+    @PostMapping ("/")
     String login(@ModelAttribute User user, RedirectAttributes redirectAttributes, HttpSession session ){
         Optional<User> userOptional = userRepository.findByUsername(user.getUsername());
 
         if( userOptional.isPresent() && userOptional.get().isActive() ) {
             session.setAttribute("user", userOptional.get());
-            return "redirect:/welcomePage";
+            return "welcomePage";
         } else {
             redirectAttributes.addFlashAttribute("error", "Invalid username or password");
-            return "redirect:/login";
+            return "loginPage";
         }
     }
 
