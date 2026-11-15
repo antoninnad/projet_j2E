@@ -6,6 +6,8 @@ import './App.css'
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -13,7 +15,8 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/createAccount" element={<RegistrationPage />} />
-      <Route path="/dashboard" element={<div>TODO</div>} />
+      <Route path="/adminLogin" element={<AdminLoginPage/>} />
+      <Route path="/adminDashboard" element={<AdminDashboard/>} />
     </Routes>
   );
 }

@@ -15,7 +15,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -72,6 +72,9 @@ export default function LoginPage() {
 
       <Link to="/createAccount" className="btn btn-secondary">
         Create Account
+      </Link>
+      <Link to="/adminLogin" className="btn btn-secondary">
+        Admin
       </Link>
     </div>
   );

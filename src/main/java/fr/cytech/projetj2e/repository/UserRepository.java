@@ -1,5 +1,6 @@
 package fr.cytech.projetj2e.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import fr.cytech.projetj2e.model.User;
@@ -14,5 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
     boolean existsByUsername(String username);
+    List<User> findByActiveFalse();
 
 }
