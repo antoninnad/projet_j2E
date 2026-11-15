@@ -14,6 +14,8 @@ Application **Spring Boot** avec **Thymeleaf**, structurée comme les projets de
 
 ## Démarrer
 
+Prérequis : Java 17, Node.js 22.12 ou supérieur et npm 10 ou supérieur. Maven construit aussi le frontend avant de lancer Spring Boot.
+
 Depuis ce dossier :
 
 ```bash
@@ -80,3 +82,147 @@ Le nom du patter est le `pattern access token / refresh token`.
 Comme demandé on ajoutera dans la classe `User` associé à la table `User` le paramètre `salt`.
 
 On hashera le mdp avec du sha256(`mot de passe` + `salt`)
+
+### Account creation
+
+Each account is created by the user on the registration form, but a boolean will remain false until the admin approves the account. without the approval, login in should be automatically denied.
+
+
+# Projet J2EE
+
+Application Spring Boot avec Thymeleaf, structurée comme les projets de `dev_JEE`.
+
+## Démarrer
+
+Depuis ce dossier :
+
+```bash
+./mvnw spring-boot:run
+```
+
+La page d’accueil est disponible sur <http://localhost:8080/>.
+
+## Entités
+
+### User
+
+Représente un utilisateur de l'application.
+
+Attributs du diagramme : `id` (`Long`), `firstName` (`String`), `lastName` (`String`), `email` (`String`) et `passwordHash` (`String`).
+
+Un utilisateur possède un profil, peut être propriétaire ou contributeur de plusieurs `Node`, et peut avoir plusieurs `Membership` et `RefreshToken`.
+
+La classe Java `fr.cytech.projetj2e.model.User` est un exemple JPA repris de `compte-client` ; elle utilise `username` et `password` et ne correspond pas encore aux attributs du diagramme.
+
+La section Sécurité prévoit aussi un `salt` et l'approbation des comptes, mais ces éléments ne figurent pas dans le diagramme et ne sont donc pas listés comme attributs confirmés ici.
+
+### Profile
+
+Contient les informations de profil d'un utilisateur. Le diagramme indique les attributs `profilePicture` (`String`) et `bio` (`String`). Chaque `Profile` appartient à exactement un `User`, et chaque `User` possède exactement un `Profile`.
+
+### Admin
+
+Représente un compte administrateur distinct de `User` dans le diagramme. Ses attributs sont `login` (`String`) et `password` (`String`). Le diagramme ne précise aucune association pour cette classe.
+
+### Node
+
+Classe abstraite commune à `Folder` et `File`. Elle regroupe les attributs `id` (`int`), `createdAt` (`Date`), `lastEditedAt` (`Date`), `owner` (`User`), `name` (`String`) et `contributors` (`List<User>`).
+
+Chaque `Node` a un propriétaire. Un utilisateur peut posséder plusieurs nœuds et contribuer à plusieurs nœuds. Les sous-types de `Node` sont contenus dans un `Folder` selon l'association `Children` du diagramme.
+
+### Folder
+
+Représente un dossier dans l'arborescence des fichiers de l'entreprise. Il hérite des attributs de `Node` et possède l'attribut `parentFolder` (`Folder`). Un dossier peut contenir plusieurs `Node` (fichiers ou sous-dossiers). Un dossier racine est associé à un `Department`.
+
+Chaque département constitue un dossier racine, puis les fichiers et sous-dossiers sont organisés par niveaux :
+
+| Niveau | Description |
+| --- | --- |
+| 0 | Dossier racine correspondant à un département, par exemple `Finance`. |
+| 1 | Fichier ou dossier directement contenu dans le département, par exemple `Paie`. |
+| 2 et plus | Fichier ou sous-dossier imbriqué dans un élément du niveau précédent. |
+
+La portée d'accès dépend du niveau accordé : le niveau 0 donne accès à tous les départements, le niveau 1 aux fichiers du département concerné et le niveau 2 aux sous-dossiers de niveau 2 de ce département.
+
+Le mode `Contributeur` permet de limiter les droits de contribution à un élément précis, par exemple un seul fichier situé au bout de l'arborescence.
+
+Exemple d'arborescence allant du niveau 0 au niveau 4 :
+
+```mermaid
+flowchart TD
+    D["Finance — département, niveau 0"] --> P["Paie — niveau 1"]
+    P --> A["2026 — niveau 2"]
+    A --> M["Mars — niveau 3"]
+    M --> F["bulletin-001.pdf — niveau 4"]
+```
+
+### File
+
+Représente un fichier stocké dans un dossier. Il hérite des attributs de `Node` et ajoute `originalFileName` (`String`), `contentType` (`String`), `size` (`long`) et `storagePath` (`String`).
+
+### Department
+
+Représente un département. Le diagramme l'associe à exactement un dossier racine (`rootFolder`) et à zéro ou plusieurs `Membership`. Les indications `field:type` et `method(type):type` affichées dans le diagramme sont des placeholders ; aucun attribut concret n'y est spécifié.
+
+### Membership
+
+Associe un `User` à un `Department` et porte son niveau d'accès. Le diagramme indique les attributs `id` (`Long`) et `accessLevel` (`int`). Chaque adhésion concerne un utilisateur et un département ; chacun d'eux peut avoir plusieurs adhésions.
+
+### RefreshToken
+
+Cette entité est décrite dans le README, mais n'apparaît pas dans le diagramme UML. Elle représente un jeton de renouvellement associé à un utilisateur. Les champs actuellement documentés sont `id` (`UUID`), `user_id` (`UUID`), `token_hash` (`String`), `created_at`, `expires_at` et `revoked_at` (`DateTime`). Un utilisateur peut posséder plusieurs jetons. Le type `UUID` de `user_id` diverge du type `Long` de `User.id` dans le diagramme et reste à harmoniser.
+
+
+## Frontend React et shadcn/ui
+
+L’exemple dans `frontend/src/App.tsx` utilise `Card` et `Button` de shadcn/ui pour afficher « Hello world » et un compteur. Le header réutilise `SiteMenu`, construit avec `NavigationMenu` de shadcn/ui.
+
+### Développement avec actualisation à chaud sur Spring Boot
+
+Prérequis : Node.js 22.12 ou supérieur. Dans un premier terminal :
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite démarre sur `http://localhost:5173` (port fixe). Dans un second terminal, à la racine du projet :
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev -Dfrontend.skip=true
+```
+
+Ouvrir **http://localhost:8080/**. Après l’activation initiale du profil `dev`, les modifications des composants React et des styles s’affichent sur cette page sans recharger manuellement le navigateur ni relancer Spring Boot. React Fast Refresh conserve généralement l’état des composants, comme le compteur. Les modifications du code Java nécessitent une relance.
+
+Le profil `dev` charge les modules depuis Vite ; les deux serveurs doivent rester actifs. `frontend.skip=true` évite l’installation et le build frontend Maven pendant cette session. Le template partagé injecte le client Vite et le préambule React nécessaires à Fast Refresh. Le frontend peut aussi être ouvert directement sur `http://localhost:5173`.
+
+Si le port 8080 est déjà occupé, arrêter l’ancienne instance ou ajouter `-Dspring-boot.run.arguments=--server.port=8082` à la commande Maven, puis ouvrir `http://localhost:8082/`. Le port Vite reste 5173.
+
+### Build et lancement normal
+
+```bash
+./mvnw spring-boot:run
+# Ou pour produire le JAR :
+./mvnw package
+```
+
+Sans le profil `dev`, Spring sert les fichiers compilés localement. Maven exécute `npm ci` et `npm run build`. Les fichiers `app.js` et `app.css` sont générés dans `target/classes/static/ui/` et inclus dans le JAR ; Vite n’a pas besoin de tourner en production.
+
+### Réutilisation et composants
+
+`index.html` fournit le point de montage React `#root`. L’URL de base transmise par Thymeleaf respecte le chemin de contexte Spring. Pour inclure uniquement le header dans un autre template :
+
+```html
+<head th:replace="~{fragments/head :: head('Titre de la page')}"></head>
+<header th:replace="~{fragments/header :: header('accueil')}"></header>
+```
+
+Pour ajouter un composant shadcn/ui :
+
+```bash
+cd frontend
+npx shadcn@latest add nom-du-composant
+```
+
+Les styles sont dans `frontend/src/styles.css`, et la configuration shadcn/ui dans `frontend/components.json`.
