@@ -1,44 +1,64 @@
 package fr.cytech.projetj2e.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
-@Entity
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.ToString;
+
+
+@Entity  @Data 
 @Table(name = "users")
 public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
+    @NotBlank
     private String username;
 
+    @Column(unique = true, nullable = false)
+    @NotBlank
+    private String email;
+
+    @Column 
+    @NotBlank 
+    private String firstName;
+
+    @Column 
+    @NotBlank
+    private String lastName;
+
     @Column(nullable = false)
-    private String password;
+    @ToString.Exclude
+    private String passwordHash;
 
-    protected User() {
-        // Constructeur requis par JPA.
-    }
+    @Column(nullable = false)
+    private boolean active = false;
 
-    public User(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
+    @OneToOne
+    private UserProfile profile;
 
-    public Long getId() {
-        return id;
-    }
 
+    // methods ...
     public String getUsername() {
         return username;
     }
 
-    public String getPassword() {
-        return password;
+    public void setUsername(String username) {
+        this.username = username;
     }
+
+    
+
+    public void setProfile(UserProfile profile) {
+        this.profile = profile;
+    }
+
+    public UserProfile getProfile() {
+        return profile;
+    }
+
+   
 }
