@@ -14,15 +14,24 @@ Application **Spring Boot** avec **Thymeleaf**, structurée comme les projets de
 
 ## Démarrer
 
-Prérequis : Java 17, Node.js 22.12 ou supérieur et npm 10 ou supérieur. Maven construit aussi le frontend avant de lancer Spring Boot.
+Prérequis : Java 17 ou supérieur, Node.js 22.12 ou supérieur et npm 10 ou supérieur.
 
-Depuis ce dossier :
+Lancer le backend depuis la racine du projet :
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-La page d'accueil est disponible sur <http://localhost:8080/>.
+Dans un second terminal, lancer le frontend :
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Ouvrir **http://localhost:5173/**. Le backend écoute sur le port 8080 ; Vite lui transmet les requêtes `/api`.
+L’interface de fichiers utilise actuellement des données de démonstration en mémoire.
 
 ---
 
@@ -94,13 +103,7 @@ Application Spring Boot avec Thymeleaf, structurée comme les projets de `dev_JE
 
 ## Démarrer
 
-Depuis ce dossier :
-
-```bash
-./mvnw spring-boot:run
-```
-
-La page d’accueil est disponible sur <http://localhost:8080/>.
+Voir les [commandes de lancement](#démarrer) en début de document.
 
 ## Entités
 
@@ -183,52 +186,17 @@ L’explorateur propose six éléments par page, une navigation dans les dossier
 
 Les données d’exemple sont définies dans `frontend/src/data/workspace.ts`. Le contenu, les favoris et les contributeurs sont mis à jour **en mémoire pendant la session** : recharger la page réinitialise les données. L’interface n’est pas encore reliée aux API de fichiers ou à une collaboration en temps réel.
 
-### Développement avec actualisation à chaud sur Spring Boot
+### Développement et build
 
-Prérequis : Node.js 22.12 ou supérieur. Dans un premier terminal :
+Vite actualise l’interface sur **http://localhost:5173/** lors des modifications React ou CSS.
+Les modifications Java nécessitent une relance du backend. Garder les deux terminaux ouverts.
 
-```bash
-cd frontend
-npm ci
-npm run dev
-```
-
-Vite démarre sur `http://localhost:5173` (port fixe). Dans un second terminal, à la racine du projet :
-
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev -Dfrontend.skip=true
-```
-
-Ouvrir **http://localhost:8080/**. Après l’activation initiale du profil `dev`, les modifications des composants React et des styles s’affichent sur cette page sans recharger manuellement le navigateur ni relancer Spring Boot. React Fast Refresh conserve généralement l’état des composants, comme le fichier sélectionné. Les modifications du code Java nécessitent une relance.
-
-Le profil `dev` charge les modules depuis Vite ; les deux serveurs doivent rester actifs. `frontend.skip=true` évite l’installation et le build frontend Maven pendant cette session. Le template partagé injecte le client Vite et le préambule React nécessaires à Fast Refresh. Le frontend peut aussi être ouvert directement sur `http://localhost:5173`.
-
-Si le port 8080 est déjà occupé, arrêter l’ancienne instance ou ajouter `-Dspring-boot.run.arguments=--server.port=8082` à la commande Maven, puis ouvrir `http://localhost:8082/`. Le port Vite reste 5173.
-
-### Build et lancement normal
-
-```bash
-./mvnw spring-boot:run
-# Ou pour produire le JAR :
-./mvnw package
-```
-
-Sans le profil `dev`, Spring sert les fichiers compilés localement. Maven exécute `npm ci` et `npm run build`. Les fichiers `app.js` et `app.css` sont générés dans `target/classes/static/ui/` et inclus dans le JAR ; Vite n’a pas besoin de tourner en production.
-
-### Réutilisation et composants
-
-`index.html` fournit le point de montage React `#root`. L’URL de base transmise par Thymeleaf respecte le chemin de contexte Spring. Pour inclure uniquement le header dans un autre template :
-
-```html
-<head th:replace="~{fragments/head :: head('Titre de la page')}"></head>
-<header th:replace="~{fragments/header :: header('accueil')}"></header>
-```
-
-Pour ajouter un composant shadcn/ui :
+Pour compiler le frontend séparément :
 
 ```bash
 cd frontend
-npx shadcn@latest add nom-du-composant
+npm run build
 ```
 
-Les styles sont dans `frontend/src/styles.css`, et la configuration shadcn/ui dans `frontend/components.json`.
+Les fichiers sont générés dans `frontend/dist/`. Maven ne construit et ne sert pas automatiquement ce frontend.
+Il n’existe actuellement aucun profil Spring `dev` permettant de l’ouvrir sur le port 8080.
