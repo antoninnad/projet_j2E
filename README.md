@@ -175,7 +175,13 @@ Cette entité est décrite dans le README, mais n'apparaît pas dans le diagramm
 
 ## Frontend React et shadcn/ui
 
-L’exemple dans `frontend/src/App.tsx` utilise `Card` et `Button` de shadcn/ui pour afficher « Hello world » et un compteur. Le header réutilise `SiteMenu`, construit avec `NavigationMenu` de shadcn/ui.
+L’interface principale est composée dans `frontend/src/App.tsx` et `frontend/src/components/workspace/`. Elle utilise les composants shadcn/ui `Resizable`, `Pagination`, `Avatar`, `Button`, `Input`, `Textarea`, `Badge` et `Sonner`. Le header réutilise `SiteMenu`, construit avec `NavigationMenu`.
+
+L’explorateur propose six éléments par page, une navigation dans les dossiers, une recherche dans le dossier courant et un filtre de favoris. Le panneau de droite permet de consulter, modifier, enregistrer ou annuler le brouillon du fichier sélectionné. La barre au-dessus des panneaux affiche les favoris et les avatars des personnes ayant modifié le document (trois avatars puis un compteur).
+
+À l’ouverture et à l’enregistrement d’un fichier, un toast confirme l’action. Les brouillons sont conservés lors du passage à un autre fichier ; `Ctrl+S` ou `Cmd+S` enregistre le fichier en cours d’édition. Sur mobile, les panneaux redimensionnables sont empilés verticalement.
+
+Les données d’exemple sont définies dans `frontend/src/data/workspace.ts`. Le contenu, les favoris et les contributeurs sont mis à jour **en mémoire pendant la session** : recharger la page réinitialise les données. L’interface n’est pas encore reliée aux API de fichiers ou à une collaboration en temps réel.
 
 ### Développement avec actualisation à chaud sur Spring Boot
 
@@ -193,7 +199,7 @@ Vite démarre sur `http://localhost:5173` (port fixe). Dans un second terminal, 
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev -Dfrontend.skip=true
 ```
 
-Ouvrir **http://localhost:8080/**. Après l’activation initiale du profil `dev`, les modifications des composants React et des styles s’affichent sur cette page sans recharger manuellement le navigateur ni relancer Spring Boot. React Fast Refresh conserve généralement l’état des composants, comme le compteur. Les modifications du code Java nécessitent une relance.
+Ouvrir **http://localhost:8080/**. Après l’activation initiale du profil `dev`, les modifications des composants React et des styles s’affichent sur cette page sans recharger manuellement le navigateur ni relancer Spring Boot. React Fast Refresh conserve généralement l’état des composants, comme le fichier sélectionné. Les modifications du code Java nécessitent une relance.
 
 Le profil `dev` charge les modules depuis Vite ; les deux serveurs doivent rester actifs. `frontend.skip=true` évite l’installation et le build frontend Maven pendant cette session. Le template partagé injecte le client Vite et le préambule React nécessaires à Fast Refresh. Le frontend peut aussi être ouvert directement sur `http://localhost:5173`.
 
