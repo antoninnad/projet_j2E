@@ -123,7 +123,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T14 | Administration des comptes | Afficher les inscriptions en attente et permettre approbation/refus depuis l’interface MVC ; compléter désactivation et contrôle d’accès par entreprise | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
 | T15 | Départements | Développer gestion des départements, membres et niveaux ; utiliser la création interne des racines fournie en T05 | B1 | P0 | À faire | T08, T11 | Adhésions et dossiers racines cohérents |
 | T16 | Permissions | Implémenter le service central selon la matrice ; exposer les actions autorisées | B1 | P0 | À faire | T15 | Décisions de droits réutilisables par les services |
-| T17 | Administration frontend | Brancher demandes de comptes, désactivation, départements et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles |
+| T17 | Administration frontend | Afficher et modifier en ligne les champs des utilisateurs, éléments, départements et fichiers depuis les listes d’administration ; compléter désactivation, adhésions et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles et les droits prévus |
 | T18 | Exploration backend | Créer racines et API des enfants visibles, pagination et métadonnées | B2 | P1 | À faire | T08, T16 | Arborescence limitée aux éléments autorisés |
 | T19 | Exploration frontend | Brancher navigation, fil d’Ariane et pagination ; afficher les actions permises | F2 | P1 | Partiel | T03, T18 | Explorateur connecté à l’API |
 | T20 | Dossiers backend | Créer/renommer/déplacer/supprimer ; contrôler cycles, seuils et sous-arbres | B2 | P1 | À faire | T18 | Opérations cohérentes et protégées |
@@ -163,6 +163,12 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 Les contrôleurs login, inscription et administration des comptes ont été adaptés aux formulaires Thymeleaf : connexion membre et administrateur par session, redirections avec retours d’erreur, déconnexion, validation de l’inscription, liste des inscriptions en attente et actions d’approbation/refus. Les pages de connexion et d’inscription sont servies en MVC ; le tableau de bord membre actuel est un écran minimal.
 
 Cette adaptation ne termine pas T12 à T14 : la création d’entreprise et de son premier administrateur, la désactivation de compte, la protection centralisée des routes et la gestion complète de session restent à réaliser. Le contrôle administrateur actuel vérifie seulement la présence de `adminId` en session ; l’isolation par entreprise et une autorisation centralisée doivent encore être mises en place. `mvn test` compile le projet avec succès, mais aucun test automatisé n’est présent pour valider ces parcours.
+
+### Avancement des listes d’administration
+
+Les pages `admin-dashboard-listUsers`, `admin-dashboard-listNodes`, `admin-dashboard-listDepartements` et `admin-dashboard-listFiles` affichent les données persistées et proposent l’édition en ligne des champs métier : informations et statut utilisateur, nom des éléments, nom des départements, et noms/type MIME des fichiers. Les dates, propriétaires, tailles et chemins de stockage sont affichés ou gardés non modifiables. Chaque mise à jour est envoyée au contrôleur MVC et validée avant sauvegarde ; les doublons nom/email et nom de département sont refusés. Les listes sont accessibles depuis le tableau de bord administrateur.
+
+T17 reste partiel : ces listes ne remplacent pas la gestion des adhésions/niveaux d’accès, et l’administration n’est pas encore restreinte à une entreprise. Le contrôle actuel se limite à la présence de `adminId` en session. `mvn test` compile avec succès, sans tests automatisés ; les quatre vues ont été vérifiées en HTTP sur le serveur local déjà présent, tandis qu’un second démarrage de l’application a été empêché par le port 8080 déjà occupé.
 
 ## 5. Chronologie de réalisation
 
