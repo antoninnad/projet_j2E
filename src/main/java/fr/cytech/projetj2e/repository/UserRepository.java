@@ -3,6 +3,7 @@ package fr.cytech.projetj2e.repository;
 import java.util.List;
 import java.util.Optional;
 
+import fr.cytech.projetj2e.model.AccountStatus;
 import fr.cytech.projetj2e.model.User;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,6 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
     boolean existsByUsername(String username);
-    List<User> findByActiveFalse();
+    boolean existsByEmail(String email);
+    List<User> findByStatus(AccountStatus status);
 
 }

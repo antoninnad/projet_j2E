@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.cytech.projetj2e.model.AccountStatus;
 import fr.cytech.projetj2e.model.Admin;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.repository.AdminRepository;
@@ -48,9 +49,13 @@ public class LoginController {
         }
         User user = opt.get();
 
-        if (!user.isActive()) {
+        if (user.getStatus() == AccountStatus.PENDING) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Your account is awaiting admin approval"));
+        }
+        if (user.getStatus() == AccountStatus.DISABLED) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Your account has been disabled"));
         }
 
         session.setAttribute("userId", user.getId());

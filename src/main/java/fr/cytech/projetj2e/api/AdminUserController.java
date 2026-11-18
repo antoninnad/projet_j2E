@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import fr.cytech.projetj2e.model.AccountStatus;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
@@ -33,7 +34,7 @@ public class AdminUserController {
     @GetMapping("/pending")
     public List<PendingUser> pending(HttpSession session) {
         requireAdmin(session);
-        return users.findByActiveFalse().stream()
+        return users.findByStatus(AccountStatus.PENDING).stream()
                 .map(u -> new PendingUser(u.getId(), u.getUsername(),
                         u.getFirstName(), u.getLastName(), u.getEmail()))
                 .toList();
@@ -44,7 +45,7 @@ public class AdminUserController {
         requireAdmin(session);
         User u = users.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        u.setActive(true);
+        u.setStatus(AccountStatus.ACTIVE);
         users.save(u);
         return ResponseEntity.ok().build();
     }
@@ -54,8 +55,9 @@ public class AdminUserController {
         requireAdmin(session);
         User u = users.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (u.isActive())
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already approved");
+        // Refuser une inscription ne concerne que les comptes en attente
+        if (u.getStatus() != AccountStatus.PENDING)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is not pending approval");
         users.delete(u);
         return ResponseEntity.noContent().build();
     }
