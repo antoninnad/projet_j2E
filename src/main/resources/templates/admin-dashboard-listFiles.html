@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration — Fichiers</title>
+</head>
+<body>
+<main>
+    <h1>Fichiers</h1>
+    <nav>
+        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
+        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
+        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
+        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
+    </nav>
+    <p th:if="${notice}" th:text="${notice}" role="status"></p>
+    <p th:if="${error}" th:text="${error}" role="alert"></p>
+
+    <p th:if="${#lists.isEmpty(files)}">Aucun fichier.</p>
+    <table th:unless="${#lists.isEmpty(files)}">
+        <thead>
+        <tr><th>ID</th><th>Nom</th><th>Nom d'origine</th><th>Type MIME</th><th>Taille (octets)</th><th>Propriétaire</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="file : ${files}">
+            <td th:text="${file.id}"></td>
+            <td><input th:attr="form=${'file-form-' + file.id}" name="name" th:value="${file.name}" required></td>
+            <td><input th:attr="form=${'file-form-' + file.id}" name="originalFileName"
+                       th:value="${file.originalFileName}" required></td>
+            <td><input th:attr="form=${'file-form-' + file.id}" name="contentType"
+                       th:value="${file.contentType}"></td>
+            <td th:text="${file.size}"></td>
+            <td th:text="${file.owner.username}"></td>
+            <td>
+                <form th:id="${'file-form-' + file.id}"
+                      th:action="@{/admin/dashboard/files/{id}(id=${file.id})}" method="post">
+                    <button type="submit">Enregistrer</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

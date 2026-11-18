@@ -118,9 +118,9 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T09 | Intégration continue backend | Automatiser compilation, tests backend et migrations sur base de test | B1 | P0 | À faire | T06 | Échecs détectés avant intégration |
 | T10 | Intégration continue frontend | Automatiser types, build et contrôles frontend avec la version Node requise | F1 | P0 | À faire | T02, T03 | Frontend compilable après chaque intégration |
 | T11 | Sessions et sécurité | Compléter session courante/déconnexion, rotation de session, rôles, CSRF et cookies | B1 | P0 | Partiel | T07 | Accès privés centralisés et comptes inactifs exclus |
-| T12 | Entreprises et inscription | Créer entreprise/premier administrateur ; corriger inscription JSON, champs et doublons | B1 | P0 | Partiel | T11 | Compte créé dans la bonne entreprise en attente d’approbation |
-| T13 | Écrans d’accès | Brancher création d’entreprise, inscription, connexion et déconnexion ; protéger les routes | F1 | P0 | Partiel | T02, T03, T11, T12 | Parcours d’accès avec erreurs et expiration de session |
-| T14 | Administration des comptes | Compléter approbation/refus/désactivation dans l’entreprise administrée | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
+| T12 | Entreprises et inscription | Créer entreprise/premier administrateur ; compléter l’inscription MVC avec validation des champs, confirmation du mot de passe et retours d’erreur métier | B1 | P0 | Partiel | T11 | Compte créé dans la bonne entreprise en attente d’approbation |
+| T13 | Écrans d’accès | Convertir inscription, connexion et déconnexion en parcours MVC Thymeleaf ; protéger et compléter les routes et états de session | F1 | P0 | Partiel | T02, T03, T11, T12 | Parcours d’accès complet avec erreurs et expiration de session |
+| T14 | Administration des comptes | Afficher les inscriptions en attente et permettre approbation/refus depuis l’interface MVC ; compléter désactivation et contrôle d’accès par entreprise | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
 | T15 | Départements | Développer gestion des départements, membres et niveaux ; utiliser la création interne des racines fournie en T05 | B1 | P0 | À faire | T08, T11 | Adhésions et dossiers racines cohérents |
 | T16 | Permissions | Implémenter le service central selon la matrice ; exposer les actions autorisées | B1 | P0 | À faire | T15 | Décisions de droits réutilisables par les services |
 | T17 | Administration frontend | Brancher demandes de comptes, désactivation, départements et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles |
@@ -157,6 +157,12 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T48 | Démonstration | Préparer le scénario complet, exécuter la recette sur l’hébergement et suivre les corrections | F2 | P1 | À faire | T45, T46 | Parcours complet présenté sans données simulées |
 | T49 | Évolutions interface | Décrire groupes, coédition, versions, corbeille et notifications ; chiffrer avec F1 | F2 | P2 | À faire | T47, T48 | Backlog d’évolutions distinct de la démo |
 | T50 | Évolutions backend | Décrire récupération par email, quotas, antivirus et exploitation ; chiffrer avec B2 | B1 | P2 | À faire | T47, T48 | Backlog technique priorisé après livraison |
+
+### Avancement MVC des comptes
+
+Les contrôleurs login, inscription et administration des comptes ont été adaptés aux formulaires Thymeleaf : connexion membre et administrateur par session, redirections avec retours d’erreur, déconnexion, validation de l’inscription, liste des inscriptions en attente et actions d’approbation/refus. Les pages de connexion et d’inscription sont servies en MVC ; le tableau de bord membre actuel est un écran minimal.
+
+Cette adaptation ne termine pas T12 à T14 : la création d’entreprise et de son premier administrateur, la désactivation de compte, la protection centralisée des routes et la gestion complète de session restent à réaliser. Le contrôle administrateur actuel vérifie seulement la présence de `adminId` en session ; l’isolation par entreprise et une autorisation centralisée doivent encore être mises en place. `mvn test` compile le projet avec succès, mais aucun test automatisé n’est présent pour valider ces parcours.
 
 ## 5. Chronologie de réalisation
 

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration — Départements</title>
+</head>
+<body>
+<main>
+    <h1>Départements</h1>
+    <nav>
+        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
+        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
+        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
+        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
+    </nav>
+    <p th:if="${notice}" th:text="${notice}" role="status"></p>
+    <p th:if="${error}" th:text="${error}" role="alert"></p>
+
+    <p th:if="${#lists.isEmpty(departments)}">Aucun département.</p>
+    <table th:unless="${#lists.isEmpty(departments)}">
+        <thead>
+        <tr><th>ID</th><th>Nom</th><th>Entreprise</th><th>Code entreprise</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="department : ${departments}">
+            <td th:text="${department.id}"></td>
+            <td><input th:attr="form=${'department-form-' + department.id}"
+                       name="name" th:value="${department.name}" required></td>
+            <td th:text="${department.company.name}"></td>
+            <td th:text="${department.company.code}"></td>
+            <td>
+                <form th:id="${'department-form-' + department.id}"
+                      th:action="@{/admin/dashboard/departments/{id}(id=${department.id})}" method="post">
+                    <button type="submit">Enregistrer</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="container">
+    <h2>Welcome to the First Static Page, login to continue:</h2>
+
+    <div class="login-form">
+        <!-- th:action ajoute automatiquement le token CSRF -->
+        <form th:action="@{/login}" method="post" class="form-group">
+            <label for="username">Username</label>
+            <input id="username" type="text" name="username" required>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" required>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <!-- message flash envoyé par RegisterController -->
+    <p th:if="${success}" th:text="${success}" style="color: green;"></p>
+    <p th:if="${param.error != null and param.error[0] == 'pending'}" style="color: red;">
+        Your account is awaiting admin approval.
+    </p>
+    <p th:if="${param.error != null and param.error[0] == 'disabled'}" style="color: red;">
+        Your account has been disabled.
+    </p>
+    <p th:if="${param.error != null and param.error[0] != 'pending' and param.error[0] != 'disabled'}"
+       style="color: red;">Invalid username or password.</p>
+    <p th:if="${param.logout}" style="color: green;">You have been logged out.</p>
+
+    <a th:href="@{/register}" class="btn btn-secondary">Create Account</a>
+    <a th:href="@{/adminLogin}" class="btn btn-secondary">Admin</a>
+</div>
+</body>
+</html>
