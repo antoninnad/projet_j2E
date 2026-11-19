@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Pending registrations</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="ar">
+    <div class="ar-wrap">
+        <h1>Pending registrations</h1>
+        <p class="ar-sub">Approved users can log in. Declined registrations are removed.</p>
+        <nav>
+            <a th:href="@{/admin/dashboard/listUsers}">Users</a>
+            <a th:href="@{/admin/dashboard/listNodes}">Nodes</a>
+            <a th:href="@{/admin/dashboard/listDepartements}">Departments</a>
+            <a th:href="@{/admin/dashboard/listFiles}">Files</a>
+        </nav>
+
+        <!-- messages flash envoyés par AdminController -->
+        <div class="ar-msg ar-err" role="alert" th:if="${error}" th:text="${error}"></div>
+        <div class="ar-msg ar-okmsg" role="status" th:if="${notice}" th:text="${notice}"></div>
+
+        <div class="ar-empty" th:if="${#lists.isEmpty(users)}">
+            No registrations waiting for review.
+        </div>
+
+        <div class="ar-row" th:each="u : ${users}">
+            <div class="ar-info">
+                <div class="ar-name"
+                     th:text="${!#strings.isEmpty(u.firstName) ? u.firstName + ' ' + (u.lastName ?: '') : u.username}">
+                    Name
+                </div>
+                <div class="ar-meta" th:text="${u.email}">email</div>
+            </div>
+
+            <div class="ar-actions">
+                <form th:action="@{/admin/users/{id}/approve(id=${u.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="ar-approve">Approve</button>
+                </form>
+                <form th:action="@{/admin/users/{id}/decline(id=${u.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="ar-decline">Decline</button>
+                </form>
+            </div>
+        </div>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

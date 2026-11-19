@@ -40,8 +40,16 @@ public class File extends Node {
         return originalFileName;
     }
 
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
+
     public String getContentType() {
         return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public long getSize() {

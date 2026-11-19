@@ -44,7 +44,17 @@
         <p>Votre session a expiré. Merci de vous reconnecter pour continuer.</p>
     </div>
 
-    <div th:if="${param.error != null and error == null}" role="alert"
+    <div th:if="${param.error != null and error == null and param.error[0] == 'pending'}" role="alert"
+         class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p>Votre compte est en attente d'approbation par l'administrateur de votre entreprise.</p>
+    </div>
+
+    <div th:if="${param.error != null and error == null and param.error[0] == 'disabled'}" role="alert"
+         class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <p>Votre compte a été désactivé. Contactez l'administrateur de votre entreprise.</p>
+    </div>
+
+    <div th:if="${param.error != null and error == null and param.error[0] != 'pending' and param.error[0] != 'disabled'}" role="alert"
          class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
         <p>Identifiants invalides ou compte en attente de validation.</p>
     </div>

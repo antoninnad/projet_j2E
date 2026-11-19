@@ -134,10 +134,10 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 
 | ID | Fonctionnalité | Tâche concrète | Responsable | Priorité | État actuel | Dépend de | Résultat attendu |
 |---|---|---|---|---|---|---|---|
-| T01 | Contrats et routes | Documenter routes MVC de la section 1.1, DTO, session et contrats JSON OpenAPI, pagination et erreurs ; faire relire par l’équipe | B1 | P0 | À faire | — | Contrats et parcours MVC/React utilisables par les deux équipes |
+| T01 | Contrats et routes | Documenter routes MVC de la section 1.1, DTO, session et contrats JSON OpenAPI, pagination et erreurs ; faire relire par l’équipe | B1 | P0 | À vérifier | — | Contrats et parcours MVC/React utilisables par les deux équipes |
 | T02 | Socle frontend | Créer index.html, register.html, login.html, dashboard.html et les fragments Thymeleaf communs ; intégrer l’espace TypeScript avec un style et un routage cohérents | F1 | P0 | Terminé | T01 | Pages Thymeleaf avec fragments réutilisés et interfaces React intégrées |
 | T03 | Intégration frontend | Créer client API, types partagés, gestion des erreurs et réponses simulées | F2 | P0 | À faire | T01 | Appels homogènes et travail frontend indépendant |
-| T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions ; garantir User/UserProfile en OneToOne et coordonner les annotations OneToMany/ManyToMany avec T05 | B1 | P0 | Partiel | T01 | Relations du cours et rattachements d’entreprise définis |
+| T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions ; garantir User/UserProfile en OneToOne et coordonner les annotations OneToMany/ManyToMany avec T05 | B1 | P0 | À vérifier | T01 | Relations du cours et rattachements d’entreprise définis |
 | T05 | Modèle documents | Compléter Node/File avec Folder, parenté, seuil, version et entreprise ; annoter les enfants de Folder en OneToMany et les contributeurs de Node en ManyToMany ; fournir la création interne des racines | B2 | P0 | Partiel | T04 | Arborescence persistable et modèle relu avec B1 |
 | T06 | Base de données | Conserver un profil h2 sur fichier et ajouter un profil postgres ; configurer migrations et environnements, intégrer les tables de B2 et documenter le lancement des deux profils | B1 | P0 | À faire | T04, T05 | Schéma reproductible et données persistantes sur H2 et PostgreSQL |
 | T07 | Isolation des comptes | Centraliser l’identité, l’entreprise courante et les restrictions des services comptes/profils | B1 | P0 | À faire | T06 | Identité fiable sans entreprise choisie librement par le client |
@@ -147,10 +147,10 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T11 | Sessions et sécurité | Créer LoginDTO, findByEmail, UserService.findUser et PublicUser en session ; ajouter POST /login et POST /logout, session courante, rotation de session, rôles, CSRF et cookies | B1 | P0 | Partiel | T07 | Connexion par email, session sans secrets et comptes inactifs exclus |
 | T12 | Entreprises et inscription | Créer entreprise/premier administrateur ; créer RegisterDTO et POST /register ; vérifier les mots de passe et hacher via BCrypt dans UserService, persister tous les champs et le profil ; aligner l’API JSON et gérer les doublons | B1 | P0 | Partiel | T11 | Compte et profil créés dans la bonne entreprise en attente d’approbation |
 | T13 | Écrans d’accès | Avec B1, exposer GET /, /register, /login et /dashboard ; brancher formulaires Thymeleaf et déconnexion avec CSRF, erreurs et redirections ; intégrer création d’entreprise et React ; protéger le dashboard | F1 | P0 | Partiel | T02, T03, T11, T12 | Parcours MVC avec fragments, session et expiration ; dashboard alimenté selon les droits dès T18 |
-| T14 | Administration des comptes | Compléter approbation/refus/désactivation dans l’entreprise administrée | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
+| T14 | Administration des comptes | Afficher les inscriptions en attente et permettre approbation/refus depuis l’interface MVC ; compléter désactivation et contrôle d’accès par entreprise | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
 | T15 | Départements | Développer gestion des départements, membres et niveaux ; utiliser la création interne des racines fournie en T05 | B1 | P0 | À faire | T08, T11 | Adhésions et dossiers racines cohérents |
 | T16 | Permissions | Implémenter le service central selon la matrice ; exposer les actions autorisées | B1 | P0 | À faire | T15 | Décisions de droits réutilisables par les services |
-| T17 | Administration frontend | Brancher demandes de comptes, désactivation, départements et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles |
+| T17 | Administration frontend | Afficher et modifier en ligne les champs des utilisateurs, éléments, départements et fichiers depuis les listes d’administration ; compléter demandes de comptes, désactivation, adhésions et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles et les droits prévus |
 | T18 | Exploration backend | Créer racines et API des enfants visibles, pagination et métadonnées ; fournir à F1/B1 les services pour alimenter le dashboard Thymeleaf | B2 | P1 | À faire | T08, T16 | Arborescence et dashboard limités aux éléments autorisés |
 | T19 | Exploration frontend | Brancher navigation, fil d’Ariane et pagination ; afficher les actions permises | F2 | P1 | Partiel | T03, T18 | Explorateur connecté à l’API |
 | T20 | Dossiers backend | Créer/renommer/déplacer/supprimer ; contrôler cycles, seuils et sous-arbres | B2 | P1 | À faire | T18 | Opérations cohérentes et protégées |
@@ -184,6 +184,18 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T48 | Démonstration | Préparer le scénario complet, exécuter la recette sur l’hébergement et suivre les corrections | F2 | P1 | À faire | T45, T46 | Parcours complet présenté sans données simulées |
 | T49 | Évolutions interface | Décrire groupes, coédition, versions, corbeille et notifications ; chiffrer avec F1 | F2 | P2 | À faire | T47, T48 | Backlog d’évolutions distinct de la démo |
 | T50 | Évolutions backend | Décrire récupération par email, quotas, antivirus et exploitation ; chiffrer avec B2 | B1 | P2 | À faire | T47, T48 | Backlog technique priorisé après livraison |
+
+### Avancement MVC des comptes
+
+Les contrôleurs login, inscription et administration des comptes ont été adaptés aux formulaires Thymeleaf : connexion membre et administrateur par session, redirections avec retours d’erreur, déconnexion, validation de l’inscription, liste des inscriptions en attente et actions d’approbation/refus. Les pages de connexion et d’inscription sont servies en MVC ; le tableau de bord membre actuel est un écran minimal.
+
+Cette adaptation ne termine pas T12 à T14 : la création d’entreprise et de son premier administrateur, la désactivation de compte, la protection centralisée des routes et la gestion complète de session restent à réaliser. Le contrôle administrateur actuel vérifie seulement la présence de `adminId` en session ; l’isolation par entreprise et une autorisation centralisée doivent encore être mises en place. `mvn test` compile le projet avec succès, mais aucun test automatisé n’est présent pour valider ces parcours.
+
+### Avancement des listes d’administration
+
+Les pages `admin-dashboard-listUsers`, `admin-dashboard-listNodes`, `admin-dashboard-listDepartements` et `admin-dashboard-listFiles` affichent les données persistées et proposent l’édition en ligne des champs métier : informations et statut utilisateur, nom des éléments, nom des départements, et noms/type MIME des fichiers. Les dates, propriétaires, tailles et chemins de stockage sont affichés ou gardés non modifiables. Chaque mise à jour est envoyée au contrôleur MVC et validée avant sauvegarde ; les doublons nom/email et nom de département sont refusés. Les listes sont accessibles depuis le tableau de bord administrateur.
+
+T17 reste partiel : ces listes ne remplacent pas la gestion des adhésions/niveaux d’accès, et l’administration n’est pas encore restreinte à une entreprise. Le contrôle actuel se limite à la présence de `adminId` en session. `mvn test` compile avec succès, sans tests automatisés ; les quatre vues ont été vérifiées en HTTP sur le serveur local déjà présent, tandis qu’un second démarrage de l’application a été empêché par le port 8080 déjà occupé.
 
 ## 5. Chronologie de réalisation
 

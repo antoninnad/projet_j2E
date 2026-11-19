@@ -19,11 +19,16 @@
 
 ```text
 src/main/java/fr/cytech/projetj2e/
-├─ controller/HomeController.java           # @Controller MVC : GET /, /login, /register, /dashboard
+├─ controller/HomeController.java           # @Controller MVC : GET / -> index.html
+├─ controller/PageController.java           # @Controller MVC : GET /dashboard -> dashboard.html (garde session + ?tab=)
+├─ controller/LoginController.java          # @Controller MVC : GET/POST /login, /adminLogin, POST /logout
+├─ controller/RegisterController.java       # @Controller MVC : GET/POST /register (UserDto)
+├─ controller/Admin{Dashboard,User}Controller & NodeManagementController # Vues/actions admin MVC
 ├─ controller/FrontendModelAdvice.java      # @ControllerAdvice(@Controller) : assets Vite + état session sûr
-├─ api/{Login,Register,AdminUser}Controller # @RestController JSON existants (à aligner en T11-T14)
 ├─ configuration/SecurityConfig.java        # Bean BCryptPasswordEncoder
-└─ model/ & repository/ & service/          # JPA (T04-T08)
+└─ model/ & repository/ & service/          # Company, Department, Membership, User, UserProfile, Node, Folder, File
+
+openapi.yaml                                # Contrat OpenAPI (T01)
 
 src/main/resources/
 ├─ application.properties                   # app.frontend.dev-server-url= (vide => /ui/app.{css,js})
@@ -54,11 +59,11 @@ frontend/
 | Type | Route | Propriétaire | Comportement |
 |---|---|---|---|
 | MVC (`@Controller`) | `GET /` | `HomeController` → `index.html` | Accueil public |
-| MVC (`@Controller`) | `GET /login` | `HomeController` → `login.html` | Formulaire `POST /login` (`loginForm`: `email`, `password`) |
-| MVC (`@Controller`) | `GET /register` | `HomeController` → `register.html` | Formulaire `POST /register` (`registerForm`: `firstName`, `lastName`, `username`, `email`, `companyCode`, `password`, `confirmPassword`) |
-| MVC (`@Controller`) | `GET /dashboard` | `HomeController` → `dashboard.html` | Redirige `302 -> /login?required=true` si non authentifié ; sinon rend synthèse serveur + îlot React |
+| MVC (`@Controller`) | `GET/POST /login`, `POST /logout` | `LoginController` → `login.html` | Connexion + déconnexion (à migrer sur `LoginDTO` email + `PublicUser` en T11) |
+| MVC (`@Controller`) | `GET/POST /register` | `RegisterController` → `register.html` | Formulaire `userDto` (`firstName`, `lastName`, `username`, `email`, `companyCode`, `password`, `confirmPassword`) |
+| MVC (`@Controller`) | `GET /dashboard` | `PageController` → `dashboard.html` | Redirige `302 -> /login?required=true` si non authentifié ; sinon rend synthèse serveur + îlot React |
 | Onglet React | `/dashboard?tab={files\|directory\|chat\|admin}` | `WorkspaceShell` (`routes.ts`) | Synchronisé via `History API` ; un reload HTTP repasse toujours par Spring MVC |
-| JSON (`@RestController`) | `/api/**` | Controllers `api/` | API consommée par React (proxyfiée par Vite en dev) |
+| JSON (`@RestController`) | `/api/**` | Contrat `openapi.yaml` | API consommée par React (proxyfiée par Vite en dev) |
 
 ---
 

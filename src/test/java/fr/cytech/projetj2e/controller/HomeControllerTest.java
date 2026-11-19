@@ -17,8 +17,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import fr.cytech.projetj2e.repository.AdminRepository;
+import fr.cytech.projetj2e.repository.CompanyRepository;
+import fr.cytech.projetj2e.repository.UserRepository;
+import fr.cytech.projetj2e.service.UserService;
 
-@WebMvcTest(HomeController.class)
+@WebMvcTest({ HomeController.class, PageController.class, LoginController.class, RegisterController.class })
 @Import(FrontendModelAdvice.class)
 class HomeControllerTest {
 
@@ -27,6 +30,15 @@ class HomeControllerTest {
 
     @MockitoBean
     private AdminRepository adminRepository;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private CompanyRepository companyRepository;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
@@ -45,15 +57,23 @@ class HomeControllerTest {
     }
 
     @Test
-    void loginRendersEmailFormAndDisplaysQueryMessages() throws Exception {
+    void loginRendersFormAndDisplaysQueryMessages() throws Exception {
         mockMvc.perform(get("/login").param("required", "true"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(content().string(containsString("Connexion — Lagui")))
                 .andExpect(content().string(containsString("action=\"/login\"")))
-                .andExpect(content().string(containsString("name=\"email\"")))
+                .andExpect(content().string(containsString("name=\"username\"")))
                 .andExpect(content().string(containsString("name=\"password\"")))
                 .andExpect(content().string(containsString("Veuillez vous connecter pour accéder à votre tableau de bord.")));
+    }
+
+    @Test
+    void loginDisplaysPendingAccountMessage() throws Exception {
+        mockMvc.perform(get("/login").param("error", "pending"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("login"))
+                .andExpect(content().string(containsString("en attente d'approbation")));
     }
 
     @Test

@@ -15,8 +15,13 @@
 
         <div th:replace="~{fragments/messages :: messages}"></div>
 
-        <form th:action="@{/register}" th:object="${registerForm}" method="post" class="space-y-4" novalidate>
+        <form th:action="@{/register}" th:object="${userDto}" method="post" class="space-y-4" novalidate>
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div th:if="${#fields.hasGlobalErrors()}" role="alert"
+                 class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 space-y-1">
+                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erreur d'inscription</p>
+            </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-1.5">

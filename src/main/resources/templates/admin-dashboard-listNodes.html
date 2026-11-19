@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration — Éléments</title>
+</head>
+<body>
+<main>
+    <h1>Éléments (dossiers et fichiers)</h1>
+    <nav>
+        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
+        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
+        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
+        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
+    </nav>
+    <p th:if="${notice}" th:text="${notice}" role="status"></p>
+    <p th:if="${error}" th:text="${error}" role="alert"></p>
+
+    <p th:if="${#lists.isEmpty(nodes)}">Aucun élément.</p>
+    <table th:unless="${#lists.isEmpty(nodes)}">
+        <thead>
+        <tr><th>ID</th><th>Type</th><th>Nom</th><th>Propriétaire</th><th>Créé le</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="node : ${nodes}">
+            <td th:text="${node.id}"></td>
+            <td th:text="${node.type}"></td>
+            <td><input th:attr="form=${'node-form-' + node.id}" name="name" th:value="${node.name}" required></td>
+            <td th:text="${node.owner}"></td>
+            <td th:text="${node.createdAt}"></td>
+            <td>
+                <form th:id="${'node-form-' + node.id}"
+                      th:action="@{/admin/dashboard/nodes/{id}(id=${node.id})}" method="post">
+                    <button type="submit">Enregistrer</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

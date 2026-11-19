@@ -1,5 +1,6 @@
 package fr.cytech.projetj2e.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -24,6 +25,11 @@ public class UserDto {
     @NotBlank
     private String lastName;
 
-    @NotBlank 
+    @NotBlank
+    @Email
     private String email;
+
+    /** Code de l'entreprise à rejoindre (voir Company.code). */
+    @NotBlank
+    private String companyCode;
 }

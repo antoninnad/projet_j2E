@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Connexion', 'Connectez-vous à votre espace collaboratif Lagui avec votre adresse email professionnelle.')}"></head>
+<head th:replace="~{fragments/head :: head('Connexion', 'Connectez-vous à votre espace collaboratif Lagui.')}"></head>
 <body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
 <header th:replace="~{fragments/header :: header('login')}"></header>
 
@@ -15,22 +15,20 @@
 
         <div th:replace="~{fragments/messages :: messages}"></div>
 
-        <form th:action="@{/login}" th:object="${loginForm}" method="post" class="space-y-4" novalidate>
+        <form th:action="@{/login}" method="post" class="space-y-4">
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
             <div class="space-y-1.5">
-                <label for="email" class="block text-sm font-medium text-foreground">
-                    Adresse email
+                <label for="username" class="block text-sm font-medium text-foreground">
+                    Identifiant
                 </label>
-                <input id="email"
-                       type="email"
-                       th:field="*{email}"
-                       autocomplete="email"
-                       placeholder="prenom.nom@entreprise.fr"
+                <input id="username"
+                       type="text"
+                       name="username"
+                       autocomplete="username"
+                       placeholder="prenom.nom"
                        required
                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
-                   class="text-xs text-destructive" role="alert"></p>
             </div>
 
             <div class="space-y-1.5">
@@ -39,12 +37,10 @@
                 </label>
                 <input id="password"
                        type="password"
-                       th:field="*{password}"
+                       name="password"
                        autocomplete="current-password"
                        required
                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
-                   class="text-xs text-destructive" role="alert"></p>
             </div>
 
             <button type="submit"
@@ -53,11 +49,16 @@
             </button>
         </form>
 
-        <div class="border-t border-border pt-4 text-center text-sm text-muted-foreground">
+        <div class="space-y-2 border-t border-border pt-4 text-center text-sm text-muted-foreground">
             <p>
                 Pas encore de compte ?
                 <a th:href="@{/register}" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">
                     Créer une demande d'inscription
+                </a>
+            </p>
+            <p class="text-xs">
+                <a th:href="@{/adminLogin}" class="text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                    Accès administrateur
                 </a>
             </p>
         </div>

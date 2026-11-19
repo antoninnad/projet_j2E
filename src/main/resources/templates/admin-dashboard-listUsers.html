@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration — Utilisateurs</title>
+</head>
+<body>
+<main>
+    <h1>Utilisateurs</h1>
+    <nav>
+        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
+        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
+        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
+        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
+    </nav>
+    <p th:if="${notice}" th:text="${notice}" role="status"></p>
+    <p th:if="${error}" th:text="${error}" role="alert"></p>
+
+    <p th:if="${#lists.isEmpty(users)}">Aucun utilisateur.</p>
+    <table th:unless="${#lists.isEmpty(users)}">
+        <thead>
+        <tr><th>ID</th><th>Identifiant</th><th>Prénom</th><th>Nom</th><th>Email</th><th>Statut</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+                <td th:text="${user.id}"></td>
+                <td><input th:attr="form=${'user-form-' + user.id}" name="username" th:value="${user.username}" required></td>
+                <td><input th:attr="form=${'user-form-' + user.id}" name="firstName" th:value="${user.firstName}" required></td>
+                <td><input th:attr="form=${'user-form-' + user.id}" name="lastName" th:value="${user.lastName}" required></td>
+                <td><input th:attr="form=${'user-form-' + user.id}" type="email" name="email" th:value="${user.email}" required></td>
+                <td>
+                    <select th:attr="form=${'user-form-' + user.id}" name="status">
+                        <option th:each="status : ${statuses}" th:value="${status}"
+                                th:text="${status}" th:selected="${status == user.status}"></option>
+                    </select>
+                </td>
+                <td>
+                    <form th:id="${'user-form-' + user.id}"
+                          th:action="@{/admin/dashboard/users/{id}(id=${user.id})}" method="post">
+                        <button type="submit">Enregistrer</button>
+                    </form>
+                </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>
