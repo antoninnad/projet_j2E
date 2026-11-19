@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header(activePage)" class="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+    <a href="#contenu"
+       class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground">
+        Aller au contenu principal
+    </a>
+
+    <div class="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <a th:href="@{/}" class="inline-flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-85">
+            <span class="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-bold tracking-tight text-primary-foreground"
+                  aria-hidden="true">L</span>
+            <span class="flex flex-col leading-none">
+                <span class="text-base font-semibold tracking-tight">Lagui</span>
+                <span class="text-[11px] text-muted-foreground">Espace collaboratif</span>
+            </span>
+        </a>
+
+        <div th:replace="~{fragments/nav :: nav(${activePage})}"></div>
+    </div>
+</header>
+</body>
+</html>

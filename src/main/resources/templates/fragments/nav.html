@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="nav(activePage)" aria-label="Navigation principale" class="flex flex-wrap items-center gap-1 sm:gap-2">
+    <a th:href="@{/}"
+       th:attr="aria-current=${activePage == 'accueil' ? 'page' : null}"
+       th:classappend="${activePage == 'accueil'} ? 'bg-secondary text-foreground font-medium' : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
+        Accueil
+    </a>
+
+    <a th:href="@{/dashboard}"
+       th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}"
+       th:classappend="${activePage == 'dashboard'} ? 'bg-secondary text-foreground font-medium' : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
+        Tableau de bord
+    </a>
+
+    <th:block th:unless="${isAuthenticated}">
+        <a th:href="@{/login}"
+           th:attr="aria-current=${activePage == 'login' ? 'page' : null}"
+           th:classappend="${activePage == 'login'} ? 'bg-secondary text-foreground font-medium' : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground'"
+           class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
+            Connexion
+        </a>
+
+        <a th:href="@{/register}"
+           th:attr="aria-current=${activePage == 'register' ? 'page' : null}"
+           th:classappend="${activePage == 'register'} ? 'ring-2 ring-ring ring-offset-2' : ''"
+           class="inline-flex items-center rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+            Inscription
+        </a>
+    </th:block>
+
+    <th:block th:if="${isAuthenticated}">
+        <span th:if="${sessionDisplayName != null and !sessionDisplayName.isEmpty()}"
+              class="hidden items-center rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium text-foreground sm:inline-flex"
+              th:text="${sessionDisplayName}">
+            Utilisateur
+        </span>
+
+        <form th:action="@{/logout}" method="post" class="inline">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit"
+                    class="inline-flex cursor-pointer items-center rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                Déconnexion
+            </button>
+        </form>
+    </th:block>
+</nav>
+</body>
+</html>

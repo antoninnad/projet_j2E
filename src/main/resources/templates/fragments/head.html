@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(pageTitle, pageDescription)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+          th:content="${pageDescription != null ? pageDescription : 'Lagui — Espace collaboratif sécurisé pour entreprises : documents, permissions, profils et chat privé.'}" />
+    <title th:text="${pageTitle != null ? pageTitle + ' — Lagui' : 'Lagui — Espace collaboratif'}">Lagui</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/ui/favicon.svg}" />
+
+    <!-- Mode production / Spring Boot seul : bundle Vite + Tailwind v4 compilé dans /static/ui/ -->
+    <th:block th:unless="${useViteDevServer}">
+        <link rel="stylesheet" th:href="@{/ui/app.css}" />
+        <script type="module" th:src="@{/ui/app.js}" defer></script>
+    </th:block>
+
+    <!-- Mode développement optionnel avec serveur Vite HMR (app.frontend.dev-server-url=http://localhost:5173) -->
+    <th:block th:if="${useViteDevServer}">
+        <script type="module" th:src="${frontendDevServerUrl + '/@vite/client'}"></script>
+        <script type="module" th:src="${frontendDevServerUrl + '/src/main.tsx'}"></script>
+    </th:block>
+</head>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Accueil', 'Espace collaboratif sécurisé par entreprise pour gérer vos documents, permissions, profils et échanges.')}"></head>
+<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<header th:replace="~{fragments/header :: header('accueil')}"></header>
+
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
+    <div class="mb-6">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+    </div>
+
+    <section class="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-10">
+        <div class="max-w-3xl space-y-5">
+            <span class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/70 px-3 py-1 text-xs font-medium text-foreground">
+                <span class="size-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+                Espace collaboratif multi-entreprises
+            </span>
+
+            <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
+                Partagez vos documents et collaborez dans un espace strictement cloisonné par entreprise.
+            </h1>
+
+            <p class="text-base leading-relaxed text-muted-foreground">
+                Lagui centralise les dossiers par département, applique vos niveaux d'accès côté serveur,
+                met à disposition l'annuaire interne de vos collègues et intègre un chat privé en temps réel.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+                <th:block th:unless="${isAuthenticated}">
+                    <a th:href="@{/login}"
+                       class="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+                        Se connecter
+                    </a>
+                    <a th:href="@{/register}"
+                       class="inline-flex items-center justify-center rounded-md border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
+                        Demander un compte
+                    </a>
+                </th:block>
+
+                <th:block th:if="${isAuthenticated}">
+                    <a th:href="@{/dashboard}"
+                       class="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+                        Ouvrir mon tableau de bord
+                    </a>
+                </th:block>
+            </div>
+        </div>
+    </section>
+
+    <section aria-labelledby="fonctionnalites-titre" class="mt-10">
+        <h2 id="fonctionnalites-titre" class="text-lg font-semibold tracking-tight">
+            Ce que propose votre espace
+        </h2>
+
+        <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-xl border border-border bg-background p-5 shadow-xs">
+                <h3 class="text-sm font-semibold">Isolation par entreprise</h3>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Chaque compte appartient à une seule entreprise et requiert l'approbation de son administrateur.
+                </p>
+            </article>
+
+            <article class="rounded-xl border border-border bg-background p-5 shadow-xs">
+                <h3 class="text-sm font-semibold">Départements et seuils</h3>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Les droits de lecture, modification, suppression et partage dépendent du niveau d'accès au département.
+                </p>
+            </article>
+
+            <article class="rounded-xl border border-border bg-background p-5 shadow-xs">
+                <h3 class="text-sm font-semibold">Explorateur &amp; éditeur</h3>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Naviguez dans l'arborescence, importez vos fichiers, consultez et éditez avec protection contre les conflits.
+                </p>
+            </article>
+
+            <article class="rounded-xl border border-border bg-background p-5 shadow-xs">
+                <h3 class="text-sm font-semibold">Annuaire &amp; chat privé</h3>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Retrouvez vos collègues actifs et échangez dans des conversations privées strictement réservées aux participants.
+                </p>
+            </article>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
