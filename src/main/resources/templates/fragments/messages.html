@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="messages" class="space-y-3" aria-live="polite">
+    <!-- Messages flash issus des contrôleurs Spring MVC -->
+    <div th:if="${success != null}" role="status"
+         class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p th:text="${success}">Action effectuée avec succès.</p>
+    </div>
+
+    <div th:if="${info != null}" role="status"
+         class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+        <p th:text="${info}">Information.</p>
+    </div>
+
+    <div th:if="${warning != null}" role="alert"
+         class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p th:text="${warning}">Attention.</p>
+    </div>
+
+    <div th:if="${error != null}" role="alert"
+         class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <p th:text="${error}">Une erreur est survenue.</p>
+    </div>
+
+    <!-- Messages standardisés issus des paramètres de redirection -->
+    <div th:if="${param.registered != null and success == null}" role="status"
+         class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p>Votre demande d'inscription a bien été enregistrée. Vous pourrez vous connecter après approbation par l'administrateur de votre entreprise.</p>
+    </div>
+
+    <div th:if="${param.logout != null and info == null}" role="status"
+         class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+        <p>Vous avez été déconnecté avec succès.</p>
+    </div>
+
+    <div th:if="${param.required != null and warning == null}" role="alert"
+         class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p>Veuillez vous connecter pour accéder à votre tableau de bord.</p>
+    </div>
+
+    <div th:if="${param.expired != null and warning == null}" role="alert"
+         class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p>Votre session a expiré. Merci de vous reconnecter pour continuer.</p>
+    </div>
+
+    <div th:if="${param.error != null and error == null}" role="alert"
+         class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <p>Identifiants invalides ou compte en attente de validation.</p>
+    </div>
+</div>
+</body>
+</html>

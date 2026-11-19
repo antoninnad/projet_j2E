@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer th:fragment="footer" class="mt-auto border-t border-border bg-background">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p>
+            <span class="font-medium text-foreground">Lagui</span> — Espace collaboratif cloisonné par entreprise.
+        </p>
+        <div class="flex flex-wrap items-center gap-4">
+            <a th:href="@{/}" class="transition-colors hover:text-foreground">Accueil</a>
+            <a th:href="@{/dashboard}" class="transition-colors hover:text-foreground">Tableau de bord</a>
+            <a th:href="@{/login}" th:unless="${isAuthenticated}" class="transition-colors hover:text-foreground">Connexion</a>
+            <a th:href="@{/register}" th:unless="${isAuthenticated}" class="transition-colors hover:text-foreground">Inscription</a>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

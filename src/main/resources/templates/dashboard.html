@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Tableau de bord', 'Accédez à vos départements, documents autorisés, annuaire et chat privé.')}"></head>
+<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<header th:replace="~{fragments/header :: header('dashboard')}"></header>
+
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+    <div class="mb-5">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+    </div>
+
+    <!-- Synthèse serveur Thymeleaf des ressources autorisées (alimentée dès T18) -->
+    <section aria-labelledby="synthese-dashboard" class="mb-6 grid gap-4 md:grid-cols-2">
+        <div class="rounded-xl border border-border bg-background p-5 shadow-xs">
+            <div class="flex items-center justify-between gap-2">
+                <h1 id="synthese-dashboard" class="text-base font-semibold tracking-tight">
+                    Mes départements accessibles
+                </h1>
+                <span class="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                      th:text="${#lists.size(departments)}">0</span>
+            </div>
+
+            <ul th:if="${!#lists.isEmpty(departments)}" class="mt-3 flex flex-wrap gap-2">
+                <li th:each="dept : ${departments}"
+                    class="rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-foreground"
+                    th:text="${dept}">Département</li>
+            </ul>
+
+            <p th:if="${#lists.isEmpty(departments)}" class="mt-2.5 text-xs text-muted-foreground">
+                Aucun département affecté pour le moment. Les départements autorisés apparaîtront ici dès leur chargement côté serveur.
+            </p>
+        </div>
+
+        <div class="rounded-xl border border-border bg-background p-5 shadow-xs">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="text-base font-semibold tracking-tight">
+                    Documents récents autorisés
+                </h2>
+                <span class="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                      th:text="${#lists.size(recentDocuments)}">0</span>
+            </div>
+
+            <ul th:if="${!#lists.isEmpty(recentDocuments)}" class="mt-3 space-y-1.5 text-xs">
+                <li th:each="doc : ${recentDocuments}"
+                    class="truncate rounded-md bg-secondary/40 px-3 py-1.5 text-foreground"
+                    th:text="${doc}">Document</li>
+            </ul>
+
+            <p th:if="${#lists.isEmpty(recentDocuments)}" class="mt-2.5 text-xs text-muted-foreground">
+                Utilisez l'espace interactif ci-dessous pour parcourir, consulter et modifier vos dossiers et fichiers.
+            </p>
+        </div>
+    </section>
+
+    <!-- Point de montage de l'espace interactif React / TypeScript -->
+    <section aria-label="Espace de travail interactif">
+        <div id="workspace-root"
+             data-react-mount="workspace"
+             th:attr="data-base-url=@{/},data-initial-tab=${activeTab},data-user-name=${sessionDisplayName},data-is-admin=${isAdmin}">
+            <div class="rounded-xl border border-border bg-background p-8 text-center text-sm text-muted-foreground shadow-xs">
+                Chargement de l'espace de travail interactif…
+            </div>
+        </div>
+        <noscript>
+            <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                JavaScript est nécessaire pour utiliser l'explorateur interactif, l'éditeur et le chat en temps réel.
+            </div>
+        </noscript>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

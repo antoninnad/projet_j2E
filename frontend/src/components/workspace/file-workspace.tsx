@@ -10,7 +10,7 @@ import { ContributorAvatars } from "./contributor-avatars"
 import { FileEditor } from "./file-editor"
 import { FileExplorer, PAGE_SIZE } from "./file-explorer"
 
-export function FileWorkspace() {
+export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
   const [entries, setEntries] = useState(initialEntries)
   const [selectedId, setSelectedId] = useState("guide")
   const [folderId, setFolderId] = useState<string | null>(null)
@@ -67,8 +67,14 @@ export function FileWorkspace() {
     setEntries(current => current.map(entry => entry.id === selectedId ? { ...entry, favorite: !entry.favorite } : entry))
   }
 
+  const Wrapper = embedded ? "div" : "main"
+
   return (
-    <main id="contenu" tabIndex={-1} className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9">
+    <Wrapper
+      id={embedded ? undefined : "contenu"}
+      tabIndex={embedded ? undefined : -1}
+      className={embedded ? "w-full" : "mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9"}
+    >
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground"><FolderOpen className="size-3.5" aria-hidden="true" /><span>Entreprise</span><ChevronRight className="size-3" aria-hidden="true" /><span>Documents</span></div>
@@ -105,6 +111,6 @@ export function FileWorkspace() {
         </ResizablePanelGroup>
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><Check className="size-3.5" aria-hidden="true" />{dirtyIds.length ? `${dirtyIds.length} brouillon${dirtyIds.length > 1 ? "s" : ""} conservé${dirtyIds.length > 1 ? "s" : ""} pendant cette session` : "Vos documents sont prêts à être consultés"}</span><span>Glissez la séparation pour ajuster votre espace</span></div>
-    </main>
+    </Wrapper>
   )
 }

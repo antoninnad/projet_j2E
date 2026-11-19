@@ -1,5 +1,27 @@
-import { ChevronDown, FilePlus2, FolderPlus, Home, Plus, Upload, UserRound } from "lucide-react"
+import {
+  ChevronDown,
+  FilePlus2,
+  FolderOpen,
+  FolderPlus,
+  Home,
+  LogIn,
+  Plus,
+  ShieldCheck,
+  Upload,
+  UserPlus,
+  UserRound,
+} from "lucide-react"
+import { MVC_ROUTES, resolveAppPath } from "@/app/routes"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -8,84 +30,48 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
-
-export function DropdownMenuUser() {
+export function DropdownMenuUser({ baseUrl = "/" }: { baseUrl?: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="group">
           <UserRound className="size-4" aria-hidden="true" />
           Mon compte
-          <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
+          <ChevronDown
+            className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+            aria-hidden="true"
+          />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-72 max-w-[calc(100vw-2rem)]" align="start">
+      <DropdownMenuContent className="w-64 max-w-[calc(100vw-2rem)]" align="end">
+        <DropdownMenuLabel>Accès rapides</DropdownMenuLabel>
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="flex items-center gap-3 py-3">
-            <UserRound className="size-5 shrink-0" aria-hidden="true" />
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="break-words">@antonin.nadaud</span>
-              <span className="text-sm font-normal text-blue-700">[company name]</span>
-            </span>
-          </DropdownMenuLabel>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          <DropdownMenuItem asChild>
+            <a href={resolveAppPath(baseUrl, MVC_ROUTES.dashboard)}>
+              <FolderOpen className="size-4" aria-hidden="true" />
+              Tableau de bord
+            </a>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          <DropdownMenuItem asChild>
+            <a href={`${resolveAppPath(baseUrl, MVC_ROUTES.dashboard)}?tab=admin`}>
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Administration
+            </a>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem>Email</DropdownMenuItem>
-                <DropdownMenuItem>Message</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>More...</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
-          <DropdownMenuItem>
-            New Team
-            <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
+          <DropdownMenuItem asChild>
+            <a href={resolveAppPath(baseUrl, MVC_ROUTES.login)}>
+              <LogIn className="size-4" aria-hidden="true" />
+              Connexion
+            </a>
           </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>GitHub</DropdownMenuItem>
-          <DropdownMenuItem>Support</DropdownMenuItem>
-          <DropdownMenuItem disabled>API</DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Log out
-            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          <DropdownMenuItem asChild>
+            <a href={resolveAppPath(baseUrl, MVC_ROUTES.register)}>
+              <UserPlus className="size-4" aria-hidden="true" />
+              Inscription
+            </a>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
@@ -93,68 +79,65 @@ export function DropdownMenuUser() {
   )
 }
 
-
 export function DropdownMenuFile() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="icon" aria-label="Ajouter" title="Ajouter">
+        <Button type="button" variant="outline" size="icon" aria-label="Créer ou importer" title="Créer ou importer">
           <Plus className="size-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48" align="end">
-        <DropdownMenuLabel>Create</DropdownMenuLabel>
+      <DropdownMenuContent className="w-52" align="end">
+        <DropdownMenuLabel>Actions documents</DropdownMenuLabel>
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled>
             <FilePlus2 aria-hidden="true" />
-            New File
+            Nouveau fichier (T24)
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled>
             <FolderPlus aria-hidden="true" />
-            New Folder
+            Nouveau dossier (T24)
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem disabled>
           <Upload aria-hidden="true" />
-          Upload File
+          Importer un fichier (T24)
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
 }
 
-export function SiteMenu({ baseUrl = "/", activePage = "accueil" }: {
+export function SiteMenu({
+  baseUrl = "/",
+  activePage = "dashboard",
+}: {
   baseUrl?: string
   activePage?: string
 }) {
-
-  //menu
-
   return (
     <NavigationMenu aria-label="Menu principal" viewport={false}>
-
       <NavigationMenuList>
-
-
         <NavigationMenuItem>
-          <NavigationMenuLink asChild active={activePage === "accueil"} className={navigationMenuTriggerStyle()}>
-            <a href={baseUrl} aria-label="Accueil" title="Accueil">
+          <NavigationMenuLink
+            asChild
+            active={activePage === "accueil"}
+            className={navigationMenuTriggerStyle()}
+          >
+            <a href={resolveAppPath(baseUrl, MVC_ROUTES.home)} aria-label="Accueil" title="Accueil">
               <Home className="size-4" aria-hidden="true" />
             </a>
           </NavigationMenuLink>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <DropdownMenuUser />
+          <DropdownMenuUser baseUrl={baseUrl} />
         </NavigationMenuItem>
 
         <NavigationMenuItem>
           <DropdownMenuFile />
         </NavigationMenuItem>
-
-
-
       </NavigationMenuList>
     </NavigationMenu>
   )

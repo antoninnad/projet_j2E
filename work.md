@@ -6,7 +6,34 @@ Créer un espace de travail permettant aux salariés d’une entreprise de parta
 
 La première livraison est une **démonstration complète avec plusieurs entreprises isolées**. Un compte appartient à une seule entreprise. Les documents, profils et conversations d’une entreprise ne sont jamais accessibles à une autre entreprise.
 
-Le projet repose sur React/TypeScript pour le frontend et Spring Boot/Java pour le backend. Les fonctionnalités doivent être branchées sur les API réelles et conserver leurs données après un redémarrage.
+Le projet repose sur Spring Boot/Java, avec des pages et fragments Thymeleaf pour le socle demandé en cours et React/TypeScript pour les interfaces métier interactives. Les fonctionnalités doivent utiliser les services réels du backend et conserver leurs données après un redémarrage.
+
+### 1.1 Exigences techniques du cours à intégrer
+
+Ces exigences font partie de la première livraison. Le périmètre métier reste l’espace collaboratif décrit dans ce document. Les entités du sujet servent d’exemples pour les relations : le modèle doit démontrer `@OneToOne` (`User` / `UserProfile`), `@OneToMany` (enfants d’un `Folder` ou documents possédés par un `User`) et `@ManyToMany` (contributeurs d’un `Node`).
+
+**Pages et fragments Thymeleaf**
+
+- Spring MVC sert `GET /` avec `index.html`, `GET /register` avec `register.html`, `GET /login` avec `login.html` et `GET /dashboard` avec `dashboard.html`.
+- Les templates utilisent réellement des fragments Thymeleaf communs, par exemple pour l’en-tête, la navigation et les messages, avec `th:fragment` et `th:replace` ou `th:insert`.
+- Le dashboard exige une session authentifiée et présente les documents et départements accessibles à l’utilisateur, selon l’adaptation métier retenue. Un visiteur est redirigé vers `/login`.
+- React complète ces pages pour l’explorateur, l’éditeur ou le chat. Le routage frontend et le déploiement préservent les routes MVC ci-dessus et leur rendu Thymeleaf.
+
+**Base de données**
+
+- Conserver un profil Spring `h2`, utilisable pour le cours et la recette, avec une base H2 sur fichier afin de vérifier la persistance après redémarrage.
+- Prévoir un profil Spring `postgres` pour PostgreSQL et le déploiement. PostgreSQL ne remplace pas le profil H2.
+- Documenter l’activation des deux profils ; vérifier le schéma et les migrations sur les deux moteurs.
+
+**Inscription et authentification**
+
+- Créer `RegisterDTO` avec les champs d’inscription, dont `password` et `confirmPassword`, et `LoginDTO` avec `email` et `password`.
+- Ajouter `UserRepository.findByEmail` ; contrôler les doublons d’email et d’identifiant à l’inscription.
+- Dans `UserService.register`, vérifier la validation et la concordance des mots de passe, copier tous les champs attendus, puis hacher le mot de passe avec le bean `PasswordEncoder` BCrypt avant l’enregistrement. Créer et associer le `UserProfile` de chaque nouvel utilisateur.
+- Dans `UserService.findUser`, rechercher par email et vérifier le mot de passe avec `PasswordEncoder.matches` ; refuser les comptes en attente ou désactivés.
+- Créer `PublicUser`, une représentation de l’utilisateur sans mot de passe, hash ni secret de sécurité. Après connexion, renouveler l’identifiant de session et placer un `PublicUser` dans la session serveur ; revérifier en base les droits et l’état du compte pour les accès privés.
+- Implémenter `POST /register` et `POST /login` pour les formulaires Thymeleaf, avec validation, erreurs affichées et redirections adaptées, puis `POST /logout` pour invalider la session. Protéger les formulaires par CSRF.
+- Si des endpoints JSON `/api/...` sont utilisés par React, ils partagent les mêmes DTO, services et session ; ils ne remplacent pas les routes MVC demandées. Les contrôleurs de pages utilisent `@Controller`, les contrôleurs JSON `@RestController`.
 
 ## 2. Fonctionnalités attendues
 
@@ -107,24 +134,24 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 
 | ID | Fonctionnalité | Tâche concrète | Responsable | Priorité | État actuel | Dépend de | Résultat attendu |
 |---|---|---|---|---|---|---|---|
-| T01 | Contrats d’API | Documenter routes, DTO, pagination et erreurs dans OpenAPI ; faire relire par l’équipe | B1 | P0 | À faire | — | Contrats utilisables par les deux équipes |
-| T02 | Socle frontend | Unifier les pages de comptes et l’espace TypeScript dans un routeur et un style communs | F1 | P0 | Partiel | T01 | Une application avec des routes cohérentes |
+| T01 | Contrats et routes | Documenter routes MVC de la section 1.1, DTO, session et contrats JSON OpenAPI, pagination et erreurs ; faire relire par l’équipe | B1 | P0 | À faire | — | Contrats et parcours MVC/React utilisables par les deux équipes |
+| T02 | Socle frontend | Créer index.html, register.html, login.html, dashboard.html et les fragments Thymeleaf communs ; intégrer l’espace TypeScript avec un style et un routage cohérents | F1 | P0 | Terminé | T01 | Pages Thymeleaf avec fragments réutilisés et interfaces React intégrées |
 | T03 | Intégration frontend | Créer client API, types partagés, gestion des erreurs et réponses simulées | F2 | P0 | À faire | T01 | Appels homogènes et travail frontend indépendant |
-| T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions | B1 | P0 | Partiel | T01 | Relations et rattachements d’entreprise définis |
-| T05 | Modèle documents | Compléter Node/File avec Folder, parenté, seuil, version et entreprise ; fournir la création interne des racines | B2 | P0 | Partiel | T04 | Arborescence persistable et modèle relu avec B1 |
-| T06 | Base de données | Configurer PostgreSQL, migrations et environnements ; intégrer les tables de B2 | B1 | P0 | À faire | T04, T05 | Schéma reproductible et données persistantes |
+| T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions ; garantir User/UserProfile en OneToOne et coordonner les annotations OneToMany/ManyToMany avec T05 | B1 | P0 | Partiel | T01 | Relations du cours et rattachements d’entreprise définis |
+| T05 | Modèle documents | Compléter Node/File avec Folder, parenté, seuil, version et entreprise ; annoter les enfants de Folder en OneToMany et les contributeurs de Node en ManyToMany ; fournir la création interne des racines | B2 | P0 | Partiel | T04 | Arborescence persistable et modèle relu avec B1 |
+| T06 | Base de données | Conserver un profil h2 sur fichier et ajouter un profil postgres ; configurer migrations et environnements, intégrer les tables de B2 et documenter le lancement des deux profils | B1 | P0 | À faire | T04, T05 | Schéma reproductible et données persistantes sur H2 et PostgreSQL |
 | T07 | Isolation des comptes | Centraliser l’identité, l’entreprise courante et les restrictions des services comptes/profils | B1 | P0 | À faire | T06 | Identité fiable sans entreprise choisie librement par le client |
 | T08 | Isolation des ressources | Filtrer documents et stockage par entreprise ; fournir les contrôles réutilisés pour le chat | B2 | P0 | À faire | T05, T07 | Aucun accès par référence à une autre entreprise |
-| T09 | Intégration continue backend | Automatiser compilation, tests backend et migrations sur base de test | B1 | P0 | À faire | T06 | Échecs détectés avant intégration |
+| T09 | Intégration continue backend | Automatiser compilation, tests backend et validation du schéma/migrations sur H2 et PostgreSQL de test | B1 | P0 | À faire | T06 | Échecs détectés sur les deux moteurs avant intégration |
 | T10 | Intégration continue frontend | Automatiser types, build et contrôles frontend avec la version Node requise | F1 | P0 | À faire | T02, T03 | Frontend compilable après chaque intégration |
-| T11 | Sessions et sécurité | Compléter session courante/déconnexion, rotation de session, rôles, CSRF et cookies | B1 | P0 | Partiel | T07 | Accès privés centralisés et comptes inactifs exclus |
-| T12 | Entreprises et inscription | Créer entreprise/premier administrateur ; corriger inscription JSON, champs et doublons | B1 | P0 | Partiel | T11 | Compte créé dans la bonne entreprise en attente d’approbation |
-| T13 | Écrans d’accès | Brancher création d’entreprise, inscription, connexion et déconnexion ; protéger les routes | F1 | P0 | Partiel | T02, T03, T11, T12 | Parcours d’accès avec erreurs et expiration de session |
+| T11 | Sessions et sécurité | Créer LoginDTO, findByEmail, UserService.findUser et PublicUser en session ; ajouter POST /login et POST /logout, session courante, rotation de session, rôles, CSRF et cookies | B1 | P0 | Partiel | T07 | Connexion par email, session sans secrets et comptes inactifs exclus |
+| T12 | Entreprises et inscription | Créer entreprise/premier administrateur ; créer RegisterDTO et POST /register ; vérifier les mots de passe et hacher via BCrypt dans UserService, persister tous les champs et le profil ; aligner l’API JSON et gérer les doublons | B1 | P0 | Partiel | T11 | Compte et profil créés dans la bonne entreprise en attente d’approbation |
+| T13 | Écrans d’accès | Avec B1, exposer GET /, /register, /login et /dashboard ; brancher formulaires Thymeleaf et déconnexion avec CSRF, erreurs et redirections ; intégrer création d’entreprise et React ; protéger le dashboard | F1 | P0 | Partiel | T02, T03, T11, T12 | Parcours MVC avec fragments, session et expiration ; dashboard alimenté selon les droits dès T18 |
 | T14 | Administration des comptes | Compléter approbation/refus/désactivation dans l’entreprise administrée | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
 | T15 | Départements | Développer gestion des départements, membres et niveaux ; utiliser la création interne des racines fournie en T05 | B1 | P0 | À faire | T08, T11 | Adhésions et dossiers racines cohérents |
 | T16 | Permissions | Implémenter le service central selon la matrice ; exposer les actions autorisées | B1 | P0 | À faire | T15 | Décisions de droits réutilisables par les services |
 | T17 | Administration frontend | Brancher demandes de comptes, désactivation, départements et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles |
-| T18 | Exploration backend | Créer racines et API des enfants visibles, pagination et métadonnées | B2 | P1 | À faire | T08, T16 | Arborescence limitée aux éléments autorisés |
+| T18 | Exploration backend | Créer racines et API des enfants visibles, pagination et métadonnées ; fournir à F1/B1 les services pour alimenter le dashboard Thymeleaf | B2 | P1 | À faire | T08, T16 | Arborescence et dashboard limités aux éléments autorisés |
 | T19 | Exploration frontend | Brancher navigation, fil d’Ariane et pagination ; afficher les actions permises | F2 | P1 | Partiel | T03, T18 | Explorateur connecté à l’API |
 | T20 | Dossiers backend | Créer/renommer/déplacer/supprimer ; contrôler cycles, seuils et sous-arbres | B2 | P1 | À faire | T18 | Opérations cohérentes et protégées |
 | T21 | Stockage et import | Développer upload multipart, limites et stockage privé hors ressources publiques | B2 | P1 | À faire | T18 | Fichier stocké avec ses métadonnées et sans chemin public |
@@ -146,12 +173,12 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T37 | Activité frontend | Afficher opérations récentes et auteurs des modifications | F1 | P1 | À faire | T28, T36 | Activité réelle visible selon les accès |
 | T38 | Qualité écrans F1 | Traiter chargements, erreurs, états vides, mobile, clavier et libellés français | F1 | P1 | Partiel | T17, T28, T30, T37 | Parcours comptes/administration/profils accessibles |
 | T39 | Qualité écrans F2 | Traiter les mêmes états pour explorateur, éditeur, upload et chat | F2 | P1 | Partiel | T26, T32, T35 | Parcours documents/chat accessibles |
-| T40 | Tests comptes et permissions | Tester sessions, comptes inactifs, isolation, rôles et chaque case de la matrice | B1 | P0 | À faire | T11, T16 | Refus d’accès démontrés par tests automatisés |
+| T40 | Tests comptes et permissions | Tester DTO, doublons, concordance/hash des mots de passe dans le service, findByEmail/findUser, PublicUser en session, routes MVC, CSRF, déconnexion, comptes inactifs, isolation, rôles et matrice | B1 | P0 | À faire | T11, T12, T13, T16 | Parcours du cours et refus d’accès démontrés par tests automatisés |
 | T41 | Tests documents et chat | Tester uploads, cycles, sous-arbres, versions, persistance et accès aux conversations | B2 | P0 | À faire | T23, T34, T36 | Règles métier et isolation REST/WebSocket vérifiées |
-| T42 | Tests frontend F1 | Automatiser inscription/approbation/connexion, profil, partage et expiration de session | F1 | P1 | À faire | T38, T40 | Parcours F1 vérifiés et contrôle mobile réalisé |
+| T42 | Tests frontend F1 | Automatiser pages/fragments Thymeleaf, inscription/approbation/connexion par email, dashboard connecté aux ressources autorisées, déconnexion, profil, partage et expiration de session | F1 | P1 | À faire | T38, T40 | Parcours MVC/React F1 vérifiés et contrôle mobile réalisé |
 | T43 | Tests frontend F2 | Automatiser import/édition/conflit, favoris et conversation entre deux comptes | F2 | P1 | À faire | T39, T41 | Parcours F2 vérifiés et contrôle mobile réalisé |
 | T44 | Déploiement backend | Préparer Docker Compose, PostgreSQL, volumes, secrets, HTTPS et passage WebSocket | B1 | P1 | À faire | T09, T40, T41 | Backend et stockage déployables avec données durables |
-| T45 | Déploiement frontend | Servir le build avec routage SPA, API et WebSocket ; vérifier le point d’entrée commun | F1 | P1 | À faire | T10, T42, T43, T44 | Application utilisable sur l’URL de démo |
+| T45 | Déploiement frontend | Servir les assets React, l’API et le WebSocket en préservant le rendu Thymeleaf des routes /, /register, /login et /dashboard ; vérifier le point d’entrée commun | F1 | P1 | À faire | T10, T42, T43, T44 | Application MVC/React utilisable sur l’URL de démo |
 | T46 | Données et sauvegarde | Préparer deux entreprises, comptes et documents ; documenter et vérifier restauration base/fichiers | B2 | P1 | À faire | T36, T44 | Démo reproductible et restauration contrôlée |
 | T47 | Documentation et recette | Mettre à jour guides installation/utilisation et recueillir la validation des quatre personnes | F1 | P1 | À faire | T45, T46 | Consignes vérifiées et checklist de livraison complétée |
 | T48 | Démonstration | Préparer le scénario complet, exécuter la recette sur l’hébergement et suivre les corrections | F2 | P1 | À faire | T45, T46 | Parcours complet présenté sans données simulées |
@@ -164,8 +191,8 @@ Aucune échéance n’est fixée : les phases décrivent l’ordre et les dépen
 
 | Phase | F1 — Frontend 1 | F2 — Frontend 2 | B1 — Backend 1 | B2 — Backend 2 | Condition de passage |
 |---|---|---|---|---|---|
-| **1 — Fondations** | Structure et CI frontend : T02, T10 | Client API, types et simulations : T03 | Contrats, modèle comptes, base, contexte entreprise et CI : T01, T04, T06, T07, T09 | Modèle documents et isolation : T05, T08 | Contrats relus, modèle partagé et base persistante ; application frontend compilable |
-| **2 — Comptes et droits** | Accès et administration : T13, T17 | Début de l’explorateur T19 sur simulations puis API | Sessions, inscriptions, approbation, départements et permissions : T11, T12, T14, T15, T16 ; premiers tests T40 | Exploration et racines : T18, puis début des dossiers T20 | Inscription → approbation → connexion fonctionnelles ; droits et isolation vérifiés |
+| **1 — Fondations** | Templates/fragments Thymeleaf, structure React et CI frontend : T02, T10 | Client API, types et simulations : T03 | Contrats, modèle comptes, profils H2/PostgreSQL, contexte entreprise et CI : T01, T04, T06, T07, T09 | Modèle documents et isolation : T05, T08 | Contrats relus, trois types de relations modélisés et deux profils BDD opérationnels ; frontend compilable |
+| **2 — Comptes et droits** | Routes/pages MVC, formulaires et administration : T13, T17 | Début de l’explorateur T19 sur simulations puis API | DTO, services d’inscription/connexion, PublicUser en session, approbation, départements et permissions : T11, T12, T14, T15, T16 ; premiers tests T40 | Exploration et racines : T18, puis début des dossiers T20 | Inscription → approbation → connexion par email → dashboard → déconnexion fonctionnels ; droits et isolation vérifiés |
 | **3 — Documents** | Panneau de partage : T28 ; début profils T30 dès contrat disponible | Explorateur et opérations documents : fin T19, T24, T25, T26 | Partage T27 et profils/annuaire T29 ; enrichissement T40 | Fin dossiers T20, import/lecture/écriture T21–T23 ; début tests T41 | Importer, consulter, modifier, partager, déplacer et supprimer selon les droits ; conflit d’édition traité |
 | **4 — Collaboration** | Fin profils T30, activité T37 et qualité T38 | Recherche/favoris T32, chat T35 et qualité T39 | Finalisation sécurité T40 ; assistance d’intégration | Recherche/favoris T31, chat T33–T34, activité T36 ; enrichissement T41 | Profils, favoris, activité et chat fonctionnent avec les données réelles |
 | **5 — Recette et livraison** | Tests T42, déploiement frontend T45 et documentation T47 | Tests T43 et démonstration T48 | Finalisation T40, déploiement backend T44 | Finalisation T41, données et restauration T46 | Checklist validée sur l’hébergement par les quatre personnes |
@@ -184,6 +211,12 @@ Aucune échéance n’est fixée : les phases décrivent l’ordre et les dépen
 Une fonctionnalité est terminée lorsque son interface utilise l’API réelle, que ses données sont persistées, que ses droits sont contrôlés côté serveur et que ses cas d’erreur ont été vérifiés.
 
 - [ ] Les quatre personnes peuvent lancer le projet depuis les instructions du dépôt avec les mêmes versions d’outils.
+- [ ] GET /, /register et /login rendent les templates Thymeleaf attendus ; les pages utilisent réellement les fragments communs.
+- [ ] GET /dashboard redirige un visiteur vers /login et présente à un membre connecté uniquement ses ressources autorisées ; React et le déploiement préservent ces routes MVC.
+- [ ] Les profils h2 (base sur fichier) et postgres sont documentés et fonctionnels ; schéma/migrations et persistance après redémarrage sont vérifiés sur les deux moteurs.
+- [ ] RegisterDTO et LoginDTO sont utilisés ; findByEmail et UserService.findUser assurent la connexion par email ; UserService vérifie les mots de passe et utilise PasswordEncoder BCrypt pour le hash et la comparaison.
+- [ ] POST /register et POST /login traitent les formulaires avec validation, CSRF, erreurs et redirections ; la session contient un PublicUser sans secrets et POST /logout l’invalide.
+- [ ] Chaque User possède un UserProfile associé ; les relations @OneToOne, @OneToMany et @ManyToMany sont présentes et leur persistance est vérifiée.
 - [ ] Une entreprise et son administrateur peuvent être créés sans donner accès aux données d’une autre entreprise.
 - [ ] Une inscription conserve tous les champs ; l’approbation est nécessaire pour accéder à l’espace.
 - [ ] La connexion, la restauration de session, la déconnexion et l’expiration fonctionnent ; un compte désactivé perd son accès.

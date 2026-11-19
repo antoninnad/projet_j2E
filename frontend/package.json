@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
     "watch": "vite build --watch",
     "dev": "vite"
