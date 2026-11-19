@@ -49,4 +49,32 @@ public class Company {
         this.name = name;
         this.code = code;
     }
+
+    public void addUser(User user) {
+        if (!users.contains(user)) {
+            users.add(user);
+        }
+        user.setCompany(this);
+    }
+
+    public void removeUser(User user) {
+        users.remove(user);
+        if (user.getCompany() == this) {
+            user.setCompany(null);
+        }
+    }
+
+    public void addDepartment(Department department) {
+        if (!departments.contains(department)) {
+            departments.add(department);
+        }
+        department.setCompany(this);
+    }
+
+    public void removeDepartment(Department department) {
+        departments.remove(department);
+        if (department.getCompany() == this) {
+            department.setCompany(null);
+        }
+    }
 }

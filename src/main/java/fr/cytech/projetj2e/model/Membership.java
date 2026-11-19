@@ -47,4 +47,20 @@ public class Membership {
         this.department = department;
         this.accessLevel = accessLevel;
     }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
 }

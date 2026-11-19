@@ -110,7 +110,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T01 | Contrats d’API | Documenter routes, DTO, pagination et erreurs dans OpenAPI ; faire relire par l’équipe | B1 | P0 | À vérifier | — | Contrats utilisables par les deux équipes |
 | T02 | Socle frontend | Unifier les pages de comptes et l’espace TypeScript dans un routeur et un style communs | F1 | P0 | Partiel | T01 | Une application avec des routes cohérentes |
 | T03 | Intégration frontend | Créer client API, types partagés, gestion des erreurs et réponses simulées | F2 | P0 | À faire | T01 | Appels homogènes et travail frontend indépendant |
-| T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions | B1 | P0 | Partiel | T01 | Relations et rattachements d’entreprise définis |
+| T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions | B1 | P0 | À vérifier | T01 | Relations et rattachements d’entreprise définis |
 | T05 | Modèle documents | Compléter Node/File avec Folder, parenté, seuil, version et entreprise ; fournir la création interne des racines | B2 | P0 | Partiel | T04 | Arborescence persistable et modèle relu avec B1 |
 | T06 | Base de données | Configurer PostgreSQL, migrations et environnements ; intégrer les tables de B2 | B1 | P0 | À faire | T04, T05 | Schéma reproductible et données persistantes |
 | T07 | Isolation des comptes | Centraliser l’identité, l’entreprise courante et les restrictions des services comptes/profils | B1 | P0 | À faire | T06 | Identité fiable sans entreprise choisie librement par le client |

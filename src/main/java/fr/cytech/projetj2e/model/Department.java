@@ -51,4 +51,18 @@ public class Department {
         this.name = name;
         this.company = company;
     }
+
+    public void addMembership(Membership membership) {
+        if (!memberships.contains(membership)) {
+            memberships.add(membership);
+        }
+        membership.setDepartment(this);
+    }
+
+    public void removeMembership(Membership membership) {
+        memberships.remove(membership);
+        if (membership.getDepartment() == this) {
+            membership.setDepartment(null);
+        }
+    }
 }
