@@ -94,9 +94,14 @@ frontend/
 ## 6. Commandes exactes de vérification
 
 ```bash
-# Frontend (Node 22 requis)
+# Frontend — pipeline CI complet T10 (Node 22 requis : check:node + lint + typecheck + test + build + check:bundle)
 export PATH="$HOME/.nvm/versions/node/v22.19.0/bin:$PATH"
-cd frontend && npm run typecheck && npm run build
+cd frontend && npm run ci
+
+# Tests frontend seuls ou avec couverture V8 (Vitest + Testing Library + jsdom)
+cd frontend && npm run test
+cd frontend && npm run test:coverage
+# Astuce jsdom 29 + React 19 : utiliser fireEvent.change(...) pour les inputs/textarea contrôlés
 
 # Backend + tests MVC
 ./mvnw test
@@ -117,7 +122,7 @@ cd frontend && npm run typecheck && npm run build
 - **Ne jamais** exposer de mot de passe, hash ou secret dans `FrontendModelAdvice`, les templates ou `data-*`.
 - **Prochains branchements** :
   - **T03 (F2)** : créer client API + types partagés dans `frontend/src/lib/` / `frontend/src/types/` et brancher `PendingRegistrationsPanel` / `FileWorkspace`.
-  - **T10 (F1)** : ajouter workflow CI exécutant `npm ci && npm run typecheck && npm run build` sous Node 22.
+  - **T10 (F1)** : CI frontend en place (`.github/workflows/frontend-ci.yml`, `npm run ci`, Vitest + ESLint TS + `scripts/{check-node,verify-bundle}.mjs`). Sera définitivement validée après intégration de T03.
   - **T11–T13 (B1/F1)** : brancher `POST /login`, `POST /register`, `POST /logout`, CSRF et `PublicUser` en session ; les champs des formulaires `login.html` / `register.html` et `th:errors` sont déjà alignés.
   - **T17 (F1)** : enrichir `frontend/src/components/admin/pending-registrations-panel.tsx` (désactivation, départements, niveaux).
   - **T18 (B2)** : alimenter les attributs modèle `departments` et `recentDocuments` de `HomeController#dashboard`.
