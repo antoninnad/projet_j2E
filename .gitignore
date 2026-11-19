@@ -29,5 +29,7 @@ target/
 /projet_pau_fc/
 
 
-# Dépendances du frontend
+# Dépendances et rapports générés du frontend
 frontend/node_modules/
+frontend/coverage/
+frontend/dist/

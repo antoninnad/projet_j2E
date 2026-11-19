@@ -1,0 +1,54 @@
+name: Frontend CI (T10)
+
+# Déclencheurs automatiques désactivés temporairement (décommenter push / pull_request pour réactiver).
+on:
+  # push:
+  #   branches: [dev, main, "feature/**"]
+  #   paths:
+  #     - "frontend/**"
+  #     - "src/main/resources/templates/**"
+  #     - ".github/workflows/frontend-ci.yml"
+  # pull_request:
+  #   branches: [dev, main]
+  #   paths:
+  #     - "frontend/**"
+  #     - "src/main/resources/templates/**"
+  #     - ".github/workflows/frontend-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  frontend-checks:
+    name: Lint, Types, Tests & Build (Node 22)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "frontend/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+
+      - name: Verify Node.js version
+        run: npm run check:node
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint (TypeScript / TSX)
+        run: npm run lint
+
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Unit & component tests (Vitest)
+        run: npm run test:coverage
+
+      - name: Build production bundle & verify Thymeleaf CSS scan
+        run: npm run build && npm run check:bundle

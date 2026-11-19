@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Check, RefreshCw, ShieldCheck, UserX } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -19,38 +19,65 @@ function formatDisplayName(user: PendingUser): string {
   return fullName || user.username || user.email
 }
 
+async function fetchPendingUsers(signal?: AbortSignal): Promise<PendingUser[]> {
+  const response = await fetch(`${ADMIN_USERS_API}/pending`, {
+    credentials: "include",
+    signal,
+  })
+  if (response.status === 401 || response.status === 403) {
+    throw new Error("Accès administrateur requis pour consulter les demandes d'inscription.")
+  }
+  if (!response.ok) {
+    throw new Error(`Le serveur a répondu avec le statut ${response.status}.`)
+  }
+  const data: PendingUser[] = await response.json()
+  return Array.isArray(data) ? data : []
+}
+
 export function PendingRegistrationsPanel() {
   const [users, setUsers] = useState<PendingUser[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const loadPendingUsers = useCallback(async () => {
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+
+    fetchPendingUsers(controller.signal)
+      .then((data) => {
+        if (!active) return
+        setUsers(data)
+        setError(null)
+      })
+      .catch((err: unknown) => {
+        if (!active || (err instanceof DOMException && err.name === "AbortError")) return
+        const message = err instanceof Error ? err.message : "Impossible de joindre le serveur."
+        setError(message)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [])
+
+  async function handleRefresh() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${ADMIN_USERS_API}/pending`, {
-        credentials: "include",
-      })
-      if (response.status === 401 || response.status === 403) {
-        throw new Error("Accès administrateur requis pour consulter les demandes d'inscription.")
-      }
-      if (!response.ok) {
-        throw new Error(`Le serveur a répondu avec le statut ${response.status}.`)
-      }
-      const data: PendingUser[] = await response.json()
-      setUsers(Array.isArray(data) ? data : [])
+      const data = await fetchPendingUsers()
+      setUsers(data)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Impossible de joindre le serveur."
       setError(message)
     } finally {
       setLoading(false)
     }
-  }, [])
-
-  useEffect(() => {
-    void loadPendingUsers()
-  }, [loadPendingUsers])
+  }
 
   async function handleAction(user: PendingUser, action: "approve" | "decline") {
     setBusyId(user.id)
@@ -96,7 +123,7 @@ export function PendingRegistrationsPanel() {
 
         <div className="flex items-center gap-2">
           <Badge variant="outline">{users.length} en attente</Badge>
-          <Button type="button" variant="outline" size="sm" onClick={() => void loadPendingUsers()} disabled={loading}>
+          <Button type="button" variant="outline" size="sm" onClick={() => void handleRefresh()} disabled={loading}>
             <RefreshCw className={loading ? "size-4 animate-spin" : "size-4"} aria-hidden="true" />
             Actualiser
           </Button>
