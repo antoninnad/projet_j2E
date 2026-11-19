@@ -1,0 +1,505 @@
+openapi: 3.1.0
+info:
+  title: Projet J2E API
+  version: 1.0.0
+  description: |
+    Contrats HTTP du projet. Toutes les routes sécurisées utilisent la session
+    courante du serveur; le client ne fournit jamais directement son entreprise.
+servers:
+  - url: /api
+    description: API proxifiée vers le backend Spring Boot
+tags:
+  - name: Authentication
+  - name: Companies
+  - name: Users
+  - name: Profiles
+  - name: Departments
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Créer un compte en attente d'approbation
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Compte créé avec le statut PENDING
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Ouvrir une session utilisateur
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Session ouverte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Fermer la session courante
+      operationId: logout
+      responses:
+        '204':
+          description: Session invalidée
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/session:
+    get:
+      tags: [Authentication]
+      summary: Lire la session courante
+      operationId: getSession
+      responses:
+        '200':
+          description: Utilisateur courant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /companies/{companyId}:
+    parameters:
+      - $ref: '#/components/parameters/CompanyId'
+    get:
+      tags: [Companies]
+      summary: Lire une entreprise
+      operationId: getCompany
+      responses:
+        '200':
+          description: Entreprise trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users:
+    get:
+      tags: [Users]
+      summary: Lister les comptes de l'entreprise courante
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - name: status
+          in: query
+          description: Filtre par statut de compte
+          schema:
+            $ref: '#/components/schemas/AccountStatus'
+        - name: search
+          in: query
+          description: Recherche sur le nom, l'identifiant ou l'adresse email
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: Page de comptes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [Users]
+      summary: Lire un compte
+      operationId: getUser
+      responses:
+        '200':
+          description: Compte trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Users]
+      summary: Modifier un compte
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Compte mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /users/{userId}/approve:
+    post:
+      tags: [Users]
+      summary: Approuver une inscription
+      operationId: approveUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Compte approuvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /users/{userId}/decline:
+    post:
+      tags: [Users]
+      summary: Refuser une inscription
+      operationId: declineUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: Inscription refusée et compte supprimé
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /profiles/me:
+    get:
+      tags: [Profiles]
+      summary: Lire mon profil
+      operationId: getMyProfile
+      responses:
+        '200':
+          description: Profil trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Profiles]
+      summary: Modifier mon profil
+      operationId: updateMyProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profil mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+  /departments:
+    get:
+      tags: [Departments]
+      summary: Lister les départements de l'entreprise courante
+      operationId: listDepartments
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: Page de départements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+components:
+  parameters:
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    Page:
+      name: page
+      in: query
+      description: Index de page basé sur zéro
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      description: Nombre d'éléments demandés par page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Sort:
+      name: sort
+      in: query
+      description: "Tri au format champ,direction. Direction: asc ou desc"
+      schema:
+        type: string
+        example: name,asc
+  schemas:
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [username, email, password, confirmPassword, firstName, lastName, companyCode]
+      properties:
+        username: {type: string, minLength: 3, maxLength: 50}
+        email: {type: string, format: email}
+        password: {type: string, format: password, minLength: 8, maxLength: 72}
+        confirmPassword: {type: string, format: password, minLength: 8, maxLength: 72}
+        firstName: {type: string, minLength: 1, maxLength: 100}
+        lastName: {type: string, minLength: 1, maxLength: 100}
+        companyCode: {type: string, minLength: 1, maxLength: 100}
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: {type: string, minLength: 1, maxLength: 50}
+        password: {type: string, format: password, minLength: 1}
+    RegistrationResponse:
+      type: object
+      required: [id, status, message]
+      properties:
+        id: {type: integer, format: int64}
+        status: {$ref: '#/components/schemas/AccountStatus'}
+        message: {type: string}
+    SessionResponse:
+      type: object
+      required: [authenticated, user]
+      properties:
+        authenticated: {type: boolean}
+        user:
+          $ref: '#/components/schemas/SessionUser'
+    SessionUser:
+      type: object
+      required: [id, username, firstName, lastName, email, role, status, companyId]
+      properties:
+        id: {type: integer, format: int64}
+        username: {type: string}
+        firstName: {type: string}
+        lastName: {type: string}
+        email: {type: string, format: email}
+        role: {$ref: '#/components/schemas/UserRole'}
+        status: {$ref: '#/components/schemas/AccountStatus'}
+        companyId: {type: integer, format: int64}
+    AccountStatus:
+      type: string
+      enum: [PENDING, ACTIVE, DISABLED]
+    UserRole:
+      type: string
+      enum: [MEMBER, COMPANY_ADMIN]
+    Company:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: integer, format: int64}
+        name: {type: string}
+    User:
+      type: object
+      required: [id, username, firstName, lastName, email, status, role, companyId]
+      properties:
+        id: {type: integer, format: int64}
+        username: {type: string}
+        firstName: {type: string}
+        lastName: {type: string}
+        email: {type: string, format: email}
+        status: {$ref: '#/components/schemas/AccountStatus'}
+        role: {$ref: '#/components/schemas/UserRole'}
+        companyId: {type: integer, format: int64}
+    UpdateUserRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        username: {type: string, minLength: 3, maxLength: 50}
+        firstName: {type: string, minLength: 1, maxLength: 100}
+        lastName: {type: string, minLength: 1, maxLength: 100}
+        email: {type: string, format: email}
+        status: {$ref: '#/components/schemas/AccountStatus'}
+        role: {$ref: '#/components/schemas/UserRole'}
+    Profile:
+      type: object
+      required: [id, bio, profilePictureUrl]
+      properties:
+        id: {type: integer, format: int64}
+        bio: {type: string, maxLength: 2000}
+        profilePictureUrl: {type: string, format: uri, nullable: true}
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        bio: {type: string, maxLength: 2000}
+        profilePictureUrl: {type: string, format: uri, nullable: true}
+    Department:
+      type: object
+      required: [id, name, companyId]
+      properties:
+        id: {type: integer, format: int64}
+        name: {type: string}
+        companyId: {type: integer, format: int64}
+    PageMeta:
+      type: object
+      required: [page, size, totalElements, totalPages, first, last]
+      properties:
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1}
+        totalElements: {type: integer, minimum: 0}
+        totalPages: {type: integer, minimum: 0}
+        first: {type: boolean}
+        last: {type: boolean}
+    UserPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/User'}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    DepartmentPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Department'}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: {type: string, example: VALIDATION_FAILED}
+        message: {type: string}
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          description: Erreurs champ par champ, par exemple confirmPassword
+  responses:
+    BadRequest:
+      description: Requête invalide ou mal formée
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: BAD_REQUEST, message: Requête invalide}
+    Unauthorized:
+      description: Session absente ou expirée
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: UNAUTHORIZED, message: Session requise}
+    Forbidden:
+      description: Authentifié mais sans droit suffisant
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: FORBIDDEN, message: Droit insuffisant}
+    NotFound:
+      description: Ressource inexistante ou hors de l'entreprise courante
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: NOT_FOUND, message: Ressource introuvable}
+    Conflict:
+      description: Conflit métier ou état incompatible
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: CONFLICT, message: Identifiant déjà utilisé}
+    ValidationFailed:
+      description: Validation métier ou des champs échouée
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example:
+            code: VALIDATION_FAILED
+            message: La requête contient des erreurs
+            errors:
+              email: Cet email est déjà utilisé

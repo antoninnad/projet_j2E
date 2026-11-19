@@ -30,6 +30,13 @@ npm ci
 npm run dev
 ```
 
+## Contrats d'API
+
+Les contrats HTTP versionnés sont définis dans [openapi.yaml](./openapi.yaml).
+Ils décrivent les DTO, les paramètres de pagination, les filtres, les statuts
+HTTP et les erreurs JSON communes. Les routes REST sont préfixées par `/api`;
+les données sont isolées à l'entreprise de la session courante.
+
 Ouvrir **http://localhost:5173/**. Le backend écoute sur le port 8080 ; Vite lui transmet les requêtes `/api`.
 L’interface de fichiers utilise actuellement des données de démonstration en mémoire.
 

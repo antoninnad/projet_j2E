@@ -107,7 +107,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 
 | ID | Fonctionnalité | Tâche concrète | Responsable | Priorité | État actuel | Dépend de | Résultat attendu |
 |---|---|---|---|---|---|---|---|
-| T01 | Contrats d’API | Documenter routes, DTO, pagination et erreurs dans OpenAPI ; faire relire par l’équipe | B1 | P0 | À faire | — | Contrats utilisables par les deux équipes |
+| T01 | Contrats d’API | Documenter routes, DTO, pagination et erreurs dans OpenAPI ; faire relire par l’équipe | B1 | P0 | À vérifier | — | Contrats utilisables par les deux équipes |
 | T02 | Socle frontend | Unifier les pages de comptes et l’espace TypeScript dans un routeur et un style communs | F1 | P0 | Partiel | T01 | Une application avec des routes cohérentes |
 | T03 | Intégration frontend | Créer client API, types partagés, gestion des erreurs et réponses simulées | F2 | P0 | À faire | T01 | Appels homogènes et travail frontend indépendant |
 | T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions | B1 | P0 | Partiel | T01 | Relations et rattachements d’entreprise définis |
