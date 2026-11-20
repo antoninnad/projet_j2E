@@ -141,7 +141,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T05 | Modèle documents | Compléter Node/File avec Folder, parenté, seuil, version et entreprise ; annoter les enfants de Folder en OneToMany et les contributeurs de Node en ManyToMany ; fournir la création interne des racines | B2 | P0 | Partiel | T04 | Arborescence persistable et modèle relu avec B1 |
 | T06 | Base de données | Conserver un profil h2 sur fichier et ajouter un profil postgres ; configurer migrations et environnements, intégrer les tables de B2 et documenter le lancement des deux profils | B1 | P0 | À faire | T04, T05 | Schéma reproductible et données persistantes sur H2 et PostgreSQL |
 | T07 | Isolation des comptes | Centraliser l’identité, l’entreprise courante et les restrictions des services comptes/profils | B1 | P0 | À faire | T06 | Identité fiable sans entreprise choisie librement par le client |
-| T08 | Isolation des ressources | Filtrer documents et stockage par entreprise ; fournir les contrôles réutilisés pour le chat | B2 | P0 | À faire | T05, T07 | Aucun accès par référence à une autre entreprise |
+| T08 | Isolation des ressources | Filtrer documents et stockage par entreprise ; fournir les contrôles réutilisés pour le chat | B2 | P0 | Terminé | T05, T07 | Aucun accès par référence à une autre entreprise |
 | T09 | Intégration continue backend | Automatiser compilation, tests backend et validation du schéma/migrations sur H2 et PostgreSQL de test | B1 | P0 | À faire | T06 | Échecs détectés sur les deux moteurs avant intégration |
 | T10 | Intégration continue frontend | Automatiser types, build et contrôles frontend avec la version Node requise | F1 | P0 | À vérifier | T02, T03 | Frontend compilable après chaque intégration |
 | T11 | Sessions et sécurité | Créer LoginDTO, findByEmail, UserService.findUser et PublicUser en session ; ajouter POST /login et POST /logout, session courante, rotation de session, rôles, CSRF et cookies | B1 | P0 | Partiel | T07 | Connexion par email, session sans secrets et comptes inactifs exclus |
@@ -200,6 +200,10 @@ Cette adaptation ne termine pas T12 à T14 : la création d’entreprise et de s
 Les pages `admin-dashboard-listUsers`, `admin-dashboard-listNodes`, `admin-dashboard-listDepartements` et `admin-dashboard-listFiles` affichent les données persistées et proposent l’édition en ligne des champs métier : informations et statut utilisateur, nom des éléments, nom des départements, et noms/type MIME des fichiers. Les dates, propriétaires, tailles et chemins de stockage sont affichés ou gardés non modifiables. Chaque mise à jour est envoyée au contrôleur MVC et validée avant sauvegarde ; les doublons nom/email et nom de département sont refusés. Les listes sont accessibles depuis le tableau de bord administrateur.
 
 T17 reste partiel : ces listes ne remplacent pas la gestion des adhésions/niveaux d’accès, et l’administration n’est pas encore restreinte à une entreprise. Le contrôle actuel se limite à la présence de `adminId` en session. `mvn test` compile avec succès, sans tests automatisés ; les quatre vues ont été vérifiées en HTTP sur le serveur local déjà présent, tandis qu’un second démarrage de l’application a été empêché par le port 8080 déjà occupé.
+
+### Avancement de l'isolation des ressources
+
+T08 est vérifié par des tests JPA ciblés : les recherches de dossiers, nœuds et fichiers utilisent l’entreprise courante, les chemins privés sont préfixés par l’identifiant d’entreprise et les références croisées sont refusées. `ResourceIsolationService` fournit aussi le contrôle réutilisable empêchant une conversation entre deux comptes de sociétés différentes. Les opérations de chat restent à implémenter dans T33–T34.
 
 ## 5. Chronologie de réalisation
 
