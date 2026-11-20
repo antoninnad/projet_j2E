@@ -15,6 +15,9 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
 
     List<Folder> findByParent(Folder parent);
 
+    /** Vide si le dossier n'existe pas ou appartient à une autre entreprise. */
+    Optional<Folder> findByIdAndCompany_Id(Long id, Long companyId);
+
     /** Dossier racine d'un département (un seul par département). */
     Optional<Folder> findByDepartmentAndParentIsNull(Department department);
 
