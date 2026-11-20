@@ -22,7 +22,8 @@ import lombok.Setter;
 
 /**
  * Département d'une entreprise (ex. Finance, Ressources humaines).
- * Le dossier racine (relation 1-1 avec Folder) sera ajouté avec l'entité Folder.
+ * Son dossier racine est le Folder sans parent de ce département :
+ * créé par FolderService.createDepartmentRoot, retrouvé par FolderService.findDepartmentRoot.
  */
 @Entity
 @Table(name = "departments",
