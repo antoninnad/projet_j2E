@@ -1,6 +1,8 @@
 import { createApiClient, type ApiClientOptions } from "@/lib/api-client"
 import type {
   Company,
+  CreateCompanyRequest,
+  CreateCompanyResponse,
   Department,
   LoginRequest,
   Page,
@@ -25,6 +27,8 @@ export function createApi(options?: ApiClientOptions) {
       json<SessionResponse>("/auth/login", { method: "POST", json: data, signal }),
     logout: (signal?: AbortSignal) => noContent("/auth/logout", { method: "POST", signal }),
     getSession: (signal?: AbortSignal) => json<SessionResponse>("/auth/session", { signal }),
+    createCompany: (data: CreateCompanyRequest, signal?: AbortSignal) =>
+      json<CreateCompanyResponse>("/companies", { method: "POST", json: data, signal }),
     getCompany: (id: number, signal?: AbortSignal) => json<Company>(`/companies/${id}`, { signal }),
     listUsers: (query?: UserQuery, signal?: AbortSignal) => json<Page<User>>("/users", { query, signal }),
     getUser: (id: number, signal?: AbortSignal) => json<User>(`/users/${id}`, { signal }),

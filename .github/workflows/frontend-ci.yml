@@ -1,20 +1,24 @@
 name: Frontend CI (T10)
 
-# Déclencheurs automatiques désactivés temporairement (décommenter push / pull_request pour réactiver).
+# Exécution automatique uniquement sur main (push et pull requests ciblant main).
 on:
-  # push:
-  #   branches: [dev, main, "feature/**"]
-  #   paths:
-  #     - "frontend/**"
-  #     - "src/main/resources/templates/**"
-  #     - ".github/workflows/frontend-ci.yml"
-  # pull_request:
-  #   branches: [dev, main]
-  #   paths:
-  #     - "frontend/**"
-  #     - "src/main/resources/templates/**"
-  #     - ".github/workflows/frontend-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "src/main/resources/templates/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "src/main/resources/templates/**"
+      - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   frontend-checks:

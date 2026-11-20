@@ -8,6 +8,11 @@
         <p th:text="${success}">Action effectuée avec succès.</p>
     </div>
 
+    <div th:if="${notice != null and success == null}" role="status"
+         class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p th:text="${notice}">Opération enregistrée.</p>
+    </div>
+
     <div th:if="${info != null}" role="status"
          class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
         <p th:text="${info}">Information.</p>

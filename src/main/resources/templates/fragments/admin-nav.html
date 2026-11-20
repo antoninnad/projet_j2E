@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="adminNav(activeSection)"
+     aria-label="Sections d'administration"
+     class="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-3 shadow-xs">
+    <a th:href="@{/admin/dashboard}"
+       th:attr="aria-current=${activeSection == 'pending' ? 'page' : null}"
+       th:classappend="${activeSection == 'pending'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors">
+        Inscriptions &amp; Entreprises
+    </a>
+
+    <a th:href="@{/admin/dashboard/listUsers}"
+       th:attr="aria-current=${activeSection == 'users' ? 'page' : null}"
+       th:classappend="${activeSection == 'users'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors">
+        Utilisateurs
+    </a>
+
+    <a th:href="@{/admin/dashboard/listDepartements}"
+       th:attr="aria-current=${activeSection == 'departments' ? 'page' : null}"
+       th:classappend="${activeSection == 'departments'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors">
+        Départements
+    </a>
+
+    <a th:href="@{/admin/dashboard/listNodes}"
+       th:attr="aria-current=${activeSection == 'nodes' ? 'page' : null}"
+       th:classappend="${activeSection == 'nodes'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors">
+        Éléments
+    </a>
+
+    <a th:href="@{/admin/dashboard/listFiles}"
+       th:attr="aria-current=${activeSection == 'files' ? 'page' : null}"
+       th:classappend="${activeSection == 'files'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors">
+        Fichiers
+    </a>
+</nav>
+</body>
+</html>

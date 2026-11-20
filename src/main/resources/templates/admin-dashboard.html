@@ -1,53 +1,89 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Pending registrations</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body>
-<div class="ar">
-    <div class="ar-wrap">
-        <h1>Pending registrations</h1>
-        <p class="ar-sub">Approved users can log in. Declined registrations are removed.</p>
-        <nav>
-            <a th:href="@{/admin/dashboard/listUsers}">Users</a>
-            <a th:href="@{/admin/dashboard/listNodes}">Nodes</a>
-            <a th:href="@{/admin/dashboard/listDepartements}">Departments</a>
-            <a th:href="@{/admin/dashboard/listFiles}">Files</a>
-        </nav>
+<head th:replace="~{fragments/head :: head('Administration — Inscriptions & Entreprises', 'Validez les demandes de comptes et créez de nouvelles entreprises isolées.')}"></head>
+<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<header th:replace="~{fragments/header :: header('admin')}"></header>
 
-        <!-- messages flash envoyés par AdminController -->
-        <div class="ar-msg ar-err" role="alert" th:if="${error}" th:text="${error}"></div>
-        <div class="ar-msg ar-okmsg" role="status" th:if="${notice}" th:text="${notice}"></div>
-
-        <div class="ar-empty" th:if="${#lists.isEmpty(users)}">
-            No registrations waiting for review.
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Administration de la plateforme</h1>
+            <p class="mt-1 text-sm text-muted-foreground">
+                Gérez les inscriptions en attente, les entreprises, les départements et les ressources.
+            </p>
         </div>
-
-        <div class="ar-row" th:each="u : ${users}">
-            <div class="ar-info">
-                <div class="ar-name"
-                     th:text="${!#strings.isEmpty(u.firstName) ? u.firstName + ' ' + (u.lastName ?: '') : u.username}">
-                    Name
-                </div>
-                <div class="ar-meta" th:text="${u.email}">email</div>
-            </div>
-
-            <div class="ar-actions">
-                <form th:action="@{/admin/users/{id}/approve(id=${u.id})}" method="post" style="display:inline;">
-                    <button type="submit" class="ar-approve">Approve</button>
-                </form>
-                <form th:action="@{/admin/users/{id}/decline(id=${u.id})}" method="post" style="display:inline;">
-                    <button type="submit" class="ar-decline">Decline</button>
-                </form>
-            </div>
-        </div>
-
-        <form th:action="@{/logout}" method="post">
-            <button type="submit">Logout</button>
-        </form>
     </div>
-</div>
+
+    <div th:replace="~{fragments/admin-nav :: adminNav('pending')}"></div>
+
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <!-- Section MVC : Demandes d'inscription en attente -->
+    <section aria-labelledby="inscriptions-attente-titre"
+             class="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <div>
+                <h2 id="inscriptions-attente-titre" class="text-base font-semibold tracking-tight">
+                    Demandes d'inscription en attente
+                </h2>
+                <p class="text-xs text-muted-foreground">
+                    Les comptes approuvés peuvent se connecter à leur espace d'entreprise ; les demandes refusées sont supprimées.
+                </p>
+            </div>
+            <span class="rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                  th:text="${users != null ? #lists.size(users) + ' en attente' : '0 en attente'}">0 en attente</span>
+        </div>
+
+        <div class="p-5">
+            <div th:if="${#lists.isEmpty(users)}"
+                 class="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
+                <p class="text-sm font-medium text-foreground">Aucune demande en attente de validation</p>
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Les nouvelles inscriptions salariées apparaîtront ici dès leur soumission.
+                </p>
+            </div>
+
+            <ul th:unless="${#lists.isEmpty(users)}" class="divide-y divide-border rounded-lg border border-border">
+                <li th:each="u : ${users}" class="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5">
+                    <div class="min-w-0">
+                        <p class="truncate text-sm font-medium text-foreground"
+                           th:text="${!#strings.isEmpty(u.firstName) ? u.firstName + ' ' + (u.lastName ?: '') : u.username}">
+                            Salarié
+                        </p>
+                        <p class="truncate text-xs text-muted-foreground">
+                            <span th:text="${u.email}">email@entreprise.fr</span>
+                            <span th:if="${!#strings.isEmpty(u.username)}" th:text="' · @' + ${u.username}"></span>
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <form th:action="@{/admin/users/{id}/approve(id=${u.id})}" method="post" class="inline">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit"
+                                    class="inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+                                Approuver
+                            </button>
+                        </form>
+                        <form th:action="@{/admin/users/{id}/decline(id=${u.id})}" method="post" class="inline">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit"
+                                    class="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-secondary">
+                                Refuser
+                            </button>
+                        </form>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Îlot React : Création d'entreprise et de son premier administrateur -->
+    <div id="company-creation-root"
+         data-react-mount="company-creation"
+         th:attr="data-base-url=@{/},data-login-url=@{/adminLogin(expired=true)}">
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

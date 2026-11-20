@@ -1,42 +1,66 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Administration — Éléments</title>
-</head>
-<body>
-<main>
-    <h1>Éléments (dossiers et fichiers)</h1>
-    <nav>
-        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
-        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
-        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
-        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
-    </nav>
-    <p th:if="${notice}" th:text="${notice}" role="status"></p>
-    <p th:if="${error}" th:text="${error}" role="alert"></p>
+<head th:replace="~{fragments/head :: head('Administration — Éléments', 'Consultez et renommez les dossiers et fichiers.')}"></head>
+<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<header th:replace="~{fragments/header :: header('admin')}"></header>
 
-    <p th:if="${#lists.isEmpty(nodes)}">Aucun élément.</p>
-    <table th:unless="${#lists.isEmpty(nodes)}">
-        <thead>
-        <tr><th>ID</th><th>Type</th><th>Nom</th><th>Propriétaire</th><th>Créé le</th><th>Action</th></tr>
-        </thead>
-        <tbody>
-        <tr th:each="node : ${nodes}">
-            <td th:text="${node.id}"></td>
-            <td th:text="${node.type}"></td>
-            <td><input th:attr="form=${'node-form-' + node.id}" name="name" th:value="${node.name}" required></td>
-            <td th:text="${node.owner}"></td>
-            <td th:text="${node.createdAt}"></td>
-            <td>
-                <form th:id="${'node-form-' + node.id}"
-                      th:action="@{/admin/dashboard/nodes/{id}(id=${node.id})}" method="post">
-                    <button type="submit">Enregistrer</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Administration — Éléments (dossiers et fichiers)</h1>
+        <p class="mt-1 text-sm text-muted-foreground">
+            Vue d'ensemble des nœuds de l'arborescence documentaire.
+        </p>
+    </div>
+
+    <div th:replace="~{fragments/admin-nav :: adminNav('nodes')}"></div>
+
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <section class="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <div th:if="${#lists.isEmpty(nodes)}" class="p-8 text-center text-sm text-muted-foreground">
+            Aucun élément enregistré.
+        </div>
+
+        <div th:unless="${#lists.isEmpty(nodes)}" class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-sm">
+                <thead class="border-b border-border bg-muted/40 text-xs font-medium uppercase text-muted-foreground">
+                <tr>
+                    <th class="px-4 py-3">ID</th>
+                    <th class="px-4 py-3">Type</th>
+                    <th class="px-4 py-3">Nom</th>
+                    <th class="px-4 py-3">Propriétaire</th>
+                    <th class="px-4 py-3">Créé le</th>
+                    <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                <tr th:each="node : ${nodes}" class="hover:bg-muted/20">
+                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground" th:text="${node.id}">1</td>
+                    <td class="px-4 py-3 text-xs font-medium" th:text="${node.type}">Folder</td>
+                    <td class="px-4 py-2.5">
+                        <input th:attr="form=${'node-form-' + node.id}" name="name" th:value="${node.name}"
+                               aria-label="Nom de l'élément" required
+                               class="h-8 w-full min-w-40 rounded-md border border-input bg-background px-2.5 text-xs text-foreground" />
+                    </td>
+                    <td class="px-4 py-3 text-xs" th:text="${node.owner}">owner</td>
+                    <td class="px-4 py-3 text-xs text-muted-foreground" th:text="${node.createdAt}">2026-11-20</td>
+                    <td class="px-4 py-2.5 text-right">
+                        <form th:id="${'node-form-' + node.id}"
+                              th:action="@{/admin/dashboard/nodes/{id}(id=${node.id})}" method="post">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit"
+                                    class="inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+                                Enregistrer
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

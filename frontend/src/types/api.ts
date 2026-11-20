@@ -23,7 +23,21 @@ export type RegisterRequest = LoginRequest &
 export type RegistrationResponse = Pick<User, "id" | "status"> & { message: string }
 export type UpdateUserRequest = Partial<Omit<User, "id" | "companyId">>
 
-export type Company = { id: number; name: string }
+export type Company = { id: number; name: string; code?: string }
+export type CreateCompanyRequest = {
+  companyName: string
+  companyCode: string
+  adminFirstName: string
+  adminLastName: string
+  adminUsername: string
+  adminEmail: string
+  adminPassword: string
+  adminConfirmPassword: string
+}
+export type CreateCompanyResponse = {
+  company: Company
+  admin: User
+}
 export type Department = { id: number; name: string; companyId: number }
 export type Profile = { id: number; bio: string; profilePictureUrl: string | null }
 export type UpdateProfileRequest = Partial<Omit<Profile, "id">>

@@ -3,9 +3,11 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import App from "./App.tsx"
+import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { SiteHeader } from "@/components/site-header"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
 import { createApi } from "@/lib/api"
+import { createSessionAwareFetcher } from "@/lib/session"
 import "./styles.css"
 
 function mountReactIslands() {
@@ -28,13 +30,36 @@ function mountReactIslands() {
           initialTab={element.dataset.initialTab || "files"}
           userName={element.dataset.userName || undefined}
           isAdmin={element.dataset.isAdmin === "true"}
-          client={createApi({ baseUrl: element.dataset.baseUrl })}
+          client={createApi({
+            baseUrl: element.dataset.baseUrl,
+            fetcher: createSessionAwareFetcher({
+              baseUrl: element.dataset.baseUrl,
+              loginUrl: element.dataset.loginUrl,
+            }),
+          })}
         />
       </StrictMode>,
     )
   })
 
-  // 3. Îlot facultatif d'en-tête React pour des templates dédiés
+  // 3. Îlot de création d'entreprise et premier administrateur (admin-dashboard.html)
+  document.querySelectorAll<HTMLElement>('[data-react-mount="company-creation"]').forEach((element) => {
+    createRoot(element).render(
+      <StrictMode>
+        <CompanyCreationPanel
+          client={createApi({
+            baseUrl: element.dataset.baseUrl,
+            fetcher: createSessionAwareFetcher({
+              baseUrl: element.dataset.baseUrl,
+              loginUrl: element.dataset.loginUrl,
+            }),
+          })}
+        />
+      </StrictMode>,
+    )
+  })
+
+  // 4. Îlot facultatif d'en-tête React pour des templates dédiés
   document.querySelectorAll<HTMLElement>('[data-react-mount="site-header"], [data-site-header]').forEach((element) => {
     createRoot(element).render(
       <StrictMode>

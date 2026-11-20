@@ -16,6 +16,14 @@
         Tableau de bord
     </a>
 
+    <a th:if="${isAdmin}"
+       th:href="@{/admin/dashboard}"
+       th:attr="aria-current=${activePage == 'admin' ? 'page' : null}"
+       th:classappend="${activePage == 'admin'} ? 'bg-secondary text-foreground font-medium' : 'text-muted-foreground hover:bg-secondary/70 hover:text-foreground'"
+       class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
+        Administration
+    </a>
+
     <th:block th:unless="${isAuthenticated}">
         <a th:href="@{/login}"
            th:attr="aria-current=${activePage == 'login' ? 'page' : null}"

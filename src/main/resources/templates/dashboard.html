@@ -56,7 +56,7 @@
     <section aria-label="Espace de travail interactif">
         <div id="workspace-root"
              data-react-mount="workspace"
-             th:attr="data-base-url=@{/},data-initial-tab=${activeTab},data-user-name=${sessionDisplayName},data-is-admin=${isAdmin}">
+             th:attr="data-base-url=@{/},data-login-url=@{/login(expired=true)},data-initial-tab=${activeTab},data-user-name=${sessionDisplayName},data-is-admin=${isAdmin}">
             <div class="rounded-xl border border-border bg-background p-8 text-center text-sm text-muted-foreground shadow-xs">
                 Chargement de l'espace de travail interactif…
             </div>

@@ -1,42 +1,64 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Administration — Départements</title>
-</head>
-<body>
-<main>
-    <h1>Départements</h1>
-    <nav>
-        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
-        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
-        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
-        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
-    </nav>
-    <p th:if="${notice}" th:text="${notice}" role="status"></p>
-    <p th:if="${error}" th:text="${error}" role="alert"></p>
+<head th:replace="~{fragments/head :: head('Administration — Départements', 'Gérez les départements des entreprises.')}"></head>
+<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<header th:replace="~{fragments/header :: header('admin')}"></header>
 
-    <p th:if="${#lists.isEmpty(departments)}">Aucun département.</p>
-    <table th:unless="${#lists.isEmpty(departments)}">
-        <thead>
-        <tr><th>ID</th><th>Nom</th><th>Entreprise</th><th>Code entreprise</th><th>Action</th></tr>
-        </thead>
-        <tbody>
-        <tr th:each="department : ${departments}">
-            <td th:text="${department.id}"></td>
-            <td><input th:attr="form=${'department-form-' + department.id}"
-                       name="name" th:value="${department.name}" required></td>
-            <td th:text="${department.company.name}"></td>
-            <td th:text="${department.company.code}"></td>
-            <td>
-                <form th:id="${'department-form-' + department.id}"
-                      th:action="@{/admin/dashboard/departments/{id}(id=${department.id})}" method="post">
-                    <button type="submit">Enregistrer</button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Administration — Départements</h1>
+        <p class="mt-1 text-sm text-muted-foreground">
+            Consultez et renommez les départements rattachés à chaque entreprise.
+        </p>
+    </div>
+
+    <div th:replace="~{fragments/admin-nav :: adminNav('departments')}"></div>
+
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <section class="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <div th:if="${#lists.isEmpty(departments)}" class="p-8 text-center text-sm text-muted-foreground">
+            Aucun département enregistré.
+        </div>
+
+        <div th:unless="${#lists.isEmpty(departments)}" class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-sm">
+                <thead class="border-b border-border bg-muted/40 text-xs font-medium uppercase text-muted-foreground">
+                <tr>
+                    <th class="px-4 py-3">ID</th>
+                    <th class="px-4 py-3">Nom</th>
+                    <th class="px-4 py-3">Entreprise</th>
+                    <th class="px-4 py-3">Code entreprise</th>
+                    <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                <tr th:each="department : ${departments}" class="hover:bg-muted/20">
+                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground" th:text="${department.id}">1</td>
+                    <td class="px-4 py-2.5">
+                        <input th:attr="form=${'department-form-' + department.id}"
+                               name="name" th:value="${department.name}" aria-label="Nom du département" required
+                               class="h-8 w-full min-w-40 rounded-md border border-input bg-background px-2.5 text-xs text-foreground" />
+                    </td>
+                    <td class="px-4 py-3 text-xs font-medium" th:text="${department.company.name}">Entreprise</td>
+                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground" th:text="${department.company.code}">CODE</td>
+                    <td class="px-4 py-2.5 text-right">
+                        <form th:id="${'department-form-' + department.id}"
+                              th:action="@{/admin/dashboard/departments/{id}(id=${department.id})}" method="post">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit"
+                                    class="inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+                                Enregistrer
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
