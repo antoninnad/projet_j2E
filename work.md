@@ -136,7 +136,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 |---|---|---|---|---|---|---|---|
 | T01 | Contrats et routes | Documenter routes MVC de la section 1.1, DTO, session et contrats JSON OpenAPI, pagination et erreurs ; faire relire par l’équipe | B1 | P0 | À vérifier | — | Contrats et parcours MVC/React utilisables par les deux équipes |
 | T02 | Socle frontend | Créer index.html, register.html, login.html, dashboard.html et les fragments Thymeleaf communs ; intégrer l’espace TypeScript avec un style et un routage cohérents | F1 | P0 | Terminé | T01 | Pages Thymeleaf avec fragments réutilisés et interfaces React intégrées |
-| T03 | Intégration frontend | Créer client API, types partagés, gestion des erreurs et réponses simulées | F2 | P0 | À faire | T01 | Appels homogènes et travail frontend indépendant |
+| T03 | Intégration frontend | Créer client API, types partagés, gestion des erreurs et réponses simulées | F2 | P0 | Terminé | T01 | Appels homogènes et travail frontend indépendant |
 | T04 | Modèle entreprises | Modéliser entreprises, comptes, profils, départements et adhésions ; garantir User/UserProfile en OneToOne et coordonner les annotations OneToMany/ManyToMany avec T05 | B1 | P0 | À vérifier | T01 | Relations du cours et rattachements d’entreprise définis |
 | T05 | Modèle documents | Compléter Node/File avec Folder, parenté, seuil, version et entreprise ; annoter les enfants de Folder en OneToMany et les contributeurs de Node en ManyToMany ; fournir la création interne des racines | B2 | P0 | Partiel | T04 | Arborescence persistable et modèle relu avec B1 |
 | T06 | Base de données | Conserver un profil h2 sur fichier et ajouter un profil postgres ; configurer migrations et environnements, intégrer les tables de B2 et documenter le lancement des deux profils | B1 | P0 | À faire | T04, T05 | Schéma reproductible et données persistantes sur H2 et PostgreSQL |
@@ -184,6 +184,10 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T48 | Démonstration | Préparer le scénario complet, exécuter la recette sur l’hébergement et suivre les corrections | F2 | P1 | À faire | T45, T46 | Parcours complet présenté sans données simulées |
 | T49 | Évolutions interface | Décrire groupes, coédition, versions, corbeille et notifications ; chiffrer avec F1 | F2 | P2 | À faire | T47, T48 | Backlog d’évolutions distinct de la démo |
 | T50 | Évolutions backend | Décrire récupération par email, quotas, antivirus et exploitation ; chiffrer avec B2 | B1 | P2 | À faire | T47, T48 | Backlog technique priorisé après livraison |
+
+### Avancement de l'intégration frontend
+
+T03 fournit le client HTTP, les types issus du contrat OpenAPI et un aperçu Vite simulant la session, les départements et les demandes d'inscription. Le panneau React utilise les routes `/api/users` du contrat. B1 doit encore les servir et valider l'intégration de la session et du CSRF en T11–T14. L'explorateur indexe ses données de démonstration par identifiant et par dossier parent et utilise le format de pagination commun. Son branchement attend les routes documents de T18. Le chat suivra les contrats T33–T34.
 
 ### Avancement MVC des comptes
 

@@ -2,29 +2,36 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
+import { paginate } from "@/lib/pagination"
+import type { User } from "@/types/api"
 
-const sampleUsers = [
+const sampleUsers: User[] = [
   {
     id: 10,
     username: "alice.dupont",
     firstName: "Alice",
     lastName: "Dupont",
     email: "alice@acme.fr",
+    companyId: 1,
+    role: "MEMBER",
+    status: "PENDING",
   },
   {
     id: 11,
     username: "bob.martin",
+    firstName: "",
+    lastName: "",
     email: "bob@acme.fr",
+    companyId: 1,
+    role: "MEMBER",
+    status: "PENDING",
   },
 ]
 
 describe("PendingRegistrationsPanel", () => {
   it("affiche un état vide explicite lorsqu'aucune demande n'est en attente", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+      Response.json(paginate([])),
     )
 
     render(<PendingRegistrationsPanel />)
@@ -37,13 +44,9 @@ describe("PendingRegistrationsPanel", () => {
     const user = userEvent.setup()
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(sampleUsers), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockResolvedValueOnce(Response.json(paginate(sampleUsers)))
+      .mockResolvedValueOnce(Response.json({ ...sampleUsers[0], status: "ACTIVE" }))
+      .mockResolvedValueOnce(Response.json(paginate([sampleUsers[1]])))
 
     render(<PendingRegistrationsPanel />)
 
@@ -57,10 +60,10 @@ describe("PendingRegistrationsPanel", () => {
     await waitFor(() => {
       expect(screen.queryByText("Alice Dupont")).not.toBeInTheDocument()
     })
-    expect(screen.getByText("1 en attente")).toBeInTheDocument()
+    expect(await screen.findByText("1 en attente")).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/admin/users/10/approve",
-      expect.objectContaining({ method: "POST", credentials: "include" }),
+      "/api/users/10/approve",
+      expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     )
   })
 
@@ -68,13 +71,9 @@ describe("PendingRegistrationsPanel", () => {
     const user = userEvent.setup()
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify([sampleUsers[0]]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
+      .mockResolvedValueOnce(Response.json(paginate([sampleUsers[0]])))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(Response.json(paginate([])))
 
     render(<PendingRegistrationsPanel />)
 
@@ -85,8 +84,8 @@ describe("PendingRegistrationsPanel", () => {
       expect(screen.getByText("Aucune demande en attente")).toBeInTheDocument()
     })
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/admin/users/10/decline",
-      expect.objectContaining({ method: "POST", credentials: "include" }),
+      "/api/users/10/decline",
+      expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     )
   })
 
@@ -94,12 +93,7 @@ describe("PendingRegistrationsPanel", () => {
     const user = userEvent.setup()
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(new Response(null, { status: 403 }))
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify([sampleUsers[0]]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
+      .mockResolvedValueOnce(Response.json(paginate([sampleUsers[0]])))
 
     render(<PendingRegistrationsPanel />)
 
@@ -109,5 +103,23 @@ describe("PendingRegistrationsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Actualiser" }))
     expect(await screen.findByText("Alice Dupont")).toBeInTheDocument()
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
+  it("recharge la page précédente après le retrait de la dernière demande d'une page", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.json(paginate(sampleUsers, 0, 1)))
+      .mockResolvedValueOnce(Response.json(paginate(sampleUsers, 1, 1)))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(Response.json(paginate([sampleUsers[0]], 1, 1)))
+      .mockResolvedValueOnce(Response.json(paginate([sampleUsers[0]], 0, 1)))
+
+    render(<PendingRegistrationsPanel />)
+    await user.click(await screen.findByRole("button", { name: "Suivante" }))
+    expect(await screen.findByText("bob.martin")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Refuser" }))
+
+    expect(await screen.findByText("Alice Dupont")).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith("/api/users?page=1&status=PENDING", expect.anything())
   })
 })

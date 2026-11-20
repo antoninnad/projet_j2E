@@ -1,16 +1,15 @@
 import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import App from "@/App"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
+import { paginate } from "@/lib/pagination"
 
 describe("WorkspaceShell", () => {
   beforeEach(() => {
     window.history.replaceState({}, "", "/dashboard")
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
+      Response.json(paginate([])),
     )
   })
 
@@ -62,5 +61,16 @@ describe("WorkspaceShell", () => {
     await waitFor(() => {
       expect(screen.getByRole("tab", { name: "Annuaire" })).toHaveAttribute("aria-selected", "true")
     })
+  })
+
+  it("permet d'approuver une inscription dans l'aperçu Vite sans backend", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole("tab", { name: "Administration" }))
+    expect(await screen.findByText("Sam Bernard")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Approuver" }))
+    expect(await screen.findByText("Aucune demande en attente")).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalled()
   })
 })

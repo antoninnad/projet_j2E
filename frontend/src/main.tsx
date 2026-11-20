@@ -1,14 +1,17 @@
+/// <reference types="vite/client" />
+
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import App from "./App.tsx"
 import { SiteHeader } from "@/components/site-header"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
+import { createApi } from "@/lib/api"
 import "./styles.css"
 
 function mountReactIslands() {
   // 1. Mode autonome Vite (frontend/index.html)
   const standaloneRoot = document.getElementById("root")
-  if (standaloneRoot) {
+  if (import.meta.env.DEV && standaloneRoot) {
     createRoot(standaloneRoot).render(
       <StrictMode>
         <App baseUrl={standaloneRoot.dataset.baseUrl || "/"} />
@@ -25,6 +28,7 @@ function mountReactIslands() {
           initialTab={element.dataset.initialTab || "files"}
           userName={element.dataset.userName || undefined}
           isAdmin={element.dataset.isAdmin === "true"}
+          client={createApi({ baseUrl: element.dataset.baseUrl })}
         />
       </StrictMode>,
     )

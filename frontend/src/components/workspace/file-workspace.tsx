@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Check, ChevronRight, FileText, FolderOpen, Pencil, Save, Star, X } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { initialEntries, type WorkspaceEntry } from "@/data/workspace"
+import { paginate } from "@/lib/pagination"
 import { cn } from "@/lib/utils"
 import { ContributorAvatars } from "./contributor-avatars"
 import { FileEditor } from "./file-editor"
@@ -28,22 +29,44 @@ export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
     return () => media.removeEventListener("change", update)
   }, [])
 
-  const selected = entries.find(entry => entry.id === selectedId)!
-  const folder = entries.find(entry => entry.id === folderId)
+  const { byId, byParent } = useMemo(() => {
+    const byId = new Map<string, WorkspaceEntry>()
+    const byParent = new Map<string | null, WorkspaceEntry[]>()
+    for (const entry of entries) {
+      byId.set(entry.id, entry)
+      const siblings = byParent.get(entry.parentId)
+      if (siblings) siblings.push(entry)
+      else byParent.set(entry.parentId, [entry])
+    }
+    return { byId, byParent }
+  }, [entries])
+
+  const selected = byId.get(selectedId)!
+  const folder = folderId === null ? undefined : byId.get(folderId)
   const value = drafts[selectedId] ?? selected.content
   const dirty = value !== selected.content
-  const dirtyIds = entries.filter(entry => drafts[entry.id] !== undefined && drafts[entry.id] !== entry.content).map(entry => entry.id)
-  const filtered = entries.filter(entry => entry.parentId === folderId && entry.name.toLocaleLowerCase("fr").includes(query.toLocaleLowerCase("fr")) && (!favoritesOnly || entry.favorite)).sort((a, b) => Number(b.kind === "folder") - Number(a.kind === "folder") || Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name, "fr"))
+  const dirtyIds = new Set(Object.keys(drafts).filter(id => drafts[id] !== byId.get(id)?.content))
+  const filtered = useMemo(() => {
+    const search = query.toLocaleLowerCase("fr")
+    return (byParent.get(folderId) ?? [])
+      .filter(entry => entry.name.toLocaleLowerCase("fr").includes(search) && (!favoritesOnly || entry.favorite))
+      .sort((a, b) => Number(b.kind === "folder") - Number(a.kind === "folder") ||
+        Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name, "fr"))
+  }, [byParent, folderId, query, favoritesOnly])
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount)
-  const visibleEntries = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const listing = paginate(filtered, currentPage - 1, PAGE_SIZE)
+
+  function selectFolder(id: string | null) {
+    setFolderId(id)
+    setQuery("")
+    setPage(1)
+    setFavoritesOnly(false)
+  }
 
   function open(entry: WorkspaceEntry) {
     if (entry.kind === "folder") {
-      setFolderId(entry.id)
-      setQuery("")
-      setPage(1)
-      setFavoritesOnly(false)
+      selectFolder(entry.id)
       return
     }
     setSelectedId(entry.id)
@@ -81,7 +104,7 @@ export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Espace de travail</h1>
           <p className="mt-2 text-sm text-muted-foreground">Vos fichiers, vos idées et votre équipe, au même endroit.</p>
         </div>
-        <Badge variant="outline" className="gap-1.5 bg-background py-1.5"><span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />Espace partagé</Badge>
+        <Badge variant="outline" className="bg-background py-1.5">Données de démonstration</Badge>
       </div>
 
       <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
@@ -102,7 +125,23 @@ export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
 
         <ResizablePanelGroup key={desktop ? "desktop" : "mobile"} orientation={desktop ? "horizontal" : "vertical"} className={desktop ? "h-[660px]!" : "h-[1080px]!"}>
           <ResizablePanel id="explorer" defaultSize={desktop ? "32%" : "45%"} minSize={desktop ? "25%" : "35%"} maxSize={desktop ? "50%" : "55%"}>
-            <FileExplorer entries={visibleEntries} selectedId={selectedId} folderName={folder?.name ?? "Tous les fichiers"} canGoBack={folderId !== null} query={query} favoritesOnly={favoritesOnly} page={currentPage} pageCount={pageCount} total={filtered.length} dirtyIds={dirtyIds} onSearch={value => { setQuery(value); setPage(1) }} onToggleFavorites={() => { setFavoritesOnly(!favoritesOnly); setPage(1) }} onPage={setPage} onOpen={open} onBack={() => { setFolderId(folder?.parentId ?? null); setQuery(""); setPage(1); setFavoritesOnly(false) }} />
+            <FileExplorer
+              entries={listing.items}
+              selectedId={selectedId}
+              folderName={folder?.name ?? "Tous les fichiers"}
+              canGoBack={folderId !== null}
+              query={query}
+              favoritesOnly={favoritesOnly}
+              page={currentPage}
+              pageCount={pageCount}
+              total={listing.page.totalElements}
+              dirtyIds={dirtyIds}
+              onSearch={value => { setQuery(value); setPage(1) }}
+              onToggleFavorites={() => { setFavoritesOnly(!favoritesOnly); setPage(1) }}
+              onPage={setPage}
+              onOpen={open}
+              onBack={() => selectFolder(folder?.parentId ?? null)}
+            />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Redimensionner les panneaux" />
           <ResizablePanel id="editor" defaultSize={desktop ? "68%" : "55%"} minSize="40%">
@@ -110,7 +149,7 @@ export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><Check className="size-3.5" aria-hidden="true" />{dirtyIds.length ? `${dirtyIds.length} brouillon${dirtyIds.length > 1 ? "s" : ""} conservé${dirtyIds.length > 1 ? "s" : ""} pendant cette session` : "Vos documents sont prêts à être consultés"}</span><span>Glissez la séparation pour ajuster votre espace</span></div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><Check className="size-3.5" aria-hidden="true" />{dirtyIds.size ? `${dirtyIds.size} brouillon${dirtyIds.size > 1 ? "s" : ""} conservé${dirtyIds.size > 1 ? "s" : ""} pendant cette session` : "Vos documents sont prêts à être consultés"}</span><span>Glissez la séparation pour ajuster votre espace</span></div>
     </Wrapper>
   )
 }

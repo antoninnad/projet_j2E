@@ -1,0 +1,50 @@
+export type AccountStatus = "PENDING" | "ACTIVE" | "DISABLED"
+export type UserRole = "MEMBER" | "COMPANY_ADMIN"
+
+export interface User {
+  id: number
+  username: string
+  firstName: string
+  lastName: string
+  email: string
+  status: AccountStatus
+  role: UserRole
+  companyId: number
+}
+
+export type SessionUser = User
+export type SessionResponse = { authenticated: boolean; user: SessionUser }
+export type LoginRequest = { email: string; password: string }
+export type RegisterRequest = LoginRequest &
+  Pick<User, "username" | "firstName" | "lastName"> & {
+    confirmPassword: string
+    companyCode: string
+  }
+export type RegistrationResponse = Pick<User, "id" | "status"> & { message: string }
+export type UpdateUserRequest = Partial<Omit<User, "id" | "companyId">>
+
+export type Company = { id: number; name: string }
+export type Department = { id: number; name: string; companyId: number }
+export type Profile = { id: number; bio: string; profilePictureUrl: string | null }
+export type UpdateProfileRequest = Partial<Omit<Profile, "id">>
+
+export type PageQuery = {
+  page?: number
+  size?: number
+  sort?: `${string},${"asc" | "desc"}`
+  search?: string
+}
+
+export type UserQuery = PageQuery & { status?: AccountStatus }
+
+export interface PageMeta {
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  first: boolean
+  last: boolean
+}
+
+export type Page<T> = { items: T[]; page: PageMeta }
+export type ErrorResponse = { code: string; message: string; errors?: Record<string, string> }
