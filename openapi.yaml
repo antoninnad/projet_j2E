@@ -341,9 +341,9 @@ components:
     LoginRequest:
       type: object
       additionalProperties: false
-      required: [username, password]
+      required: [email, password]
       properties:
-        username: {type: string, minLength: 1, maxLength: 50}
+        email: {type: string, format: email}
         password: {type: string, format: password, minLength: 1}
     RegistrationResponse:
       type: object
@@ -411,13 +411,13 @@ components:
       properties:
         id: {type: integer, format: int64}
         bio: {type: string, maxLength: 2000}
-        profilePictureUrl: {type: string, format: uri, nullable: true}
+        profilePictureUrl: {type: [string, 'null'], format: uri}
     UpdateProfileRequest:
       type: object
       additionalProperties: false
       properties:
         bio: {type: string, maxLength: 2000}
-        profilePictureUrl: {type: string, format: uri, nullable: true}
+        profilePictureUrl: {type: [string, 'null'], format: uri}
     Department:
       type: object
       required: [id, name, companyId]

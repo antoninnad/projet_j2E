@@ -37,8 +37,10 @@ Ils décrivent les DTO, les paramètres de pagination, les filtres, les statuts
 HTTP et les erreurs JSON communes. Les routes REST sont préfixées par `/api`;
 les données sont isolées à l'entreprise de la session courante.
 
-Ouvrir **http://localhost:5173/**. Le backend écoute sur le port 8080 ; Vite lui transmet les requêtes `/api`.
-L’interface de fichiers utilise actuellement des données de démonstration en mémoire.
+Utiliser `frontend/src/lib/api.ts` pour les appels React et `frontend/src/types/api.ts` pour les DTO. `ApiError` expose le statut HTTP, le code et les erreurs par champ. Les listes API utilisent des indices de page à partir de zéro.
+
+- **http://localhost:8080/dashboard** utilise le client HTTP avec la session Spring. Le panneau React des inscriptions appelle `/api/users` et attend les contrôleurs JSON de B1.
+- **http://localhost:5173/** ouvre l'aperçu Vite autonome. La session, les départements et la validation des inscriptions y sont simulés. Les fichiers de démonstration restent en mémoire jusqu'au branchement de l'explorateur en T19.
 
 ---
 
@@ -205,5 +207,4 @@ cd frontend
 npm run build
 ```
 
-Les fichiers sont générés dans `frontend/dist/`. Maven ne construit et ne sert pas automatiquement ce frontend.
-Il n’existe actuellement aucun profil Spring `dev` permettant de l’ouvrir sur le port 8080.
+Vite génère `app.js` et `app.css` dans `src/main/resources/static/ui/`. Spring Boot sert ces fichiers sur `/ui/` au port 8080. La compilation frontend se lance avec npm.

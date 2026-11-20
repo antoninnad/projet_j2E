@@ -17,7 +17,7 @@ type Props = {
   page: number
   pageCount: number
   total: number
-  dirtyIds: string[]
+  dirtyIds: ReadonlySet<string>
   onSearch: (query: string) => void
   onToggleFavorites: () => void
   onPage: (page: number) => void
@@ -54,7 +54,7 @@ export function FileExplorer(props: Props) {
               <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background", entry.kind === "folder" ? "border-amber-200 bg-amber-50 text-amber-600" : "text-muted-foreground")}>
                 {entry.kind === "folder" ? <Folder className="size-4" aria-hidden="true" /> : <FileText className="size-4" aria-hidden="true" />}
               </span>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><span className="truncate text-sm font-medium">{entry.name}</span>{entry.favorite && <Star className="size-3 shrink-0 fill-amber-400 text-amber-500" aria-label="Favori" />}{dirtyIds.includes(entry.id) && <span className="size-1.5 shrink-0 rounded-full bg-blue-500" aria-label="Modifications non enregistrées" />}</span><span className="mt-0.5 block text-xs text-muted-foreground">{entry.kind === "folder" ? "Dossier partagé" : new Date(entry.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><span className="truncate text-sm font-medium">{entry.name}</span>{entry.favorite && <Star className="size-3 shrink-0 fill-amber-400 text-amber-500" aria-label="Favori" />}{dirtyIds.has(entry.id) && <span className="size-1.5 shrink-0 rounded-full bg-blue-500" aria-label="Modifications non enregistrées" />}</span><span className="mt-0.5 block text-xs text-muted-foreground">{entry.kind === "folder" ? "Dossier partagé" : new Date(entry.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span></span>
               <span className="shrink-0 text-xs text-muted-foreground">{entry.kind === "folder" ? <ChevronRight className="size-4" aria-hidden="true" /> : fileSize(entry.content)}</span>
             </button>
           </li>)}

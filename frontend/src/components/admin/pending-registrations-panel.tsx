@@ -3,94 +3,64 @@ import { Check, RefreshCw, ShieldCheck, UserX } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { api, type Api } from "@/lib/api"
+import { ApiError } from "@/lib/api-client"
+import type { Page, User } from "@/types/api"
 
-const ADMIN_USERS_API = "/api/admin/users"
+type RegistrationsApi = Pick<Api, "listUsers" | "approveUser" | "declineUser">
 
-interface PendingUser {
-  id: number
-  username?: string
-  firstName?: string
-  lastName?: string
-  email: string
-}
-
-function formatDisplayName(user: PendingUser): string {
+function formatDisplayName(user: User): string {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim()
   return fullName || user.username || user.email
 }
 
-async function fetchPendingUsers(signal?: AbortSignal): Promise<PendingUser[]> {
-  const response = await fetch(`${ADMIN_USERS_API}/pending`, {
-    credentials: "include",
-    signal,
-  })
-  if (response.status === 401 || response.status === 403) {
-    throw new Error("Accès administrateur requis pour consulter les demandes d'inscription.")
-  }
-  if (!response.ok) {
-    throw new Error(`Le serveur a répondu avec le statut ${response.status}.`)
-  }
-  const data: PendingUser[] = await response.json()
-  return Array.isArray(data) ? data : []
-}
-
-export function PendingRegistrationsPanel() {
-  const [users, setUsers] = useState<PendingUser[]>([])
+export function PendingRegistrationsPanel({ client = api }: { client?: RegistrationsApi }) {
+  const [query, setQuery] = useState({ page: 0 })
+  const [result, setResult] = useState<Page<User> | null>(null)
   const [loading, setLoading] = useState(true)
-  const [busyId, setBusyId] = useState<number | null>(null)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
-    let active = true
 
-    fetchPendingUsers(controller.signal)
+    client.listUsers({ ...query, status: "PENDING" }, controller.signal)
       .then((data) => {
-        if (!active) return
-        setUsers(data)
-        setError(null)
+        if (controller.signal.aborted) return
+        const lastPage = Math.max(0, data.page.totalPages - 1)
+        if (query.page > lastPage) {
+          setQuery({ page: lastPage })
+          return
+        }
+        setResult(data)
+        setLoading(false)
       })
       .catch((err: unknown) => {
-        if (!active || (err instanceof DOMException && err.name === "AbortError")) return
+        if (controller.signal.aborted) return
         const message = err instanceof Error ? err.message : "Impossible de joindre le serveur."
-        setError(message)
-      })
-      .finally(() => {
-        if (active) setLoading(false)
+        setError(err instanceof ApiError && err.status === 403
+          ? "Accès administrateur requis pour consulter les demandes d'inscription."
+          : message)
+        setResult(null)
+        setLoading(false)
       })
 
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [])
+    return () => controller.abort()
+  }, [client, query])
 
-  async function handleRefresh() {
+  function loadPage(page: number) {
     setLoading(true)
     setError(null)
-    try {
-      const data = await fetchPendingUsers()
-      setUsers(data)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Impossible de joindre le serveur."
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
+    setQuery({ page })
   }
 
-  async function handleAction(user: PendingUser, action: "approve" | "decline") {
-    setBusyId(user.id)
+  async function handleAction(user: User, action: "approve" | "decline") {
+    setBusy(true)
     setError(null)
     try {
-      const response = await fetch(`${ADMIN_USERS_API}/${user.id}/${action}`, {
-        method: "POST",
-        credentials: "include",
-      })
-      if (!response.ok) {
-        throw new Error(`Le serveur a répondu avec le statut ${response.status}.`)
-      }
-      setUsers((current) => current.filter((item) => item.id !== user.id))
+      if (action === "approve") await client.approveUser(user.id)
+      else await client.declineUser(user.id)
+      loadPage(query.page)
       const label = formatDisplayName(user)
       toast.success(
         action === "approve"
@@ -102,7 +72,7 @@ export function PendingRegistrationsPanel() {
       setError(message)
       toast.error("Échec de l'opération", { description: message })
     } finally {
-      setBusyId(null)
+      setBusy(false)
     }
   }
 
@@ -122,8 +92,8 @@ export function PendingRegistrationsPanel() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="outline">{users.length} en attente</Badge>
-          <Button type="button" variant="outline" size="sm" onClick={() => void handleRefresh()} disabled={loading}>
+          {result && <Badge variant="outline">{result.page.totalElements} en attente</Badge>}
+          <Button type="button" variant="outline" size="sm" onClick={() => loadPage(query.page)} disabled={loading || busy}>
             <RefreshCw className={loading ? "size-4 animate-spin" : "size-4"} aria-hidden="true" />
             Actualiser
           </Button>
@@ -141,52 +111,60 @@ export function PendingRegistrationsPanel() {
           <p className="py-8 text-center text-sm text-muted-foreground">
             Chargement des demandes d'inscription…
           </p>
-        ) : users.length === 0 ? (
+        ) : result?.items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
             <p className="text-sm font-medium text-foreground">Aucune demande en attente</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Les nouvelles inscriptions nécessitant votre approbation apparaîtront automatiquement ici.
             </p>
           </div>
-        ) : (
+        ) : result && (
           <ul className="divide-y divide-border rounded-lg border border-border">
-            {users.map((user) => {
-              const isBusy = busyId === user.id
-              return (
-                <li key={user.id} className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{formatDisplayName(user)}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {user.email}
-                      {user.username ? ` · @${user.username}` : ""}
-                    </p>
-                  </div>
+            {result.items.map((user) => (
+              <li key={user.id} className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">{formatDisplayName(user)}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {user.email}
+                    {user.username ? ` · @${user.username}` : ""}
+                  </p>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={isBusy}
-                      onClick={() => void handleAction(user, "approve")}
-                    >
-                      <Check className="size-4" aria-hidden="true" />
-                      Approuver
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={isBusy}
-                      onClick={() => void handleAction(user, "decline")}
-                    >
-                      <UserX className="size-4" aria-hidden="true" />
-                      Refuser
-                    </Button>
-                  </div>
-                </li>
-              )
-            })}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => void handleAction(user, "approve")}
+                  >
+                    <Check className="size-4" aria-hidden="true" />
+                    Approuver
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => void handleAction(user, "decline")}
+                  >
+                    <UserX className="size-4" aria-hidden="true" />
+                    Refuser
+                  </Button>
+                </div>
+              </li>
+            ))}
           </ul>
+        )}
+        {result && !loading && result.page.totalPages > 1 && (
+          <nav aria-label="Pagination des demandes" className="mt-4 flex items-center justify-end gap-3">
+            <Button variant="outline" size="sm" disabled={result.page.first || busy} onClick={() => loadPage(query.page - 1)}>
+              Précédente
+            </Button>
+            <span className="text-sm text-muted-foreground">{result.page.page + 1} / {result.page.totalPages}</span>
+            <Button variant="outline" size="sm" disabled={result.page.last || busy} onClick={() => loadPage(query.page + 1)}>
+              Suivante
+            </Button>
+          </nav>
         )}
       </div>
     </section>

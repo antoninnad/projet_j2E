@@ -1,8 +1,10 @@
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from "@/components/ui/avatar"
 import { contributors } from "@/data/workspace"
 
+const contributorsById = new Map(contributors.map(person => [person.id, person]))
+
 export function ContributorAvatars({ ids }: { ids: string[] }) {
-  const people = ids.map(id => contributors.find(person => person.id === id)).filter(person => person !== undefined)
+  const people = ids.map(id => contributorsById.get(id)).filter(person => person !== undefined)
   const remaining = people.slice(3)
   return (
     <div className="flex items-center gap-3" aria-label="Personnes ayant modifié ce fichier">

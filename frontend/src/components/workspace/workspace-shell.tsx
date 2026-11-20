@@ -11,6 +11,7 @@ import { PendingRegistrationsPanel } from "@/components/admin/pending-registrati
 import { Badge } from "@/components/ui/badge"
 import { Toaster } from "@/components/ui/sonner"
 import { FileWorkspace } from "@/components/workspace/file-workspace"
+import type { Api } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 interface WorkspaceShellProps {
@@ -18,6 +19,7 @@ interface WorkspaceShellProps {
   userName?: string
   isAdmin?: boolean
   embedded?: boolean
+  client?: Api
 }
 
 const TAB_ICONS: Record<WorkspaceTabId, typeof FolderOpen> = {
@@ -32,6 +34,7 @@ export function WorkspaceShell({
   userName,
   isAdmin = false,
   embedded = false,
+  client,
 }: WorkspaceShellProps) {
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
     readTabFromLocation(parseWorkspaceTab(initialTab, "files")),
@@ -92,7 +95,7 @@ export function WorkspaceShell({
         aria-labelledby={`tab-${activeTab}`}
       >
         {activeTab === "files" && <FileWorkspace embedded={embedded} />}
-        {activeTab === "admin" && <PendingRegistrationsPanel />}
+        {activeTab === "admin" && <PendingRegistrationsPanel client={client} />}
         {activeTab === "directory" && (
           <ModulePlaceholder
             title="Annuaire et profils de l'entreprise"
