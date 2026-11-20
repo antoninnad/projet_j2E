@@ -5,8 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 /**
- * Fichier stocké. L'id, le nom, le propriétaire, les contributeurs
- * et les dates sont hérités de Node (ne pas redéclarer d'@Id ici).
+ * Fichier stocké. L'id, le nom, le parent, l'entreprise, le département, le seuil,
+ * la version, le propriétaire, les contributeurs et les dates sont hérités de Node
+ * (ne pas redéclarer d'@Id ici). Un fichier est toujours rangé dans un dossier.
  */
 @Entity
 @Table(name = "files")
@@ -21,6 +22,7 @@ public class File extends Node {
     @Column(nullable = false)
     private long size;
 
+    /** Chemin dans le stockage privé ; ne doit jamais être exposé au client. */
     @Column(nullable = false)
     private String storagePath;
 
@@ -28,12 +30,14 @@ public class File extends Node {
         // Constructeur requis par JPA.
     }
 
-    public File(User owner, String name, String originalFileName, String contentType, String storagePath, long size) {
-        super(owner, name);
+    public File(User owner, String name, Folder parent, String originalFileName,
+                String contentType, String storagePath, long size) {
+        super(owner, name, parent);
         this.originalFileName = originalFileName;
         this.contentType = contentType;
         this.storagePath = storagePath;
         this.size = size;
+        parent.addChild(this);
     }
 
     public String getOriginalFileName() {
