@@ -117,6 +117,18 @@ class CompanyIsolationServiceTest {
         assertTrue(nodesOfA.stream().allMatch(node -> node.getCompany().getId().equals(aliceA.getCompany().getId())));
     }
 
+    @Test
+    void listsRootAndChildFoldersOfTheOwnCompanyOnly() {
+        Folder reports = em.persist(new Folder(aliceA, "Rapports", rootA));
+        em.flush();
+
+        assertEquals(java.util.List.of(rootA.getId()),
+                isolation.listRootFolders(bobA).stream().map(Folder::getId).toList());
+        assertEquals(java.util.List.of(reports.getId()),
+                isolation.listChildFolders(bobA, rootA.getId()).stream().map(Folder::getId).toList());
+        assertThrows(ResourceNotFoundException.class, () -> isolation.listChildFolders(aliceA, rootB.getId()));
+    }
+
     private static User user(String username, Company company, AccountStatus status) {
         User user = new User();
         user.setUsername(username);

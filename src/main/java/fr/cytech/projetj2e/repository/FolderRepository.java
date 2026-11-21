@@ -25,4 +25,8 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
 
     /** Racines des départements d'une entreprise, sans jamais mélanger les entreprises. */
     List<Folder> findByCompanyAndParentIsNull(Company company);
+
+    Optional<Folder> findByIdAndCompany(Long id, Company company);
+
+    List<Folder> findByParentAndCompany(Folder parent, Company company);
 }

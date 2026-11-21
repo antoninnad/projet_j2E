@@ -1,5 +1,7 @@
 package fr.cytech.projetj2e.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +88,18 @@ public class CompanyIsolationService {
         if (node == null || !companyId.equals(companyId(node.getCompany()))) {
             throw new ResourceNotFoundException("Élément introuvable.");
         }
+    }
+
+    /** Dossiers racines des départements de l'entreprise du compte (repris de ResourceIsolationService). */
+    public List<Folder> listRootFolders(User actor) {
+        requireActiveCompanyId(actor);
+        return folderRepository.findByCompanyAndParentIsNull(actor.getCompany());
+    }
+
+    /** Sous-dossiers d'un dossier, après vérification que ce dossier appartient à l'entreprise du compte. */
+    public List<Folder> listChildFolders(User actor, Long folderId) {
+        Folder parent = requireFolder(actor, folderId);
+        return folderRepository.findByParentAndCompany(parent, actor.getCompany());
     }
 
     // ---------------------------------------------------------------- Comptes (chat, profils)
