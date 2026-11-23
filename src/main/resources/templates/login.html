@@ -15,20 +15,21 @@
 
         <div th:replace="~{fragments/messages :: messages}"></div>
 
-        <form th:action="@{/login}" method="post" class="space-y-4">
+        <form th:action="@{/login}" th:object="${loginDto}" method="post" class="space-y-4">
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
             <div class="space-y-1.5">
-                <label for="username" class="block text-sm font-medium text-foreground">
-                    Identifiant
+                <label for="email" class="block text-sm font-medium text-foreground">
+                    Adresse e-mail
                 </label>
-                <input id="username"
-                       type="text"
-                       name="username"
-                       autocomplete="username"
-                       placeholder="prenom.nom"
+                <input id="email"
+                       type="email"
+                       th:field="*{email}"
+                       autocomplete="email"
+                       placeholder="prenom.nom@entreprise.fr"
                        required
                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
+                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-sm text-destructive"></p>
             </div>
 
             <div class="space-y-1.5">
@@ -37,10 +38,11 @@
                 </label>
                 <input id="password"
                        type="password"
-                       name="password"
+                th:field="*{password}"
                        autocomplete="current-password"
                        required
                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
+                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-sm text-destructive"></p>
             </div>
 
             <button type="submit"

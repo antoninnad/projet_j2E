@@ -25,7 +25,10 @@ import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.repository.NodeRepository;
 
 /** Deux entreprises A et B : aucune ressource de B n'est accessible depuis un compte de A. */
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @Import({ CompanyIsolationService.class, BCryptPasswordEncoder.class }) // BCrypt : requis par le bean init de ProjetJ2eApplication
 class CompanyIsolationServiceTest {
 

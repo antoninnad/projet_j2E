@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import fr.cytech.projetj2e.dto.UserDto;
+import fr.cytech.projetj2e.dto.RegisterDTO;
 import fr.cytech.projetj2e.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +21,12 @@ public class RegisterController {
 
     @GetMapping("/register")
     public String form(Model model) {
-        model.addAttribute("userDto", new UserDto());
+        model.addAttribute("userDto", new RegisterDTO());
         return "register";
     }
 
     @PostMapping("/register")
-    public String submit(@Valid @ModelAttribute UserDto dto,
+    public String submit(@Valid @ModelAttribute("userDto") RegisterDTO dto,
                          BindingResult result,
                          RedirectAttributes redirect) {
         if (!dto.getPassword().equals(dto.getConfirmPassword())) {

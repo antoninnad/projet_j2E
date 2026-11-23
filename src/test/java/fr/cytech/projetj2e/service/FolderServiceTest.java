@@ -25,7 +25,10 @@ import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.repository.FolderRepository;
 
 /** Persistance de l'arborescence et création des racines, sur une base H2 en mémoire. */
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @Import({ FolderService.class, BCryptPasswordEncoder.class }) // BCrypt : requis par le bean init de ProjetJ2eApplication
 class FolderServiceTest {
 
