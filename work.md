@@ -163,7 +163,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T27 | Partage backend | Gérer seuils et contributeurs en appliquant permissions et intégrité de l’arbre | B1 | P1 | À faire | T16, T20 | Partage protégé sans contournement des niveaux |
 | T28 | Partage frontend | Ajouter le panneau propriétaire/seuil/contributeurs et les messages de refus | F1 | P1 | À faire | T17, T19, T27 | Droits consultables et modifiables selon autorisation |
 | T29 | Profils et annuaire backend | Créer API profils, avatar, changement du mot de passe et recherche paginée des collègues | B1 | P1 | Partiel | T11, T14 | Données validées et consultation interne à l’entreprise |
-| T30 | Profils et annuaire frontend | Créer édition du profil, avatar, mot de passe et recherche de collègues | F1 | P1 | À faire | T13, T29 | Profil persistant et annuaire fonctionnel |
+| T30 | Profils et annuaire frontend | Créer édition du profil, avatar, mot de passe et recherche de collègues | F1 | P1 | À vérifier | T13, T29 | Profil persistant et annuaire fonctionnel |
 | T31 | Recherche et favoris backend | Ajouter recherche filtrée par droits et favoris personnels persistants | B2 | P1 | À faire | T23 | Résultats et favoris sans fuite de documents |
 | T32 | Recherche et favoris frontend | Brancher recherche et vue des favoris sur les API | F2 | P1 | Partiel | T19, T31 | Favoris conservés et résultats autorisés |
 | T33 | Chat persistant backend | Créer conversations à deux, envoi, historique paginé et état de lecture | B2 | P1 | À faire | T08, T11, T29 | Messages persistants accessibles uniquement aux participants |

@@ -41,6 +41,11 @@ export type CreateCompanyResponse = {
 export type Department = { id: number; name: string; companyId: number }
 export type Profile = { id: number; bio: string; profilePictureUrl: string | null }
 export type UpdateProfileRequest = Partial<Omit<Profile, "id">>
+export type ChangePasswordRequest = {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
 
 export type PageQuery = {
   page?: number

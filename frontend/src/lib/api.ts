@@ -1,5 +1,6 @@
 import { createApiClient, type ApiClientOptions } from "@/lib/api-client"
 import type {
+  ChangePasswordRequest,
   Company,
   CreateCompanyRequest,
   CreateCompanyResponse,
@@ -39,6 +40,10 @@ export function createApi(options?: ApiClientOptions) {
     getMyProfile: (signal?: AbortSignal) => json<Profile>("/profiles/me", { signal }),
     updateMyProfile: (data: UpdateProfileRequest, signal?: AbortSignal) =>
       json<Profile>("/profiles/me", { method: "PATCH", json: data, signal }),
+    changeMyPassword: (data: ChangePasswordRequest, signal?: AbortSignal) =>
+      noContent("/profiles/me/password", { method: "POST", json: data, signal }),
+    getUserProfile: (id: number, signal?: AbortSignal) =>
+      json<Profile>(`/users/${id}/profile`, { signal }),
     listDepartments: (query?: PageQuery, signal?: AbortSignal) =>
       json<Page<Department>>("/departments", { query, signal }),
   }

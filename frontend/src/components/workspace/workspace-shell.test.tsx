@@ -8,9 +8,28 @@ import { paginate } from "@/lib/pagination"
 describe("WorkspaceShell", () => {
   beforeEach(() => {
     window.history.replaceState({}, "", "/dashboard")
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      Response.json(paginate([])),
-    )
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
+      if (url.includes("/api/auth/session")) {
+        return Response.json({
+          authenticated: true,
+          user: {
+            id: 1,
+            companyId: 1,
+            username: "alice.dupont",
+            firstName: "Alice",
+            lastName: "Dupont",
+            email: "alice@example.com",
+            status: "ACTIVE",
+            role: "COMPANY_ADMIN",
+          },
+        })
+      }
+      if (url.includes("/api/profiles/me")) {
+        return Response.json({ id: 1, bio: "", profilePictureUrl: null })
+      }
+      return Response.json(paginate([]))
+    })
   })
 
   it("affiche les 4 onglets accessibles avec l'onglet Documents actif par défaut", () => {
@@ -31,7 +50,7 @@ describe("WorkspaceShell", () => {
 
     await user.click(screen.getByRole("tab", { name: "Annuaire" }))
     expect(screen.getByRole("tab", { name: "Annuaire" })).toHaveAttribute("aria-selected", "true")
-    expect(screen.getByText(/Annuaire et profils de l'entreprise/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Annuaire de l'entreprise/i)).toBeInTheDocument()
     expect(window.location.search).toBe("?tab=directory")
 
     await user.click(screen.getByRole("tab", { name: "Chat privé" }))
@@ -72,5 +91,19 @@ describe("WorkspaceShell", () => {
     await user.click(screen.getByRole("button", { name: "Approuver" }))
     expect(await screen.findByText("Aucune demande en attente")).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("ouvre une conversation privée depuis l'annuaire et bascule sur l'onglet Chat privé (?tab=chat&peer=...)", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("tab", { name: "Annuaire" }))
+    const messageButton = await screen.findByRole("button", { name: "Envoyer un message à Léa Dubois" })
+    await user.click(messageButton)
+
+    expect(screen.getByRole("tab", { name: "Chat privé" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.getByText(/Conversation privée avec Léa Dubois/i)).toBeInTheDocument()
+    expect(window.location.search).toContain("tab=chat")
+    expect(window.location.search).toContain("peer=3")
   })
 })

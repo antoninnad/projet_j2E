@@ -1,12 +1,16 @@
 import { createApi } from "@/lib/api"
 import { paginate } from "@/lib/pagination"
 import type {
+  ChangePasswordRequest,
   Company,
   CreateCompanyRequest,
   CreateCompanyResponse,
   Department,
   ErrorResponse,
+  Profile,
   SessionResponse,
+  UpdateProfileRequest,
+  UpdateUserRequest,
   User,
 } from "@/types/api"
 
@@ -20,13 +24,69 @@ const pending: User = {
   email: "sam@example.com", status: "PENDING", role: "MEMBER",
 }
 
+const initialColleagues: User[] = [
+  {
+    id: 3, companyId: 1, username: "lea.dubois", firstName: "Léa", lastName: "Dubois",
+    email: "lea.dubois@example.com", status: "ACTIVE", role: "MEMBER",
+  },
+  {
+    id: 4, companyId: 1, username: "hugo.petit", firstName: "Hugo", lastName: "Petit",
+    email: "hugo.petit@example.com", status: "ACTIVE", role: "MEMBER",
+  },
+  {
+    id: 5, companyId: 1, username: "ines.laurent", firstName: "Inès", lastName: "Laurent",
+    email: "ines.laurent@example.com", status: "ACTIVE", role: "MEMBER",
+  },
+  {
+    id: 6, companyId: 1, username: "lucas.moreau", firstName: "Lucas", lastName: "Moreau",
+    email: "lucas.moreau@example.com", status: "ACTIVE", role: "MEMBER",
+  },
+  {
+    id: 7, companyId: 1, username: "camille.roux", firstName: "Camille", lastName: "Roux",
+    email: "camille.roux@example.com", status: "ACTIVE", role: "MEMBER",
+  },
+]
+
+const initialProfiles: Record<number, Profile> = {
+  1: {
+    id: 1,
+    bio: "Administratrice de l'espace CyTech — coordination des départements et des accès.",
+    profilePictureUrl: null,
+  },
+  3: {
+    id: 3,
+    bio: "Référente design produit et documentation partagée.",
+    profilePictureUrl: null,
+  },
+  4: {
+    id: 4,
+    bio: "Ingénieur plateforme — département Technique.",
+    profilePictureUrl: null,
+  },
+  5: {
+    id: 5,
+    bio: "Chargée des ressources humaines et de l'accueil des nouveaux arrivants.",
+    profilePictureUrl: null,
+  },
+  6: {
+    id: 6,
+    bio: "Analyste financier — département Finance.",
+    profilePictureUrl: null,
+  },
+  7: {
+    id: 7,
+    bio: "Cheffe de projet opérations internes.",
+    profilePictureUrl: null,
+  },
+}
+
 const departments: Department[] = [
   { id: 1, companyId: 1, name: "Finance" },
   { id: 2, companyId: 1, name: "Ressources humaines" },
 ]
 
-function error(status: number, code: string, message: string): Response {
-  return Response.json({ code, message } satisfies ErrorResponse, { status })
+function error(status: number, code: string, message: string, errors?: Record<string, string>): Response {
+  return Response.json({ code, message, ...(errors ? { errors } : {}) } satisfies ErrorResponse, { status })
 }
 
 function list<T extends { id: number }>(items: T[], params: URLSearchParams): Response {
@@ -37,7 +97,7 @@ function list<T extends { id: number }>(items: T[], params: URLSearchParams): Re
   }
 
   const [field = "id", direction = "asc"] = (params.get("sort") ?? "id,asc").split(",")
-  const sorted = items.sort((left, right) => {
+  const sorted = [...items].sort((left, right) => {
     const key = Object.hasOwn(left, field) ? field as keyof T : "id"
     const a = left[key]
     const b = right[key]
@@ -48,8 +108,16 @@ function list<T extends { id: number }>(items: T[], params: URLSearchParams): Re
 }
 
 export function createPreviewApi() {
-  const users = new Map<number, User>([[admin.id, admin], [pending.id, pending]])
+  const users = new Map<number, User>([
+    [admin.id, { ...admin }],
+    [pending.id, { ...pending }],
+    ...initialColleagues.map((colleague) => [colleague.id, { ...colleague }] as const),
+  ])
+  const profiles = new Map<number, Profile>(
+    Object.entries(initialProfiles).map(([id, profile]) => [Number(id), { ...profile }]),
+  )
   const companies = new Map<number, Company>([[1, { id: 1, name: "CyTech", code: "CYTECH" }]])
+  let currentPassword = "Password123!"
 
   return createApi({
     fetcher: async (url, { method, body, signal }) => {
@@ -58,8 +126,54 @@ export function createPreviewApi() {
       const search = (searchParams.get("search") ?? "").toLocaleLowerCase("fr")
 
       if (method === "GET" && pathname === "/api/auth/session") {
-        return Response.json({ authenticated: true, user: admin } satisfies SessionResponse)
+        const me = users.get(admin.id)!
+        return Response.json({ authenticated: true, user: me } satisfies SessionResponse)
       }
+
+      if (method === "GET" && pathname === "/api/profiles/me") {
+        const myProfile = profiles.get(admin.id) ?? { id: admin.id, bio: "", profilePictureUrl: null }
+        return Response.json(myProfile satisfies Profile)
+      }
+
+      if (method === "PATCH" && pathname === "/api/profiles/me") {
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as UpdateProfileRequest
+        if (payload.bio !== undefined && payload.bio.length > 2000) {
+          return error(422, "VALIDATION_FAILED", "La biographie dépasse la limite autorisée.", {
+            bio: "La biographie ne doit pas dépasser 2000 caractères.",
+          })
+        }
+        const current = profiles.get(admin.id) ?? { id: admin.id, bio: "", profilePictureUrl: null }
+        const updated: Profile = {
+          ...current,
+          bio: payload.bio !== undefined ? payload.bio : current.bio,
+          profilePictureUrl:
+            payload.profilePictureUrl !== undefined ? payload.profilePictureUrl : current.profilePictureUrl,
+        }
+        profiles.set(admin.id, updated)
+        return Response.json(updated satisfies Profile)
+      }
+
+      if (method === "POST" && pathname === "/api/profiles/me/password") {
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as Partial<ChangePasswordRequest>
+        if (!payload.currentPassword || payload.currentPassword !== currentPassword) {
+          return error(422, "VALIDATION_FAILED", "Le mot de passe actuel est incorrect.", {
+            currentPassword: "Mot de passe actuel incorrect.",
+          })
+        }
+        if (!payload.newPassword || payload.newPassword.length < 8) {
+          return error(422, "VALIDATION_FAILED", "Le nouveau mot de passe est trop court.", {
+            newPassword: "Le mot de passe doit contenir au moins 8 caractères.",
+          })
+        }
+        if (payload.newPassword !== payload.confirmPassword) {
+          return error(422, "VALIDATION_FAILED", "Les mots de passe ne correspondent pas.", {
+            confirmPassword: "La confirmation ne correspond pas au nouveau mot de passe.",
+          })
+        }
+        currentPassword = payload.newPassword
+        return new Response(null, { status: 204 })
+      }
+
       if (method === "POST" && pathname === "/api/companies") {
         const payload = (typeof body === "string" ? JSON.parse(body) : {}) as Partial<CreateCompanyRequest>
         const code = (payload.companyCode ?? "").trim().toUpperCase()
@@ -68,25 +182,15 @@ export function createPreviewApi() {
           return error(400, "VALIDATION_FAILED", "Tous les champs de création d'entreprise sont obligatoires.")
         }
         if (payload.adminPassword !== payload.adminConfirmPassword) {
-          return Response.json(
-            {
-              code: "VALIDATION_FAILED",
-              message: "Les mots de passe ne correspondent pas.",
-              errors: { adminConfirmPassword: "La confirmation ne correspond pas au mot de passe." },
-            } satisfies ErrorResponse,
-            { status: 400 },
-          )
+          return error(400, "VALIDATION_FAILED", "Les mots de passe ne correspondent pas.", {
+            adminConfirmPassword: "La confirmation ne correspond pas au mot de passe.",
+          })
         }
         const codeExists = [...companies.values()].some((c) => c.code?.toUpperCase() === code)
         if (codeExists) {
-          return Response.json(
-            {
-              code: "CONFLICT",
-              message: "Ce code d'entreprise est déjà utilisé.",
-              errors: { companyCode: "Ce code d'entreprise existe déjà." },
-            } satisfies ErrorResponse,
-            { status: 409 },
-          )
+          return error(409, "CONFLICT", "Ce code d'entreprise est déjà utilisé.", {
+            companyCode: "Ce code d'entreprise existe déjà.",
+          })
         }
         const companyId = companies.size + 1
         const createdCompany: Company = { id: companyId, name, code }
@@ -108,16 +212,60 @@ export function createPreviewApi() {
           { status: 201 },
         )
       }
+
       if (method === "GET" && pathname === "/api/departments") {
-        return list(departments.filter(item => item.name.toLocaleLowerCase("fr").includes(search)), searchParams)
+        return list(departments.filter((item) => item.name.toLocaleLowerCase("fr").includes(search)), searchParams)
       }
+
       if (method === "GET" && pathname === "/api/users") {
         const status = searchParams.get("status")
-        const matches = [...users.values()].filter(user =>
-          (!status || user.status === status) &&
-          `${user.firstName} ${user.lastName} ${user.username} ${user.email}`.toLocaleLowerCase("fr").includes(search),
+        const matches = [...users.values()].filter(
+          (user) =>
+            user.companyId === admin.companyId &&
+            (!status || user.status === status) &&
+            `${user.firstName} ${user.lastName} ${user.username} ${user.email}`.toLocaleLowerCase("fr").includes(search),
         )
         return list(matches, searchParams)
+      }
+
+      const userMatch = /^\/api\/users\/(\d+)$/.exec(pathname)
+      if (userMatch) {
+        const id = Number(userMatch[1])
+        const target = users.get(id)
+        if (!target || target.companyId !== admin.companyId) {
+          return error(404, "NOT_FOUND", "Compte introuvable.")
+        }
+        if (method === "GET") {
+          return Response.json(target satisfies User)
+        }
+        if (method === "PATCH") {
+          if (id !== admin.id) {
+            return error(403, "FORBIDDEN", "La modification d'un profil est réservée à son propriétaire.")
+          }
+          const payload = (typeof body === "string" ? JSON.parse(body) : {}) as UpdateUserRequest
+          const firstName = payload.firstName !== undefined ? payload.firstName.trim() : target.firstName
+          const lastName = payload.lastName !== undefined ? payload.lastName.trim() : target.lastName
+          if (!firstName || !lastName) {
+            return error(422, "VALIDATION_FAILED", "Le prénom et le nom sont obligatoires.", {
+              ...(!firstName ? { firstName: "Le prénom est obligatoire." } : {}),
+              ...(!lastName ? { lastName: "Le nom est obligatoire." } : {}),
+            })
+          }
+          const updated: User = { ...target, firstName, lastName }
+          users.set(id, updated)
+          return Response.json(updated satisfies User)
+        }
+      }
+
+      const profileMatch = /^\/api\/users\/(\d+)\/profile$/.exec(pathname)
+      if (method === "GET" && profileMatch) {
+        const id = Number(profileMatch[1])
+        const target = users.get(id)
+        if (!target || target.companyId !== admin.companyId || target.status !== "ACTIVE") {
+          return error(404, "NOT_FOUND", "Profil introuvable.")
+        }
+        const colleagueProfile = profiles.get(id) ?? { id, bio: "", profilePictureUrl: null }
+        return Response.json(colleagueProfile satisfies Profile)
       }
 
       const action = /^\/api\/users\/(\d+)\/(approve|decline)$/.exec(pathname)
@@ -134,6 +282,7 @@ export function createPreviewApi() {
         users.set(id, approved)
         return Response.json(approved)
       }
+
       return error(501, "NOT_IMPLEMENTED", "Cette opération n'est pas disponible dans l'aperçu.")
     },
   })

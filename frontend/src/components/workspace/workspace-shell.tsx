@@ -9,11 +9,13 @@ import {
 } from "@/app/routes"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
+import { DirectoryProfilePanel } from "@/components/directory/directory-profile-panel"
 import { Badge } from "@/components/ui/badge"
 import { Toaster } from "@/components/ui/sonner"
 import { FileWorkspace } from "@/components/workspace/file-workspace"
 import type { Api } from "@/lib/api"
 import { cn } from "@/lib/utils"
+import type { User } from "@/types/api"
 
 interface WorkspaceShellProps {
   initialTab?: string
@@ -40,6 +42,7 @@ export function WorkspaceShell({
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
     readTabFromLocation(parseWorkspaceTab(initialTab, "files")),
   )
+  const [selectedChatPeer, setSelectedChatPeer] = useState<User | null>(null)
 
   useEffect(() => {
     const onPopState = () => {
@@ -52,6 +55,17 @@ export function WorkspaceShell({
   function handleSelectTab(tab: WorkspaceTabId) {
     setActiveTab(tab)
     syncTabToLocation(tab)
+  }
+
+  function handleOpenConversation(colleague: User) {
+    setSelectedChatPeer(colleague)
+    setActiveTab("chat")
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      url.searchParams.set("tab", "chat")
+      url.searchParams.set("peer", String(colleague.id))
+      window.history.pushState({ tab: "chat", peer: colleague.id }, "", `${url.pathname}${url.search}${url.hash}`)
+    }
   }
 
   return (
@@ -103,15 +117,15 @@ export function WorkspaceShell({
           </div>
         )}
         {activeTab === "directory" && (
-          <ModulePlaceholder
-            title="Annuaire et profils de l'entreprise"
-            description="La recherche paginée des collègues actifs, la consultation des profils et l'édition de votre profil seront branchées en tâche T30."
-            badge="Prévu en T30"
-          />
+          <DirectoryProfilePanel client={client} onOpenConversation={handleOpenConversation} />
         )}
         {activeTab === "chat" && (
           <ModulePlaceholder
-            title="Chat privé en temps réel"
+            title={
+              selectedChatPeer
+                ? `Conversation privée avec ${selectedChatPeer.firstName} ${selectedChatPeer.lastName}`
+                : "Chat privé en temps réel"
+            }
             description="La liste des conversations à deux, l'historique paginé et la livraison WebSocket seront intégrés en tâche T35."
             badge="Prévu en T35"
           />
