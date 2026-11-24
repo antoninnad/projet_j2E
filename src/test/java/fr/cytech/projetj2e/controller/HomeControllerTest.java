@@ -192,4 +192,26 @@ class HomeControllerTest {
                 .andExpect(view().name("dashboard"))
                 .andExpect(content().string(containsString("data-initial-tab=\"files\"")));
     }
+
+    @Test
+    void dashboardRedirectsWithExpiredMessageWhenAccountBecomesInactive() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(FrontendModelAdvice.ATTR_USER_ID, 99L);
+        when(sessionIdentityService.requireActiveMember(session))
+                .thenThrow(new fr.cytech.projetj2e.exception.ForbiddenException("Compte désactivé"));
+
+        mockMvc.perform(get("/dashboard").session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?expired=true"));
+    }
+
+    @Test
+    void logoutInvalidatesSessionAndRedirectsToLoginWithLogoutParam() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(FrontendModelAdvice.ATTR_USER_ID, 42L);
+
+        mockMvc.perform(post("/logout").with(csrf()).session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?logout"));
+    }
 }

@@ -1,48 +1,86 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Administration — Utilisateurs</title>
-</head>
-<body>
-<main>
-    <h1>Utilisateurs</h1>
-    <nav>
-        <a th:href="@{/admin/dashboard/listUsers}">Utilisateurs</a>
-        <a th:href="@{/admin/dashboard/listNodes}">Éléments</a>
-        <a th:href="@{/admin/dashboard/listDepartements}">Départements</a>
-        <a th:href="@{/admin/dashboard/listFiles}">Fichiers</a>
-    </nav>
-    <p th:if="${notice}" th:text="${notice}" role="status"></p>
-    <p th:if="${error}" th:text="${error}" role="alert"></p>
+<head th:replace="~{fragments/head :: head('Administration — Utilisateurs', 'Consultez et modifiez les comptes utilisateurs et leur statut.')}"></head>
+<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<header th:replace="~{fragments/header :: header('admin')}"></header>
 
-    <p th:if="${#lists.isEmpty(users)}">Aucun utilisateur.</p>
-    <table th:unless="${#lists.isEmpty(users)}">
-        <thead>
-        <tr><th>ID</th><th>Identifiant</th><th>Prénom</th><th>Nom</th><th>Email</th><th>Statut</th><th>Action</th></tr>
-        </thead>
-        <tbody>
-        <tr th:each="user : ${users}">
-                <td th:text="${user.id}"></td>
-                <td><input th:attr="form=${'user-form-' + user.id}" name="username" th:value="${user.username}" required></td>
-                <td><input th:attr="form=${'user-form-' + user.id}" name="firstName" th:value="${user.firstName}" required></td>
-                <td><input th:attr="form=${'user-form-' + user.id}" name="lastName" th:value="${user.lastName}" required></td>
-                <td><input th:attr="form=${'user-form-' + user.id}" type="email" name="email" th:value="${user.email}" required></td>
-                <td>
-                    <select th:attr="form=${'user-form-' + user.id}" name="status">
-                        <option th:each="status : ${statuses}" th:value="${status}"
-                                th:text="${status}" th:selected="${status == user.status}"></option>
-                    </select>
-                </td>
-                <td>
-                    <form th:id="${'user-form-' + user.id}"
-                          th:action="@{/admin/dashboard/users/{id}(id=${user.id})}" method="post">
-                        <button type="submit">Enregistrer</button>
-                    </form>
-                </td>
-        </tr>
-        </tbody>
-    </table>
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Administration — Utilisateurs</h1>
+        <p class="mt-1 text-sm text-muted-foreground">
+            Modifiez en ligne les informations d'un compte ou changez son statut (actif, en attente, désactivé).
+        </p>
+    </div>
+
+    <div th:replace="~{fragments/admin-nav :: adminNav('users')}"></div>
+
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <section class="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <div th:if="${#lists.isEmpty(users)}" class="p-8 text-center text-sm text-muted-foreground">
+            Aucun utilisateur enregistré.
+        </div>
+
+        <div th:unless="${#lists.isEmpty(users)}" class="overflow-x-auto">
+            <table class="w-full border-collapse text-left text-sm">
+                <thead class="border-b border-border bg-muted/40 text-xs font-medium uppercase text-muted-foreground">
+                <tr>
+                    <th class="px-4 py-3">ID</th>
+                    <th class="px-4 py-3">Identifiant</th>
+                    <th class="px-4 py-3">Prénom</th>
+                    <th class="px-4 py-3">Nom</th>
+                    <th class="px-4 py-3">Email</th>
+                    <th class="px-4 py-3">Statut</th>
+                    <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                <tr th:each="user : ${users}" class="hover:bg-muted/20">
+                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground" th:text="${user.id}">1</td>
+                    <td class="px-4 py-2.5">
+                        <input th:attr="form=${'user-form-' + user.id}" name="username" th:value="${user.username}"
+                               aria-label="Identifiant" required
+                               class="h-8 w-full min-w-28 rounded-md border border-input bg-background px-2.5 text-xs text-foreground" />
+                    </td>
+                    <td class="px-4 py-2.5">
+                        <input th:attr="form=${'user-form-' + user.id}" name="firstName" th:value="${user.firstName}"
+                               aria-label="Prénom" required
+                               class="h-8 w-full min-w-24 rounded-md border border-input bg-background px-2.5 text-xs text-foreground" />
+                    </td>
+                    <td class="px-4 py-2.5">
+                        <input th:attr="form=${'user-form-' + user.id}" name="lastName" th:value="${user.lastName}"
+                               aria-label="Nom" required
+                               class="h-8 w-full min-w-24 rounded-md border border-input bg-background px-2.5 text-xs text-foreground" />
+                    </td>
+                    <td class="px-4 py-2.5">
+                        <input th:attr="form=${'user-form-' + user.id}" type="email" name="email" th:value="${user.email}"
+                               aria-label="Email" required
+                               class="h-8 w-full min-w-44 rounded-md border border-input bg-background px-2.5 text-xs text-foreground" />
+                    </td>
+                    <td class="px-4 py-2.5">
+                        <select th:attr="form=${'user-form-' + user.id}" name="status" aria-label="Statut"
+                                class="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground">
+                            <option th:each="status : ${statuses}" th:value="${status}"
+                                    th:text="${status}" th:selected="${status == user.status}"></option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-2.5 text-right">
+                        <form th:id="${'user-form-' + user.id}"
+                              th:action="@{/admin/dashboard/users/{id}(id=${user.id})}" method="post">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit"
+                                    class="inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+                                Enregistrer
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

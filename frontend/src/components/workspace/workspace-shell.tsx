@@ -7,6 +7,7 @@ import {
   syncTabToLocation,
   type WorkspaceTabId,
 } from "@/app/routes"
+import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
 import { Badge } from "@/components/ui/badge"
 import { Toaster } from "@/components/ui/sonner"
@@ -95,7 +96,12 @@ export function WorkspaceShell({
         aria-labelledby={`tab-${activeTab}`}
       >
         {activeTab === "files" && <FileWorkspace embedded={embedded} />}
-        {activeTab === "admin" && <PendingRegistrationsPanel client={client} />}
+        {activeTab === "admin" && (
+          <div className="space-y-6">
+            <PendingRegistrationsPanel client={client} />
+            <CompanyCreationPanel client={client} />
+          </div>
+        )}
         {activeTab === "directory" && (
           <ModulePlaceholder
             title="Annuaire et profils de l'entreprise"

@@ -1,6 +1,14 @@
 import { createApi } from "@/lib/api"
 import { paginate } from "@/lib/pagination"
-import type { Department, ErrorResponse, SessionResponse, User } from "@/types/api"
+import type {
+  Company,
+  CreateCompanyRequest,
+  CreateCompanyResponse,
+  Department,
+  ErrorResponse,
+  SessionResponse,
+  User,
+} from "@/types/api"
 
 const admin: User = {
   id: 1, companyId: 1, username: "alice.martin", firstName: "Alice", lastName: "Martin",
@@ -41,15 +49,64 @@ function list<T extends { id: number }>(items: T[], params: URLSearchParams): Re
 
 export function createPreviewApi() {
   const users = new Map<number, User>([[admin.id, admin], [pending.id, pending]])
+  const companies = new Map<number, Company>([[1, { id: 1, name: "CyTech", code: "CYTECH" }]])
 
   return createApi({
-    fetcher: async (url, { method, signal }) => {
+    fetcher: async (url, { method, body, signal }) => {
       signal?.throwIfAborted()
       const { pathname, searchParams } = new URL(url, "http://localhost")
       const search = (searchParams.get("search") ?? "").toLocaleLowerCase("fr")
 
       if (method === "GET" && pathname === "/api/auth/session") {
         return Response.json({ authenticated: true, user: admin } satisfies SessionResponse)
+      }
+      if (method === "POST" && pathname === "/api/companies") {
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as Partial<CreateCompanyRequest>
+        const code = (payload.companyCode ?? "").trim().toUpperCase()
+        const name = (payload.companyName ?? "").trim()
+        if (!name || !code || !payload.adminUsername || !payload.adminEmail || !payload.adminPassword) {
+          return error(400, "VALIDATION_FAILED", "Tous les champs de création d'entreprise sont obligatoires.")
+        }
+        if (payload.adminPassword !== payload.adminConfirmPassword) {
+          return Response.json(
+            {
+              code: "VALIDATION_FAILED",
+              message: "Les mots de passe ne correspondent pas.",
+              errors: { adminConfirmPassword: "La confirmation ne correspond pas au mot de passe." },
+            } satisfies ErrorResponse,
+            { status: 400 },
+          )
+        }
+        const codeExists = [...companies.values()].some((c) => c.code?.toUpperCase() === code)
+        if (codeExists) {
+          return Response.json(
+            {
+              code: "CONFLICT",
+              message: "Ce code d'entreprise est déjà utilisé.",
+              errors: { companyCode: "Ce code d'entreprise existe déjà." },
+            } satisfies ErrorResponse,
+            { status: 409 },
+          )
+        }
+        const companyId = companies.size + 1
+        const createdCompany: Company = { id: companyId, name, code }
+        companies.set(companyId, createdCompany)
+        const adminId = users.size + 1
+        const createdAdmin: User = {
+          id: adminId,
+          companyId,
+          username: payload.adminUsername.trim(),
+          firstName: (payload.adminFirstName ?? "").trim(),
+          lastName: (payload.adminLastName ?? "").trim(),
+          email: payload.adminEmail.trim(),
+          status: "ACTIVE",
+          role: "COMPANY_ADMIN",
+        }
+        users.set(adminId, createdAdmin)
+        return Response.json(
+          { company: createdCompany, admin: createdAdmin } satisfies CreateCompanyResponse,
+          { status: 201 },
+        )
       }
       if (method === "GET" && pathname === "/api/departments") {
         return list(departments.filter(item => item.name.toLocaleLowerCase("fr").includes(search)), searchParams)

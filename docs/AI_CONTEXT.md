@@ -35,7 +35,8 @@ src/main/resources/
 ├─ static/ui/{app.css,app.js,favicon.svg}   # Généré par `cd frontend && npm run build`
 └─ templates/
    ├─ index.html | login.html | register.html | dashboard.html
-   └─ fragments/{head,header,nav,messages,footer}.html
+   ├─ admin-login.html | admin-dashboard{,-listUsers,-listDepartements,-listNodes,-listFiles}.html
+   └─ fragments/{head,header,nav,admin-nav,messages,footer}.html
 
 frontend/
 ├─ vite.config.js                           # Build direct -> ../src/main/resources/static/ui (app.js / app.css)
@@ -47,9 +48,9 @@ frontend/
    ├─ app/routes.ts                         # Source unique : MVC_ROUTES + WORKSPACE_TABS (?tab=)
    ├─ components/site-{header,menu}.tsx     # Header React (mode standalone ou data-react-mount="site-header")
    ├─ components/workspace/                 # WorkspaceShell + FileWorkspace + FileExplorer + FileEditor
-   ├─ components/admin/pending-registrations-panel.tsx  # Ex-AdminDashboard migré TS/Tailwind (prêt T17)
+   ├─ components/admin/                     # PendingRegistrationsPanel + CompanyCreationPanel (T13/T17)
    ├─ components/ui/*                       # Primitives shadcn/ui
-   ├─ lib/api{,-client}.ts, types/api.ts    # Client HTTP et DTO partagés (T03)
+   ├─ lib/api{,-client}.ts, lib/session.ts, types/api.ts # Client HTTP, redirection 401 session expirée, DTO (T03/T13)
    └─ data/{api-preview,workspace}.ts       # Aperçu Vite et fichiers simulés (T19)
 ```
 
@@ -86,7 +87,8 @@ frontend/
 
 | Sélecteur DOM | Composant monté | Attributs `data-*` lus |
 |---|---|---|
-| `[data-react-mount="workspace"]` | `WorkspaceShell` (`embedded`) | `data-initial-tab`, `data-user-name`, `data-is-admin`, `data-base-url` |
+| `[data-react-mount="workspace"]` | `WorkspaceShell` (`embedded`) | `data-initial-tab`, `data-user-name`, `data-is-admin`, `data-base-url`, `data-login-url` |
+| `[data-react-mount="company-creation"]` | `CompanyCreationPanel` | `data-base-url`, `data-login-url` |
 | `[data-react-mount="site-header"]` | `SiteHeader` | `data-base-url`, `data-active-page` |
 | `#root` (uniquement `frontend/index.html`) | `App` (aperçu Vite `:5173`) | `data-base-url` |
 
@@ -123,8 +125,8 @@ cd frontend && npm run test:coverage
 - **Ne jamais** exposer de mot de passe, hash ou secret dans `FrontendModelAdvice`, les templates ou `data-*`.
 - **Prochains branchements** :
   - **T03 (F2)** fournit `createApi()` au panneau d'inscriptions sur le dashboard Thymeleaf et `createPreviewApi()` dans l'aperçu Vite. `ApiError` porte `status`, `code` et `errors` par champ. Les mutations lisent le jeton CSRF de la page lorsque Spring le fournit.
-  - **T10 (F1)** : CI frontend en place (`.github/workflows/frontend-ci.yml`, `npm run ci`, Vitest + ESLint TS + `scripts/{check-node,verify-bundle}.mjs`). Sera définitivement validée après intégration de T03.
-  - **T11–T13 (B1/F1)** : brancher `POST /login`, `POST /register`, `POST /logout`, CSRF et `PublicUser` en session ; les champs des formulaires `login.html` / `register.html` et `th:errors` sont déjà alignés.
+  - **T10 (F1)** : Terminé — CI frontend active uniquement sur `main` (`.github/workflows/frontend-ci.yml`, `npm run ci`, Node 22 via `.nvmrc`, ESLint TS, `tsc`, Vitest + V8 coverage, `scripts/{check-node,verify-bundle}.mjs`). Voir `docs/T10_FRONTEND_CI.md`.
+  - **T11–T13 (B1/F1)** : Partie F1 de T13 terminée (toutes les pages MVC et `admin-*` utilisent les fragments communs + CSRF + messages `${notice}`/`?expired`, `createSessionAwareFetcher` redirige vers `/login?expired=true` sur 401 API, `CompanyCreationPanel` intégré dans `/dashboard?tab=admin` et `admin-dashboard.html`). Dès que B1 livre T11/T12 (`LoginDTO` email, `PublicUser`, `POST /api/companies`), basculer le champ `username` de `login.html` sur `email`.
   - **T17 (F1)** : enrichir `frontend/src/components/admin/pending-registrations-panel.tsx` (désactivation, départements, niveaux).
   - **T18/T19 (B2/F2)** doivent définir les routes documents dans OpenAPI, alimenter `departments` et `recentDocuments` dans `PageController#dashboard` et brancher `FileWorkspace`. L'explorateur utilise déjà le format de pagination commun, avec des libellés affichés à partir de 1.
   - **T30 / T35** : remplacer les placeholders `directory` et `chat` dans `WorkspaceShell`.

@@ -1,19 +1,19 @@
 package fr.cytech.projetj2e.controller;
 
-import java.lang.reflect.Method;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import fr.cytech.projetj2e.dto.PublicUser;
+import fr.cytech.projetj2e.model.UserRole;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 /**
  * Expose aux templates Thymeleaf les informations communes de layout
- * (configuration des assets frontend et état minimal de session sans secrets).
+ * (configuration des assets frontend et état minimal de session basé sur PublicUser).
  */
 @ControllerAdvice(annotations = Controller.class)
 public class FrontendModelAdvice {
@@ -39,11 +39,17 @@ public class FrontendModelAdvice {
 
         HttpSession session = request.getSession(false);
         boolean authenticated = isSessionAuthenticated(session);
-        boolean admin = session != null && session.getAttribute(ATTR_ADMIN_ID) != null;
+        boolean platformAdmin = session != null && session.getAttribute(ATTR_ADMIN_ID) != null;
+        PublicUser publicUser = session != null && session.getAttribute(ATTR_PUBLIC_USER) instanceof PublicUser pu
+                ? pu
+                : null;
+        boolean companyAdmin = publicUser != null && publicUser.role() == UserRole.COMPANY_ADMIN;
 
         model.addAttribute("isAuthenticated", authenticated);
-        model.addAttribute("isAdmin", admin);
-        model.addAttribute("sessionDisplayName", resolveDisplayName(session, admin));
+        model.addAttribute("isPlatformAdmin", platformAdmin);
+        model.addAttribute("isAdmin", platformAdmin || companyAdmin);
+        model.addAttribute("publicUser", publicUser);
+        model.addAttribute("sessionDisplayName", resolveDisplayName(session, publicUser, platformAdmin));
     }
 
     public static boolean isSessionAuthenticated(HttpSession session) {
@@ -55,44 +61,31 @@ public class FrontendModelAdvice {
                 || session.getAttribute(ATTR_ADMIN_ID) != null;
     }
 
-    private static String resolveDisplayName(HttpSession session, boolean admin) {
+    private static String resolveDisplayName(HttpSession session, PublicUser publicUser, boolean platformAdmin) {
         if (session == null) {
             return "";
         }
-        Object publicUser = session.getAttribute(ATTR_PUBLIC_USER);
         if (publicUser != null) {
-            String name = readSafeDisplayName(publicUser);
-            if (!name.isBlank()) {
-                return name;
+            String displayName = publicUser.getDisplayName();
+            if (!displayName.isBlank()) {
+                return displayName;
+            }
+            if (publicUser.username() != null && !publicUser.username().isBlank()) {
+                return publicUser.username();
+            }
+            if (publicUser.email() != null && !publicUser.email().isBlank()) {
+                return publicUser.email();
             }
         }
         Object username = session.getAttribute(ATTR_USERNAME);
         if (username instanceof String value && !value.isBlank()) {
             return value;
         }
-        if (admin) {
+        if (platformAdmin) {
             return "Administrateur";
         }
         if (session.getAttribute(ATTR_USER_ID) != null) {
             return "Membre connecté";
-        }
-        return "";
-    }
-
-    /**
-     * Compatibilité ascendante avec le futur PublicUser (T11) sans dépendre de sa signature exacte.
-     */
-    private static String readSafeDisplayName(Object publicUser) {
-        for (String methodName : new String[] { "getDisplayName", "displayName", "getUsername", "username", "getEmail", "email" }) {
-            try {
-                Method method = publicUser.getClass().getMethod(methodName);
-                Object value = method.invoke(publicUser);
-                if (value instanceof String str && !str.isBlank()) {
-                    return str;
-                }
-            } catch (ReflectiveOperationException ignored) {
-                // Essai du prochain accesseur sûr
-            }
         }
         return "";
     }
