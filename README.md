@@ -19,7 +19,26 @@ Prérequis : Java 17 ou supérieur, Node.js 22.12 ou supérieur et npm 10 ou sup
 Lancer le backend depuis la racine du projet :
 
 ```bash
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=h2
+```
+
+Profil PostgreSQL local :
+
+```bash
+docker compose -f docker-compose.postgres.yml up -d postgres
+POSTGRES_URL=jdbc:postgresql://localhost:5433/projetj2e \
+./mvnw spring-boot:run -Dspring-boot.run.profiles=postgres
+```
+
+Les migrations Flyway sont dans `src/main/resources/db/migration`.
+
+Validation backend des deux bases :
+
+```bash
+./mvnw test -Dspring.profiles.active=h2
+POSTGRES_URL=jdbc:postgresql://localhost:5433/projetj2e \
+POSTGRES_USER=projetj2e POSTGRES_PASSWORD=projetj2e \
+./mvnw test -Dspring.profiles.active=postgres
 ```
 
 Dans un second terminal, lancer le frontend :
@@ -89,17 +108,14 @@ Toute la logique doit être centralisée dans un `PermissionService` (`canView`,
 
 ### Gestion Connexion
 
-On utilisera un jwt: signé par la variable `SECRET_APPLICATION` dans le `.env`:
--  `flux access token` cookie signé token de 5 minutes 
--  `refresh token` cookie signé d'une semaine pour regénérer le token de 5 minutes
-
-Le nom du patter est le `pattern access token / refresh token`.
+La connexion utilise les sessions HTTP du serveur. Après authentification, l'identifiant
+de session est renouvelé et un objet `PublicUser` sans secret est stocké en session.
+Les routes privées rechargent l'utilisateur en base pour vérifier son statut actif.
 
 ### Encryptage de mot de passe
 
-Comme demandé on ajoutera dans la classe `User` associé à la table `User` le paramètre `salt`.
-
-On hashera le mdp avec du sha256(`mot de passe` + `salt`)
+Les mots de passe sont hachés avec le bean `PasswordEncoder` BCrypt de Spring Security.
+Aucun mot de passe en clair ni hash n'est exposé aux templates ou à `PublicUser`.
 
 ### Account creation
 

@@ -8,6 +8,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import fr.cytech.projetj2e.dto.PublicUser;
+import fr.cytech.projetj2e.model.User;
+import fr.cytech.projetj2e.model.UserRole;
+import fr.cytech.projetj2e.exception.ForbiddenException;
+import fr.cytech.projetj2e.service.SessionIdentityService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -15,6 +20,11 @@ import jakarta.servlet.http.HttpSession;
 public class PageController {
 
     private static final Set<String> ALLOWED_DASHBOARD_TABS = Set.of("files", "admin", "directory", "chat");
+    private final SessionIdentityService identityService;
+
+    public PageController(SessionIdentityService identityService) {
+        this.identityService = identityService;
+    }
 
     @GetMapping("/dashboard")
     public String dashboard(
@@ -26,9 +36,22 @@ public class PageController {
             return "redirect:/login?required=true";
         }
 
-        Object userId = session.getAttribute(FrontendModelAdvice.ATTR_USER_ID);
-        if (userId != null) {
-            model.addAttribute("userId", userId);
+        try {
+            User user = identityService.requireActiveMember(session);
+            PublicUser publicUser = PublicUser.from(user);
+            model.addAttribute("userId", user.getId());
+            model.addAttribute("companyId", user.getCompany().getId());
+            model.addAttribute("publicUser", publicUser);
+            if (session.getAttribute(FrontendModelAdvice.ATTR_USERNAME) == null) {
+                String displayName = publicUser.getDisplayName();
+                model.addAttribute("sessionDisplayName",
+                        !displayName.isBlank() ? displayName : publicUser.username());
+            }
+            boolean platformAdmin = session.getAttribute(FrontendModelAdvice.ATTR_ADMIN_ID) != null;
+            model.addAttribute("isAdmin", platformAdmin || user.getRole() == UserRole.COMPANY_ADMIN);
+        } catch (ForbiddenException exception) {
+            session.invalidate();
+            return "redirect:/login?expired=true";
         }
 
         String activeTab = ALLOWED_DASHBOARD_TABS.contains(tab) ? tab : "files";

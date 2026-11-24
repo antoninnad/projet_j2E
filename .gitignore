@@ -33,3 +33,6 @@ target/
 frontend/node_modules/
 frontend/coverage/
 frontend/dist/
+
+# Contenus des fichiers importés (stockage local privé)
+/storage/
