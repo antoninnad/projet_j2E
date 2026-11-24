@@ -49,6 +49,7 @@ frontend/
    ├─ components/site-{header,menu}.tsx     # Header React (mode standalone ou data-react-mount="site-header")
    ├─ components/workspace/                 # WorkspaceShell + FileWorkspace + FileExplorer + FileEditor
    ├─ components/admin/                     # PendingRegistrationsPanel + CompanyCreationPanel (T13/T17)
+   ├─ components/directory/                 # DirectoryProfilePanel : profil, avatar, mdp, annuaire paginé (T30)
    ├─ components/ui/*                       # Primitives shadcn/ui
    ├─ lib/api{,-client}.ts, lib/session.ts, types/api.ts # Client HTTP, redirection 401 session expirée, DTO (T03/T13)
    └─ data/{api-preview,workspace}.ts       # Aperçu Vite et fichiers simulés (T19)
@@ -126,7 +127,8 @@ cd frontend && npm run test:coverage
 - **Prochains branchements** :
   - **T03 (F2)** fournit `createApi()` au panneau d'inscriptions sur le dashboard Thymeleaf et `createPreviewApi()` dans l'aperçu Vite. `ApiError` porte `status`, `code` et `errors` par champ. Les mutations lisent le jeton CSRF de la page lorsque Spring le fournit.
   - **T10 (F1)** : Terminé — CI frontend active uniquement sur `main` (`.github/workflows/frontend-ci.yml`, `npm run ci`, Node 22 via `.nvmrc`, ESLint TS, `tsc`, Vitest + V8 coverage, `scripts/{check-node,verify-bundle}.mjs`). Voir `docs/T10_FRONTEND_CI.md`.
-  - **T11–T13 (B1/F1)** : Partie F1 de T13 terminée (toutes les pages MVC et `admin-*` utilisent les fragments communs + CSRF + messages `${notice}`/`?expired`, `createSessionAwareFetcher` redirige vers `/login?expired=true` sur 401 API, `CompanyCreationPanel` intégré dans `/dashboard?tab=admin` et `admin-dashboard.html`). Dès que B1 livre T11/T12 (`LoginDTO` email, `PublicUser`, `POST /api/companies`), basculer le champ `username` de `login.html` sur `email`.
-  - **T17 (F1)** : enrichir `frontend/src/components/admin/pending-registrations-panel.tsx` (désactivation, départements, niveaux).
+  - **T11–T13 (B1/F1)** : Terminé sur `dev` (`LoginDTO` email, `RegisterDTO`, `PublicUser` en session, `SessionIdentityService`, CSRF, expiration de session, création d'entreprise React + fragments Thymeleaf).
+  - **T17 (F1)** : enrichir `frontend/src/components/admin/pending-registrations-panel.tsx` (désactivation, départements, niveaux) dès livraison de T14/T15.
   - **T18/T19 (B2/F2)** doivent définir les routes documents dans OpenAPI, alimenter `departments` et `recentDocuments` dans `PageController#dashboard` et brancher `FileWorkspace`. L'explorateur utilise déjà le format de pagination commun, avec des libellés affichés à partir de 1.
-  - **T30 / T35** : remplacer les placeholders `directory` et `chat` dans `WorkspaceShell`.
+  - **T30 (F1)** : Implémenté sur `feature/T30` (`DirectoryProfilePanel` : édition prénom/nom/bio/avatar, changement de mot de passe `POST /api/profiles/me/password`, recherche paginée des collègues `ACTIVE`, fiche publique `GET /api/users/{id}/profile` et ouverture de conversation vers `?tab=chat&peer={id}`) — prêt à valider en réel dès que B1 termine `T29`.
+  - **T35 (F2)** : remplacer le placeholder `chat` dans `WorkspaceShell` (qui reçoit déjà `selectedChatPeer` et `?peer=` depuis l'annuaire T30).
