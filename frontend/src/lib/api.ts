@@ -4,8 +4,11 @@ import type {
   Company,
   CreateCompanyRequest,
   CreateCompanyResponse,
+  CreateDepartmentRequest,
   Department,
+  DepartmentMember,
   LoginRequest,
+  NodeSharingInfo,
   Page,
   PageQuery,
   Profile,
@@ -14,6 +17,7 @@ import type {
   SessionResponse,
   UpdateProfileRequest,
   UpdateUserRequest,
+  UpsertDepartmentMemberRequest,
   User,
   UserQuery,
 } from "@/types/api"
@@ -46,6 +50,41 @@ export function createApi(options?: ApiClientOptions) {
       json<Profile>(`/users/${id}/profile`, { signal }),
     listDepartments: (query?: PageQuery, signal?: AbortSignal) =>
       json<Page<Department>>("/departments", { query, signal }),
+    createDepartment: (data: CreateDepartmentRequest, signal?: AbortSignal) =>
+      json<Department>("/departments", { method: "POST", json: data, signal }),
+    listDepartmentMembers: (departmentId: number, signal?: AbortSignal) =>
+      json<DepartmentMember[]>(`/departments/${departmentId}/members`, { signal }),
+    upsertDepartmentMember: (
+      departmentId: number,
+      data: UpsertDepartmentMemberRequest,
+      signal?: AbortSignal,
+    ) =>
+      json<DepartmentMember>(`/departments/${departmentId}/members/${data.userId}`, {
+        method: "PUT",
+        json: { accessLevel: data.accessLevel },
+        signal,
+      }),
+    removeDepartmentMember: (departmentId: number, userId: number, signal?: AbortSignal) =>
+      noContent(`/departments/${departmentId}/members/${userId}`, { method: "DELETE", signal }),
+    getNodeSharing: (nodeId: string, signal?: AbortSignal) =>
+      json<NodeSharingInfo>(`/nodes/${encodeURIComponent(nodeId)}/sharing`, { signal }),
+    updateNodeThreshold: (nodeId: string, minAccessLevel: number, signal?: AbortSignal) =>
+      json<NodeSharingInfo>(`/nodes/${encodeURIComponent(nodeId)}/threshold`, {
+        method: "PATCH",
+        json: { minAccessLevel },
+        signal,
+      }),
+    addNodeContributor: (nodeId: string, userId: number, signal?: AbortSignal) =>
+      json<NodeSharingInfo>(`/nodes/${encodeURIComponent(nodeId)}/contributors`, {
+        method: "POST",
+        json: { userId },
+        signal,
+      }),
+    removeNodeContributor: (nodeId: string, userId: number, signal?: AbortSignal) =>
+      json<NodeSharingInfo>(`/nodes/${encodeURIComponent(nodeId)}/contributors/${userId}`, {
+        method: "DELETE",
+        signal,
+      }),
   }
 }
 
