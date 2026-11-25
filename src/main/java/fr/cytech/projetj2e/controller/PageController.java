@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpSession;
 public class PageController {
 
     private static final Set<String> ALLOWED_DASHBOARD_TABS = Set.of("files", "admin", "directory", "chat");
+    private static final Set<String> ADMIN_ONLY_TABS = Set.of("admin");
     private final SessionIdentityService identityService;
 
     public PageController(SessionIdentityService identityService) {
@@ -36,6 +37,7 @@ public class PageController {
             return "redirect:/login?required=true";
         }
 
+        boolean isAdmin;
         try {
             User user = identityService.requireActiveMember(session);
             PublicUser publicUser = PublicUser.from(user);
@@ -48,13 +50,18 @@ public class PageController {
                         !displayName.isBlank() ? displayName : publicUser.username());
             }
             boolean platformAdmin = session.getAttribute(FrontendModelAdvice.ATTR_ADMIN_ID) != null;
-            model.addAttribute("isAdmin", platformAdmin || user.getRole() == UserRole.COMPANY_ADMIN);
+            isAdmin = platformAdmin || user.getRole() == UserRole.COMPANY_ADMIN;
+            model.addAttribute("isAdmin", isAdmin);
         } catch (ForbiddenException exception) {
             session.invalidate();
             return "redirect:/login?expired=true";
         }
 
         String activeTab = ALLOWED_DASHBOARD_TABS.contains(tab) ? tab : "files";
+        // L'onglet Administration est réservé aux administrateurs : un membre simple revient sur Documents.
+        if (ADMIN_ONLY_TABS.contains(activeTab) && !isAdmin) {
+            activeTab = "files";
+        }
         model.addAttribute("activeTab", activeTab);
 
         // Listes alimentées côté serveur dès l'intégration de T18 (Exploration backend).

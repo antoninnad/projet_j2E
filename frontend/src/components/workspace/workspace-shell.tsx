@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
 import { FolderOpen, MessageSquare, ShieldCheck, Users } from "lucide-react"
 import {
-  WORKSPACE_TABS,
   parseWorkspaceTab,
   readTabFromLocation,
+  restrictWorkspaceTab,
   syncTabToLocation,
+  visibleWorkspaceTabs,
   type WorkspaceTabId,
 } from "@/app/routes"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
@@ -39,22 +40,24 @@ export function WorkspaceShell({
   embedded = false,
   client,
 }: WorkspaceShellProps) {
+  const tabs = visibleWorkspaceTabs(isAdmin)
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
-    readTabFromLocation(parseWorkspaceTab(initialTab, "files")),
+    restrictWorkspaceTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")), isAdmin),
   )
   const [selectedChatPeer, setSelectedChatPeer] = useState<User | null>(null)
 
   useEffect(() => {
     const onPopState = () => {
-      setActiveTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")))
+      setActiveTab(restrictWorkspaceTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")), isAdmin))
     }
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [initialTab])
+  }, [initialTab, isAdmin])
 
   function handleSelectTab(tab: WorkspaceTabId) {
-    setActiveTab(tab)
-    syncTabToLocation(tab)
+    const allowed = restrictWorkspaceTab(tab, isAdmin)
+    setActiveTab(allowed)
+    syncTabToLocation(allowed)
   }
 
   function handleOpenConversation(colleague: User) {
@@ -72,7 +75,7 @@ export function WorkspaceShell({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 shadow-xs">
         <div role="tablist" aria-label="Modules de l'espace de travail" className="flex flex-wrap items-center gap-1.5">
-          {WORKSPACE_TABS.map((tab) => {
+          {tabs.map((tab) => {
             const Icon = TAB_ICONS[tab.id]
             const selected = activeTab === tab.id
             return (
@@ -110,7 +113,7 @@ export function WorkspaceShell({
         aria-labelledby={`tab-${activeTab}`}
       >
         {activeTab === "files" && <FileWorkspace embedded={embedded} />}
-        {activeTab === "admin" && (
+        {activeTab === "admin" && isAdmin && (
           <div className="space-y-6">
             <PendingRegistrationsPanel client={client} />
             <CompanyCreationPanel client={client} />

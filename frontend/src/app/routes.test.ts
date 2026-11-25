@@ -5,7 +5,9 @@ import {
   parseWorkspaceTab,
   readTabFromLocation,
   resolveAppPath,
+  restrictWorkspaceTab,
   syncTabToLocation,
+  visibleWorkspaceTabs,
 } from "@/app/routes"
 
 describe("routes (MVC & onglets React)", () => {
@@ -40,6 +42,18 @@ describe("routes (MVC & onglets React)", () => {
     expect(parseWorkspaceTab("inconnu")).toBe("files")
     expect(parseWorkspaceTab(null, "admin")).toBe("admin")
     expect(parseWorkspaceTab(undefined)).toBe("files")
+  })
+
+  it("visibleWorkspaceTabs masque les onglets réservés aux administrateurs", () => {
+    expect(visibleWorkspaceTabs(true).map((tab) => tab.id)).toEqual(["files", "directory", "chat", "admin"])
+    expect(visibleWorkspaceTabs(false).map((tab) => tab.id)).toEqual(["files", "directory", "chat"])
+  })
+
+  it("restrictWorkspaceTab ramène un membre simple sur l'onglet par défaut", () => {
+    expect(restrictWorkspaceTab("admin", true)).toBe("admin")
+    expect(restrictWorkspaceTab("admin", false)).toBe("files")
+    expect(restrictWorkspaceTab("chat", false)).toBe("chat")
+    expect(restrictWorkspaceTab("admin", false, "directory")).toBe("directory")
   })
 
   it("resolveAppPath normalise correctement le baseUrl et les chemins", () => {

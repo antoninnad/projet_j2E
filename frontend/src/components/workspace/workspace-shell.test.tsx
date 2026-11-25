@@ -44,9 +44,19 @@ describe("WorkspaceShell", () => {
     expect(screen.getByText("Admin")).toBeInTheDocument()
   })
 
+  it("masque l'onglet Administration à un membre simple et ignore ?tab=admin", () => {
+    window.history.replaceState({}, "", "/dashboard?tab=admin")
+    render(<WorkspaceShell embedded userName="Bob Martin" initialTab="admin" />)
+
+    expect(screen.queryByRole("tab", { name: "Administration" })).not.toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Documents" })).toHaveAttribute("aria-selected", "true")
+    expect(screen.queryByText(/Demandes d'inscription en attente/i)).not.toBeInTheDocument()
+    expect(screen.queryByText("Admin")).not.toBeInTheDocument()
+  })
+
   it("permet de naviguer entre les onglets et synchronise le paramètre ?tab=", async () => {
     const user = userEvent.setup()
-    render(<WorkspaceShell embedded />)
+    render(<WorkspaceShell embedded isAdmin />)
 
     await user.click(screen.getByRole("tab", { name: "Annuaire" }))
     expect(screen.getByRole("tab", { name: "Annuaire" })).toHaveAttribute("aria-selected", "true")

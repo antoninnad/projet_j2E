@@ -48,6 +48,20 @@ export function parseWorkspaceTab(raw: string | null | undefined, fallback: Work
   return fallback
 }
 
+/** Onglets affichés selon le rôle : les onglets adminOnly sont masqués aux membres simples. */
+export function visibleWorkspaceTabs(isAdmin: boolean): readonly WorkspaceTabMeta[] {
+  return WORKSPACE_TABS.filter((tab) => !tab.adminOnly || isAdmin)
+}
+
+/** Ramène sur l'onglet par défaut un onglet réservé (ex. ?tab=admin saisi par un membre simple). */
+export function restrictWorkspaceTab(
+  tab: WorkspaceTabId,
+  isAdmin: boolean,
+  fallback: WorkspaceTabId = "files",
+): WorkspaceTabId {
+  return visibleWorkspaceTabs(isAdmin).some((visible) => visible.id === tab) ? tab : fallback
+}
+
 export function resolveAppPath(baseUrl: string, path: string): string {
   const normalizedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl
   const normalizedPath = path.startsWith("/") ? path : `/${path}`
