@@ -39,7 +39,7 @@ export function FileExplorer(props: Props) {
             {canGoBack ? <Button variant="ghost" size="icon-sm" onClick={onBack} aria-label="Dossier parent"><ChevronLeft /></Button> : <FolderOpen className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
             <h2 className="truncate text-sm font-semibold">{folderName}</h2>
           </div>
-          <Button variant={favoritesOnly ? "secondary" : "ghost"} size="icon-sm" onClick={onToggleFavorites} aria-label="Afficher les favoris" aria-pressed={favoritesOnly} title="Afficher les favoris"><Star className={cn("size-4", favoritesOnly && "fill-amber-400 text-amber-600")} /></Button>
+          <Button variant={favoritesOnly ? "secondary" : "ghost"} size="icon-sm" onClick={onToggleFavorites} aria-label="Afficher les favoris" aria-pressed={favoritesOnly} title="Afficher les favoris"><Star className={cn("size-4", favoritesOnly && "fill-warning text-warning")} /></Button>
         </div>
         <div className="relative">
           <Search className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" aria-hidden="true" />
@@ -50,11 +50,11 @@ export function FileExplorer(props: Props) {
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {entries.length === 0 ? <div className="flex h-full min-h-36 flex-col items-center justify-center gap-2 px-4 text-center"><SearchX className="size-7 text-muted-foreground" aria-hidden="true" /><p className="text-sm font-medium">Aucun élément</p><p className="text-xs text-muted-foreground">{query ? "Essayez un autre nom de fichier." : favoritesOnly ? "Aucun favori dans ce dossier." : "Ce dossier est vide."}</p></div> : <ul className="space-y-1">
           {entries.map(entry => <li key={entry.id}>
-            <button type="button" onClick={() => onOpen(entry)} aria-current={entry.id === selectedId ? "true" : undefined} aria-label={`${entry.kind === "folder" ? "Ouvrir le dossier" : "Ouvrir le fichier"} ${entry.name}`} className={cn("group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-accent", selectedId === entry.id && "bg-accent ring-1 ring-border")}>
-              <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background", entry.kind === "folder" ? "border-amber-200 bg-amber-50 text-amber-600" : "text-muted-foreground")}>
+            <button type="button" onClick={() => onOpen(entry)} aria-current={entry.id === selectedId ? "true" : undefined} aria-label={`${entry.kind === "folder" ? "Ouvrir le dossier" : "Ouvrir le fichier"} ${entry.name}`} className={cn("group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-accent", selectedId === entry.id && "bg-primary-subtle/75 ring-1 ring-primary/25")}>
+              <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg border bg-card", entry.kind === "folder" ? "border-warning-border bg-warning-subtle text-warning-foreground" : "text-primary")}>
                 {entry.kind === "folder" ? <Folder className="size-4" aria-hidden="true" /> : <FileText className="size-4" aria-hidden="true" />}
               </span>
-              <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><span className="truncate text-sm font-medium">{entry.name}</span>{entry.favorite && <Star className="size-3 shrink-0 fill-amber-400 text-amber-500" aria-label="Favori" />}{dirtyIds.has(entry.id) && <span className="size-1.5 shrink-0 rounded-full bg-blue-500" aria-label="Modifications non enregistrées" />}</span><span className="mt-0.5 block text-xs text-muted-foreground">{entry.kind === "folder" ? "Dossier partagé" : new Date(entry.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span></span>
+              <span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><span className="truncate text-sm font-medium">{entry.name}</span>{entry.favorite && <Star className="size-3 shrink-0 fill-warning text-warning" aria-label="Favori" />}{dirtyIds.has(entry.id) && <span className="size-1.5 shrink-0 rounded-full bg-info" aria-label="Modifications non enregistrées" />}</span><span className="mt-0.5 block text-xs text-muted-foreground">{entry.kind === "folder" ? "Dossier partagé" : new Date(entry.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span></span>
               <span className="shrink-0 text-xs text-muted-foreground">{entry.kind === "folder" ? <ChevronRight className="size-4" aria-hidden="true" /> : fileSize(entry.content)}</span>
             </button>
           </li>)}

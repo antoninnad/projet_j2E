@@ -134,15 +134,15 @@ export function SharingPanel({
   return (
     <section
       aria-labelledby="panneau-partage-titre"
-      className="border-b border-border bg-muted/20 px-4 py-4 sm:px-5"
+      className="border-b border-border bg-primary-subtle/35 px-4 py-4 sm:px-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Shield className="size-4 text-muted-foreground" aria-hidden="true" />
+          <Shield className="size-4 text-primary" aria-hidden="true" />
           <h2 id="panneau-partage-titre" className="text-sm font-semibold">
             Partage et permissions — {nodeName}
           </h2>
-          {info && <Badge variant="outline">{info.departmentName}</Badge>}
+          {info && <Badge variant="brand">{info.departmentName}</Badge>}
         </div>
 
         {onClose && (
@@ -159,7 +159,7 @@ export function SharingPanel({
       </div>
 
       {error && (
-        <div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-900">
+        <div role="alert" className="mt-3 rounded-lg border border-destructive-border bg-destructive-subtle px-3.5 py-2.5 text-xs text-destructive-foreground">
           {error}
         </div>
       )}
@@ -169,7 +169,7 @@ export function SharingPanel({
       ) : info ? (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {/* Propriétaire & Seuil M */}
-          <div className="space-y-3 rounded-lg border border-border bg-background p-4">
+          <div className="space-y-3 rounded-lg border border-border bg-card p-4">
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Propriétaire
@@ -181,7 +181,7 @@ export function SharingPanel({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="secondary">Seuil actuel M = {info.minAccessLevel}</Badge>
+              <Badge variant="brand">Seuil actuel M = {info.minAccessLevel}</Badge>
               <Badge variant="outline">Seuil parent ≥ {info.parentMinAccessLevel}</Badge>
               <Badge variant="outline">
                 {info.isCompanyAdmin ? "Admin entreprise" : `Votre niveau L = ${info.actorAccessLevel}`}
@@ -189,7 +189,7 @@ export function SharingPanel({
             </div>
 
             {!info.canManageSharing && (
-              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900">
+              <div className="flex items-start gap-2 rounded-md border border-warning-border bg-warning-subtle p-2.5 text-xs text-warning-foreground">
                 <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
                 <span>
                   Consultation seule : seuls le propriétaire (avec L ≥ M), les membres avec L &gt; M ou

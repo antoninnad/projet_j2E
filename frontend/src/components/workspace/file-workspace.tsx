@@ -110,10 +110,10 @@ export function FileWorkspace({ embedded = false, client }: { embedded?: boolean
         <Badge variant="outline" className="bg-background py-1.5">Données de démonstration</Badge>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b px-4 py-4 sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted"><FileText className="size-5 text-muted-foreground" aria-hidden="true" /></div>
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15"><FileText className="size-5" aria-hidden="true" /></div>
             <div className="min-w-0"><p className="truncate text-sm font-semibold">{selected.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{dirty ? "Brouillon en cours" : "Document ouvert"}</p></div>
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:gap-4">
@@ -121,7 +121,7 @@ export function FileWorkspace({ embedded = false, client }: { embedded?: boolean
             <div className="hidden h-6 w-px bg-border sm:block" />
             <div className="flex items-center gap-2">
               <Button variant={sharingOpen ? "secondary" : "outline"} size="sm" aria-expanded={sharingOpen} onClick={() => setSharingOpen(open => !open)}><Share2 className="size-4" />Partager</Button>
-              <Button variant="ghost" size="icon" aria-label={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} aria-pressed={selected.favorite} title={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} onClick={toggleFavorite}><Star className={cn("size-4", selected.favorite && "fill-amber-400 text-amber-600")} /></Button>
+              <Button variant="ghost" size="icon" aria-label={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} aria-pressed={selected.favorite} title={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} onClick={toggleFavorite}><Star className={cn("size-4", selected.favorite && "fill-warning text-warning")} /></Button>
               {editing ? <><Button variant="ghost" size="icon" aria-label="Annuler les modifications" title="Annuler les modifications" onClick={clearDraft}><X className="size-4" /></Button><Button size="sm" onClick={save} disabled={!dirty}><Save className="size-4" />Enregistrer</Button></> : <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil className="size-4" />Modifier</Button>}
             </div>
           </div>

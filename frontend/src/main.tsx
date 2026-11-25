@@ -8,9 +8,11 @@ import { SiteHeader } from "@/components/site-header"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
 import { createApi } from "@/lib/api"
 import { createSessionAwareFetcher } from "@/lib/session"
+import { applyBrandTheme, readStoredBrandTheme } from "@/lib/theme"
 import "./styles.css"
 
 function mountReactIslands() {
+  applyBrandTheme(readStoredBrandTheme())
   // 1. Mode autonome Vite (frontend/index.html)
   const standaloneRoot = document.getElementById("root")
   if (import.meta.env.DEV && standaloneRoot) {

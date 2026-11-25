@@ -11,7 +11,7 @@
 - **Frontend** : **100 % TypeScript strict** + React 19 + Vite 8 + Tailwind CSS v4 + shadcn/ui (Radix + Lucide + Sonner).
   - **Piège Node** : `/usr/bin/node` est en v18 (trop vieux pour Vite 8). Toujours préfixer avec Node 22 via nvm :
     `export PATH="$HOME/.nvm/versions/node/v22.19.0/bin:$PATH"`
-- **CSS partagé** : `frontend/src/styles.css` contient `@source "../../src/main/resources/templates";` → Tailwind v4 scanne automatiquement React **et** Thymeleaf dans un seul bundle `/ui/app.css`.
+- **CSS partagé & Charte graphique** : `frontend/src/styles.css` contient `@source "../../src/main/resources/templates";` → Tailwind v4 scanne automatiquement React **et** Thymeleaf dans un seul bundle `/ui/app.css`. Tokens sémantiques (`--canvas`, `--card`, `--primary`, `--primary-subtle`, `--success*`, `--warning*`, `--info*`, `--destructive*`) et 3 variations (`data-brand-theme="cobalt|sauge|encre"`), documentés dans `docs/CHARTE_GRAPHIQUE.md` et prévisualisables sur `http://localhost:5173/?view=charte`.
 
 ---
 

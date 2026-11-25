@@ -279,12 +279,12 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
       {/* Gestion des comptes : désactivation / réactivation */}
       <section
         aria-labelledby="gestion-comptes-titre"
-        className="overflow-hidden rounded-xl border border-border bg-background shadow-sm lg:col-span-5"
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-sm lg:col-span-5"
       >
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <Users className="size-5 text-muted-foreground" aria-hidden="true" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+              <Users className="size-5" aria-hidden="true" />
             </div>
             <div>
               <h2 id="gestion-comptes-titre" className="text-base font-semibold tracking-tight">
@@ -317,7 +317,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
           </div>
 
           {accountsError && (
-            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+            <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
               {accountsError}
             </div>
           )}
@@ -339,8 +339,8 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate text-sm font-medium text-foreground">{fullNameOf(account)}</p>
-                        {isMe && <Badge variant="secondary">Vous</Badge>}
-                        <Badge variant={isDisabled ? "outline" : "secondary"}>
+                        {isMe && <Badge variant="brand">Vous</Badge>}
+                        <Badge variant={isDisabled ? "outline" : "success"}>
                           {isDisabled ? "Désactivé" : "Actif"}
                         </Badge>
                       </div>
@@ -405,11 +405,11 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
       {/* Départements, membres et niveaux d'accès */}
       <section
         aria-labelledby="gestion-departements-titre"
-        className="overflow-hidden rounded-xl border border-border bg-background shadow-sm lg:col-span-7"
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-sm lg:col-span-7"
       >
         <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <FolderTree className="size-5 text-muted-foreground" aria-hidden="true" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+            <FolderTree className="size-5" aria-hidden="true" />
           </div>
           <div>
             <h2 id="gestion-departements-titre" className="text-base font-semibold tracking-tight">
@@ -442,13 +442,13 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
           </form>
 
           {deptFormError && (
-            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-900">
+            <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-2.5 text-xs text-destructive-foreground">
               {deptFormError}
             </div>
           )}
 
           {departmentsError && (
-            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+            <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
               {departmentsError}
             </div>
           )}
@@ -497,7 +497,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                   </div>
 
                   {membersError && (
-                    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-900">
+                    <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-3.5 py-2.5 text-xs text-destructive-foreground">
                       {membersError}
                     </div>
                   )}

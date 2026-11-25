@@ -4,45 +4,226 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-canvas: var(--canvas);
   --color-background: var(--background);
-  --color-card: var(--background);
-  --color-card-foreground: var(--foreground);
-  --color-popover: var(--background);
-  --color-popover-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-foreground: var(--foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-foreground: var(--primary-subtle-foreground);
+
   --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--foreground);
-  --color-muted: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--secondary);
-  --color-accent-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
   --color-border: var(--border);
-  --color-input: var(--border);
+  --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-destructive: oklch(0.577 0.245 27.325);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-border: var(--success-border);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-border: var(--warning-border);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-border: var(--info-border);
+  --color-info-foreground: var(--info-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-destructive-border: var(--destructive-border);
+  --color-destructive-foreground: var(--destructive-foreground);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-}
-:root {
-  --background: oklch(1 0 0);
-  --popover: var(--background);
-  --popover-foreground: var(--foreground);
-  --foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --border: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-}
-@layer base {
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground font-sans antialiased; }
-  html { scroll-padding-top: 6rem; }
-  :focus-visible { @apply outline-2 outline-offset-4 outline-ring; }
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ==========================================================================
+   Variation A (Défaut) — "Ardoise & Cobalt"
+   Clarté institutionnelle B2B : ardoise minérale froide & bleu cobalt profond.
+   ========================================================================== */
+:root,
+[data-brand-theme="cobalt"] {
+  --canvas: oklch(0.978 0.007 255);
+  --background: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.032 258);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0.032 258);
+  --foreground: oklch(0.205 0.032 258);
+
+  --primary: oklch(0.425 0.162 262);
+  --primary-foreground: oklch(0.988 0.004 255);
+  --primary-subtle: oklch(0.958 0.022 260);
+  --primary-subtle-foreground: oklch(0.355 0.135 262);
+
+  --secondary: oklch(0.960 0.010 255);
+  --secondary-foreground: oklch(0.245 0.035 258);
+  --muted: oklch(0.962 0.008 255);
+  --muted-foreground: oklch(0.475 0.028 256);
+  --accent: oklch(0.946 0.018 258);
+  --accent-foreground: oklch(0.275 0.075 262);
+
+  --border: oklch(0.914 0.013 255);
+  --input: oklch(0.895 0.016 255);
+  --ring: oklch(0.565 0.165 260);
+
+  /* Couleurs sémantiques transverses harmonisées */
+  --success: oklch(0.585 0.145 163);
+  --success-subtle: oklch(0.968 0.024 163);
+  --success-border: oklch(0.888 0.062 163);
+  --success-foreground: oklch(0.335 0.078 165);
+
+  --warning: oklch(0.645 0.155 68);
+  --warning-subtle: oklch(0.974 0.028 82);
+  --warning-border: oklch(0.898 0.072 80);
+  --warning-foreground: oklch(0.365 0.088 62);
+
+  --info: oklch(0.575 0.142 238);
+  --info-subtle: oklch(0.968 0.020 238);
+  --info-border: oklch(0.888 0.052 238);
+  --info-foreground: oklch(0.350 0.078 240);
+
+  --destructive: oklch(0.555 0.212 27);
+  --destructive-subtle: oklch(0.968 0.019 25);
+  --destructive-border: oklch(0.885 0.056 25);
+  --destructive-foreground: oklch(0.355 0.108 27);
+
+  --brand-gradient-from: oklch(0.425 0.162 262);
+  --brand-gradient-to: oklch(0.515 0.155 245);
+  --radius: 0.625rem;
+}
+
+/* ==========================================================================
+   Variation B — "Sauge & Forêt"
+   Sérénité documentaire : pierre végétale douce & émeraude pin feutré.
+   ========================================================================== */
+[data-brand-theme="sauge"] {
+  --canvas: oklch(0.979 0.006 158);
+  --background: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.210 0.026 168);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.210 0.026 168);
+  --foreground: oklch(0.210 0.026 168);
+
+  --primary: oklch(0.418 0.098 172);
+  --primary-foreground: oklch(0.988 0.005 165);
+  --primary-subtle: oklch(0.960 0.024 170);
+  --primary-subtle-foreground: oklch(0.335 0.082 172);
+
+  --secondary: oklch(0.958 0.010 162);
+  --secondary-foreground: oklch(0.245 0.030 168);
+  --muted: oklch(0.962 0.008 160);
+  --muted-foreground: oklch(0.470 0.024 166);
+  --accent: oklch(0.944 0.019 170);
+  --accent-foreground: oklch(0.285 0.068 172);
+
+  --border: oklch(0.912 0.013 162);
+  --input: oklch(0.892 0.016 162);
+  --ring: oklch(0.555 0.118 172);
+
+  --brand-gradient-from: oklch(0.418 0.098 172);
+  --brand-gradient-to: oklch(0.510 0.115 190);
+  --radius: 0.75rem;
+}
+
+/* ==========================================================================
+   Variation C — "Encre & Ambre"
+   Sobriété éditoriale : ivoire papier chaud, encre nuit & pointe ambrée.
+   ========================================================================== */
+[data-brand-theme="encre"] {
+  --canvas: oklch(0.979 0.008 80);
+  --background: oklch(0.998 0.002 85);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.024 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0.024 260);
+  --foreground: oklch(0.205 0.024 260);
+
+  --primary: oklch(0.285 0.048 258);
+  --primary-foreground: oklch(0.985 0.006 82);
+  --primary-subtle: oklch(0.956 0.026 78);
+  --primary-subtle-foreground: oklch(0.365 0.092 62);
+
+  --secondary: oklch(0.954 0.011 80);
+  --secondary-foreground: oklch(0.245 0.026 258);
+  --muted: oklch(0.958 0.009 80);
+  --muted-foreground: oklch(0.475 0.022 255);
+  --accent: oklch(0.940 0.018 78);
+  --accent-foreground: oklch(0.265 0.048 258);
+
+  --border: oklch(0.908 0.014 80);
+  --input: oklch(0.888 0.018 80);
+  --ring: oklch(0.565 0.138 66);
+
+  --brand-gradient-from: oklch(0.285 0.048 258);
+  --brand-gradient-to: oklch(0.485 0.125 65);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --canvas: oklch(0.155 0.020 258);
+  --background: oklch(0.190 0.022 258);
+  --card: oklch(0.205 0.024 258);
+  --card-foreground: oklch(0.960 0.008 255);
+  --popover: oklch(0.205 0.024 258);
+  --popover-foreground: oklch(0.960 0.008 255);
+  --foreground: oklch(0.960 0.008 255);
+
+  --primary: oklch(0.635 0.165 258);
+  --primary-foreground: oklch(0.145 0.025 258);
+  --primary-subtle: oklch(0.265 0.055 258);
+  --primary-subtle-foreground: oklch(0.855 0.075 255);
+
+  --secondary: oklch(0.255 0.025 258);
+  --secondary-foreground: oklch(0.950 0.008 255);
+  --muted: oklch(0.250 0.022 258);
+  --muted-foreground: oklch(0.710 0.022 255);
+  --accent: oklch(0.275 0.035 258);
+  --accent-foreground: oklch(0.960 0.008 255);
+
+  --border: oklch(0.305 0.025 258);
+  --input: oklch(0.320 0.028 258);
+  --ring: oklch(0.635 0.165 258);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-canvas text-foreground font-sans antialiased;
+  }
+  html {
+    scroll-padding-top: 6rem;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-ring;
+  }
+}
+
+@layer utilities {
+  .brand-mark-surface {
+    background-image: linear-gradient(135deg, var(--brand-gradient-from), var(--brand-gradient-to));
+  }
+  .brand-top-accent {
+    background-image: linear-gradient(90deg, var(--brand-gradient-from), var(--brand-gradient-to));
+  }
+}

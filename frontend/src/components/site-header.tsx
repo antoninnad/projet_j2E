@@ -15,7 +15,7 @@ export function SiteHeader({
         className="inline-flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-85"
       >
         <span
-          className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-bold tracking-tight text-primary-foreground"
+          className="brand-mark-surface flex size-8 items-center justify-center rounded-lg text-xs font-bold tracking-tight text-primary-foreground shadow-xs ring-1 ring-white/15"
           aria-hidden="true"
         >
           L

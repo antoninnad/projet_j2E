@@ -71,7 +71,7 @@ export function WorkspaceShell({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-xs">
         <div role="tablist" aria-label="Modules de l'espace de travail" className="flex flex-wrap items-center gap-1.5">
           {WORKSPACE_TABS.map((tab) => {
             const Icon = TAB_ICONS[tab.id]
@@ -89,7 +89,7 @@ export function WorkspaceShell({
                   "inline-flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   selected
                     ? "bg-primary text-primary-foreground shadow-xs"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 )}
               >
                 <Icon className="size-4" aria-hidden="true" />
@@ -101,7 +101,7 @@ export function WorkspaceShell({
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {userName && <span className="font-medium text-foreground">{userName}</span>}
-          {isAdmin && <Badge variant="secondary">Admin</Badge>}
+          {isAdmin && <Badge variant="brand">Admin</Badge>}
         </div>
       </div>
 

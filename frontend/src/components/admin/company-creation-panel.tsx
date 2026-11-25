@@ -93,12 +93,12 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
   return (
     <section
       aria-labelledby="creation-entreprise-titre"
-      className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
     >
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <Building2 className="size-5 text-muted-foreground" aria-hidden="true" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+            <Building2 className="size-5" aria-hidden="true" />
           </div>
           <div>
             <h2 id="creation-entreprise-titre" className="text-base font-semibold tracking-tight">
@@ -113,13 +113,13 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
 
       <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4 p-5" noValidate>
         {formError && (
-          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
             {formError}
           </div>
         )}
 
         {created && (
-          <div role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <div role="status" className="rounded-lg border border-success-border bg-success-subtle px-4 py-3 text-sm text-success-foreground">
             Entreprise <strong>{created.company.name}</strong> (code{" "}
             <strong>{created.company.code ?? "—"}</strong>) créée avec l'administrateur{" "}
             <strong>{created.admin.username}</strong> ({created.admin.email}).

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Connexion', 'Connectez-vous à votre espace collaboratif Lagui.')}"></head>
-<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<body class="flex min-h-screen flex-col bg-canvas text-foreground">
 <header th:replace="~{fragments/header :: header('login')}"></header>
 
 <main id="contenu" tabindex="-1" class="mx-auto flex w-full max-w-7xl flex-1 items-center justify-center px-4 py-10 sm:px-6">
-    <section class="w-full max-w-md space-y-6 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+    <section class="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div class="brand-top-accent h-1.5 w-full" aria-hidden="true"></div>
+        <div class="space-y-6 p-6 sm:p-8">
         <div class="space-y-1.5">
             <h1 class="text-2xl font-semibold tracking-tight">Connexion</h1>
             <p class="text-sm text-muted-foreground">
@@ -52,17 +54,18 @@
         </form>
 
         <div class="space-y-2 border-t border-border pt-4 text-center text-sm text-muted-foreground">
-            <p>
-                Pas encore de compte ?
-                <a th:href="@{/register}" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">
-                    Créer une demande d'inscription
-                </a>
-            </p>
-            <p class="text-xs">
-                <a th:href="@{/adminLogin}" class="text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                    Accès administrateur
-                </a>
-            </p>
+                <p>
+                    Pas encore de compte ?
+                    <a th:href="@{/register}" class="font-medium text-primary underline underline-offset-4 hover:opacity-80">
+                        Créer une demande d'inscription
+                    </a>
+                </p>
+                <p class="text-xs">
+                    <a th:href="@{/adminLogin}" class="text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                        Accès administrateur
+                    </a>
+                </p>
+            </div>
         </div>
     </section>
 </main>

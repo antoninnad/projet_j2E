@@ -77,11 +77,11 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <ShieldCheck className="size-5 text-muted-foreground" aria-hidden="true" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+            <ShieldCheck className="size-5" aria-hidden="true" />
           </div>
           <div>
             <h2 className="text-base font-semibold tracking-tight">Demandes d'inscription en attente</h2>
@@ -92,7 +92,11 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
         </div>
 
         <div className="flex items-center gap-2">
-          {result && <Badge variant="outline">{result.page.totalElements} en attente</Badge>}
+          {result && (
+            <Badge variant={result.page.totalElements > 0 ? "warning" : "outline"}>
+              {result.page.totalElements} en attente
+            </Badge>
+          )}
           <Button type="button" variant="outline" size="sm" onClick={() => loadPage(query.page)} disabled={loading || busy}>
             <RefreshCw className={loading ? "size-4 animate-spin" : "size-4"} aria-hidden="true" />
             Actualiser
@@ -102,7 +106,7 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
 
       <div className="p-5">
         {error && (
-          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <div role="alert" className="mb-4 rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
             {error}
           </div>
         )}

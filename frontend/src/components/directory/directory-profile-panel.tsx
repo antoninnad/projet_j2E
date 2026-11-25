@@ -296,11 +296,11 @@ export function DirectoryProfilePanel({
       <div className="space-y-6 lg:col-span-5">
         <section
           aria-labelledby="mon-profil-titre"
-          className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
+          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
         >
           <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <UserRound className="size-5 text-muted-foreground" aria-hidden="true" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+              <UserRound className="size-5" aria-hidden="true" />
             </div>
             <div>
               <h2 id="mon-profil-titre" className="text-base font-semibold tracking-tight">
@@ -317,21 +317,21 @@ export function DirectoryProfilePanel({
           ) : (
             <form onSubmit={(event) => void handleSaveProfile(event)} className="space-y-4 p-5" noValidate>
               {profileError && (
-                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
                   {profileError}
                 </div>
               )}
 
               {profileSavedNotice && (
-                <div role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                <div role="status" className="rounded-lg border border-success-border bg-success-subtle px-4 py-3 text-sm text-success-foreground">
                   {profileSavedNotice}
                 </div>
               )}
 
               <div className="flex items-center gap-4">
-                <Avatar className="size-14 border border-border">
+                <Avatar className="size-14 border border-primary/20">
                   {avatarUrl.trim() && <AvatarImage src={avatarUrl.trim()} alt="Aperçu de mon avatar" />}
-                  <AvatarFallback className="text-sm font-semibold">
+                  <AvatarFallback className="bg-primary-subtle text-sm font-semibold text-primary-subtle-foreground">
                     {initialsOf(firstName, lastName, me?.username)}
                   </AvatarFallback>
                 </Avatar>
@@ -438,11 +438,11 @@ export function DirectoryProfilePanel({
 
         <section
           aria-labelledby="mot-de-passe-titre"
-          className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
+          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
         >
           <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-              <KeyRound className="size-5 text-muted-foreground" aria-hidden="true" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+              <KeyRound className="size-5" aria-hidden="true" />
             </div>
             <div>
               <h2 id="mot-de-passe-titre" className="text-base font-semibold tracking-tight">
@@ -456,13 +456,13 @@ export function DirectoryProfilePanel({
 
           <form onSubmit={(event) => void handleSavePassword(event)} className="space-y-4 p-5" noValidate>
             {passwordError && (
-              <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+              <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
                 {passwordError}
               </div>
             )}
 
             {passwordSavedNotice && (
-              <div role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <div role="status" className="rounded-lg border border-success-border bg-success-subtle px-4 py-3 text-sm text-success-foreground">
                 {passwordSavedNotice}
               </div>
             )}
@@ -541,12 +541,12 @@ export function DirectoryProfilePanel({
       <div className="space-y-6 lg:col-span-7">
         <section
           aria-labelledby="annuaire-entreprise-titre"
-          className="overflow-hidden rounded-xl border border-border bg-background shadow-sm"
+          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Users className="size-5 text-muted-foreground" aria-hidden="true" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
+                <Users className="size-5" aria-hidden="true" />
               </div>
               <div>
                 <h2 id="annuaire-entreprise-titre" className="text-base font-semibold tracking-tight">
@@ -559,7 +559,7 @@ export function DirectoryProfilePanel({
             </div>
 
             <div className="flex items-center gap-2">
-              <Badge variant="outline">
+              <Badge variant="success">
                 {directoryResult?.page.totalElements ?? 0} membre
                 {(directoryResult?.page.totalElements ?? 0) > 1 ? "s" : ""} actif
                 {(directoryResult?.page.totalElements ?? 0) > 1 ? "s" : ""}
@@ -593,7 +593,7 @@ export function DirectoryProfilePanel({
             </div>
 
             {directoryError && (
-              <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+              <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
                 {directoryError}
               </div>
             )}
@@ -620,8 +620,8 @@ export function DirectoryProfilePanel({
                       }`}
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <Avatar className="size-10 border border-border">
-                          <AvatarFallback className="text-xs font-semibold">
+                        <Avatar className="size-10 border border-primary/15">
+                          <AvatarFallback className="bg-primary-subtle text-xs font-semibold text-primary-subtle-foreground">
                             {initialsOf(colleague.firstName, colleague.lastName, colleague.username)}
                           </AvatarFallback>
                         </Avatar>
@@ -630,7 +630,7 @@ export function DirectoryProfilePanel({
                             <p className="truncate text-sm font-medium text-foreground">
                               {fullNameOf(colleague)}
                             </p>
-                            {isMe && <Badge variant="secondary">Vous</Badge>}
+                            {isMe && <Badge variant="brand">Vous</Badge>}
                             {colleague.role === "COMPANY_ADMIN" && <Badge variant="outline">Admin</Badge>}
                           </div>
                           <p className="truncate text-xs text-muted-foreground">

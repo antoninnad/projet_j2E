@@ -15,12 +15,12 @@ function avatar(background: string, foreground: string) {
 }
 
 export const contributors: Contributor[] = [
-  { id: "antonin", name: "Antonin Nadaud", initials: "AN", avatar: avatar("#dbeafe", "#3b82f6") },
-  { id: "lea", name: "Léa Martin", initials: "LM", avatar: avatar("#ede9fe", "#8b5cf6") },
-  { id: "hugo", name: "Hugo Bernard", initials: "HB", avatar: avatar("#dcfce7", "#22c55e") },
-  { id: "ines", name: "Inès Robert", initials: "IR", avatar: avatar("#ffedd5", "#f97316") },
-  { id: "louis", name: "Louis Petit", initials: "LP", avatar: avatar("#fce7f3", "#ec4899") },
-  { id: "emma", name: "Emma Laurent", initials: "EL", avatar: avatar("#ccfbf1", "#14b8a6") },
+  { id: "antonin", name: "Antonin Nadaud", initials: "AN", avatar: avatar("#EFF4FF", "#1E40AF") },
+  { id: "lea", name: "Léa Martin", initials: "LM", avatar: avatar("#EEF2FF", "#4338CA") },
+  { id: "hugo", name: "Hugo Bernard", initials: "HB", avatar: avatar("#ECFDF5", "#047857") },
+  { id: "ines", name: "Inès Robert", initials: "IR", avatar: avatar("#FFFBEB", "#B45309") },
+  { id: "louis", name: "Louis Petit", initials: "LP", avatar: avatar("#F0F9FF", "#0369A1") },
+  { id: "emma", name: "Emma Laurent", initials: "EL", avatar: avatar("#F1F5F9", "#334155") },
 ]
 
 function entry(id: string, name: string, content: string, parentId: string | null = null, kind: "file" | "folder" = "file"): WorkspaceEntry {
