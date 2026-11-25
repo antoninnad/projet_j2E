@@ -512,6 +512,97 @@ paths:
           $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/StorageError'
+  /files/{fileId}/content:
+    get:
+      tags: [Documents]
+      summary: Afficher le contenu d'un fichier (aperçu)
+      description: |
+        Exige le droit de consultation ; un fichier invisible, d'une autre entreprise ou un dossier renvoie 404.
+        Les métadonnées sont servies par GET /nodes/{nodeId}.
+        Seuls les formats sans contenu actif sont servis en ligne (Content-Disposition: inline) :
+        texte (toujours en text/plain, y compris HTML et XML), images PNG, JPEG, GIF, WebP, BMP, AVIF, et PDF.
+        Les autres formats, dont SVG, sont servis en application/octet-stream et en pièce jointe :
+        l'interface propose alors le téléchargement.
+      operationId: getFileContent
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: If-None-Match
+          in: header
+          required: false
+          description: ETag déjà reçu ("{id}-{version}") ; 304 si le fichier n'a pas changé
+          schema: {type: string}
+        - name: Range
+          in: header
+          required: false
+          description: Plage d'octets (bytes=début-fin), utile aux lecteurs PDF
+          schema: {type: string}
+      responses:
+        '200':
+          description: Contenu du fichier
+          headers:
+            ETag: {description: '"{id}-{version}" : change à chaque nouvelle version du fichier', schema: {type: string}}
+            Cache-Control: {description: 'no-cache, private', schema: {type: string}}
+            X-Content-Type-Options: {description: nosniff, schema: {type: string}}
+          content:
+            text/plain: {schema: {type: string}}
+            image/*: {schema: {type: string, format: binary}}
+            application/pdf: {schema: {type: string, format: binary}}
+            application/octet-stream: {schema: {type: string, format: binary}}
+        '206':
+          description: Plage d'octets demandée
+        '304':
+          description: Contenu inchangé depuis l'ETag fourni
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/StorageError'
+  /files/{fileId}/download:
+    get:
+      tags: [Documents]
+      summary: Télécharger un fichier
+      description: |
+        Exige le droit de consultation. Contenu en pièce jointe, sous le nom du fichier
+        (filename ASCII de secours et filename* en UTF-8) et avec son type MIME enregistré.
+      operationId: downloadFile
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: If-None-Match
+          in: header
+          required: false
+          description: ETag déjà reçu ("{id}-{version}") ; 304 si le fichier n'a pas changé
+          schema: {type: string}
+        - name: Range
+          in: header
+          required: false
+          description: Plage d'octets (bytes=début-fin), utile aux lecteurs PDF
+          schema: {type: string}
+      responses:
+        '200':
+          description: Contenu du fichier en pièce jointe
+          headers:
+            ETag: {description: '"{id}-{version}" : change à chaque nouvelle version du fichier', schema: {type: string}}
+            Cache-Control: {description: 'no-cache, private', schema: {type: string}}
+            X-Content-Type-Options: {description: nosniff, schema: {type: string}}
+          content:
+            application/octet-stream: {schema: {type: string, format: binary}}
+        '206':
+          description: Plage d'octets demandée
+        '304':
+          description: Contenu inchangé depuis l'ETag fourni
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/StorageError'
   /folders/roots:
     get:
       tags: [Documents]
