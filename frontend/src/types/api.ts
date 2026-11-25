@@ -52,6 +52,36 @@ export type UpsertDepartmentMemberRequest = {
   userId: number
   accessLevel: number
 }
+
+export type NodePermissions = {
+  view: boolean
+  modify: boolean
+  delete: boolean
+  manage: boolean
+  createChild: boolean
+}
+
+export type DocumentNode = {
+  id: number
+  name: string
+  kind: "folder" | "file"
+  parentId?: number | null
+  departmentId: number
+  departmentName: string
+  minAccessLevel: number
+  owner: Pick<User, "id" | "firstName" | "lastName">
+  createdAt: string
+  updatedAt?: string | null
+  version: number
+  originalFileName?: string | null
+  contentType?: string | null
+  size?: number | null
+  permissions: NodePermissions
+}
+
+export type BreadcrumbItem = Pick<DocumentNode, "id" | "name">
+export type NodeDetail = { node: DocumentNode; path: BreadcrumbItem[] }
+
 export type SharingPerson = Pick<User, "id" | "username" | "firstName" | "lastName" | "email">
 export type NodeSharingInfo = {
   nodeId: string

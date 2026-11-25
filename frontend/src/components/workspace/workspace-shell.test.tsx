@@ -28,6 +28,7 @@ describe("WorkspaceShell", () => {
       if (url.includes("/api/profiles/me")) {
         return Response.json({ id: 1, bio: "", profilePictureUrl: null })
       }
+      if (url.endsWith("/api/folders/roots")) return Response.json([])
       return Response.json(paginate([]))
     })
   })

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { FolderOpen, MessageSquare, ShieldCheck, Users } from "lucide-react"
 import {
   parseWorkspaceTab,
@@ -25,6 +25,7 @@ interface WorkspaceShellProps {
   isAdmin?: boolean
   embedded?: boolean
   client?: Api
+  documents?: ReactNode
 }
 
 const TAB_ICONS: Record<WorkspaceTabId, typeof FolderOpen> = {
@@ -40,6 +41,7 @@ export function WorkspaceShell({
   isAdmin = false,
   embedded = false,
   client,
+  documents,
 }: WorkspaceShellProps) {
   const tabs = visibleWorkspaceTabs(isAdmin)
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
@@ -113,7 +115,7 @@ export function WorkspaceShell({
         id={`panel-${activeTab}`}
         aria-labelledby={`tab-${activeTab}`}
       >
-        {activeTab === "files" && <FileWorkspace embedded={embedded} client={client} />}
+        {activeTab === "files" && (documents ?? <FileWorkspace embedded={embedded} client={client} />)}
         {activeTab === "admin" && isAdmin && (
           <div className="space-y-6">
             <PendingRegistrationsPanel client={client} />

@@ -58,8 +58,8 @@ les données sont isolées à l'entreprise de la session courante.
 
 Utiliser `frontend/src/lib/api.ts` pour les appels React et `frontend/src/types/api.ts` pour les DTO. `ApiError` expose le statut HTTP, le code et les erreurs par champ. Les listes API utilisent des indices de page à partir de zéro.
 
-- **http://localhost:8080/dashboard** utilise le client HTTP avec la session Spring. Le panneau React des inscriptions appelle `/api/users` et attend les contrôleurs JSON de B1.
-- **http://localhost:5173/** ouvre l'aperçu Vite autonome. La session, les départements et la validation des inscriptions y sont simulés. Les fichiers de démonstration restent en mémoire jusqu'au branchement de l'explorateur en T19.
+- **http://localhost:8080/dashboard** affiche les dossiers et fichiers accessibles au compte connecté. Pour voir un dossier, utiliser un compte administrateur d'entreprise ou un compte membre avec une adhésion au département concerné.
+- **http://localhost:5173/** ouvre l'aperçu Vite autonome avec des données simulées, dont l'éditeur et les favoris de démonstration.
 
 ---
 
@@ -205,11 +205,9 @@ Cette entité est décrite dans le README, mais n'apparaît pas dans le diagramm
 
 L’interface principale est composée dans `frontend/src/App.tsx` et `frontend/src/components/workspace/`. Elle utilise les composants shadcn/ui `Resizable`, `Pagination`, `Avatar`, `Button`, `Input`, `Textarea`, `Badge` et `Sonner`. Le header réutilise `SiteMenu`, construit avec `NavigationMenu`.
 
-L’explorateur propose six éléments par page, une navigation dans les dossiers, une recherche dans le dossier courant et un filtre de favoris. Le panneau de droite permet de consulter, modifier, enregistrer ou annuler le brouillon du fichier sélectionné. La barre au-dessus des panneaux affiche les favoris et les avatars des personnes ayant modifié le document (trois avatars puis un compteur).
+Sur le dashboard, l'explorateur charge les racines, les enfants par pages de six et les métadonnées avec le fil d'Ariane. Les droits affichés viennent du serveur. Le contenu des fichiers, la modification et les favoris seront branchés dans les tâches suivantes.
 
-À l’ouverture et à l’enregistrement d’un fichier, un toast confirme l’action. Les brouillons sont conservés lors du passage à un autre fichier ; `Ctrl+S` ou `Cmd+S` enregistre le fichier en cours d’édition. Sur mobile, les panneaux redimensionnables sont empilés verticalement.
-
-Les données d’exemple sont définies dans `frontend/src/data/workspace.ts`. Le contenu, les favoris et les contributeurs sont mis à jour **en mémoire pendant la session** : recharger la page réinitialise les données. L’interface n’est pas encore reliée aux API de fichiers ou à une collaboration en temps réel.
+L'aperçu Vite utilise les fichiers d'exemple de `frontend/src/data/workspace.ts` pour la recherche, les favoris et l'édition de texte. Les brouillons survivent au changement de fichier tant que l'explorateur reste ouvert. `Ctrl+S` ou `Cmd+S` enregistre le brouillon en mémoire. Sur mobile, les deux panneaux sont empilés.
 
 ### Développement et build
 
