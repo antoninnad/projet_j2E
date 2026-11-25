@@ -74,6 +74,26 @@ class UserServiceTest {
     }
 
     @Test
+    void registerRejectsDuplicateUsernameAfterPasswordValidation() {
+        UserRepository users = mock(UserRepository.class);
+        CompanyRepository companies = mock(CompanyRepository.class);
+        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        RegisterDTO dto = new RegisterDTO();
+        dto.setUsername("alice");
+        dto.setEmail("alice@example.com");
+        dto.setFirstName("Alice");
+        dto.setLastName("Dupont");
+        dto.setPassword("Secret123!");
+        dto.setConfirmPassword("Secret123!");
+        dto.setCompanyCode("DEMO");
+        when(users.existsByUsername("alice")).thenReturn(true);
+
+        UserService service = new UserService(users, companies, encoder);
+
+        assertThrows(IllegalArgumentException.class, () -> service.register(dto));
+    }
+
+    @Test
     void findUserAuthenticatesActiveUserByEmailWithBcrypt() {
         UserRepository users = mock(UserRepository.class);
         CompanyRepository companies = mock(CompanyRepository.class);
