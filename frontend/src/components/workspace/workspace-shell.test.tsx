@@ -61,7 +61,7 @@ describe("WorkspaceShell", () => {
 
     await user.click(screen.getByRole("tab", { name: "Annuaire" }))
     expect(screen.getByRole("tab", { name: "Annuaire" })).toHaveAttribute("aria-selected", "true")
-    expect(await screen.findByText(/Annuaire de l'entreprise/i)).toBeInTheDocument()
+    expect(await screen.findByRole("textbox", { name: "Rechercher un collègue" })).toBeInTheDocument()
     expect(window.location.search).toBe("?tab=directory")
 
     await user.click(screen.getByRole("tab", { name: "Chat privé" }))
@@ -116,5 +116,19 @@ describe("WorkspaceShell", () => {
     expect(screen.getByText(/Conversation privée avec Léa Dubois/i)).toBeInTheDocument()
     expect(window.location.search).toContain("tab=chat")
     expect(window.location.search).toContain("peer=3")
+  })
+
+  it("permet de réduire puis redéployer la barre latérale façon Teams", async () => {
+    const user = userEvent.setup()
+    render(<WorkspaceShell embedded userName="Alice Dupont" isAdmin />)
+
+    const sidebar = screen.getByLabelText("Barre latérale d'application")
+    expect(sidebar).toHaveAttribute("data-state", "expanded")
+
+    await user.click(screen.getByRole("button", { name: "Réduire la barre latérale" }))
+    expect(sidebar).toHaveAttribute("data-state", "collapsed")
+
+    await user.click(screen.getByRole("button", { name: "Développer la barre latérale" }))
+    expect(sidebar).toHaveAttribute("data-state", "expanded")
   })
 })

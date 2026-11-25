@@ -67,8 +67,8 @@ describe("DirectoryProfilePanel (T30)", () => {
     const onOpenConversation = vi.fn()
     render(<DirectoryProfilePanel client={client} onOpenConversation={onOpenConversation} />)
 
-    // Affiche 6 membres actifs au total (Sam Bernard PENDING est exclu)
-    expect(await screen.findByText("6 membres actifs")).toBeInTheDocument()
+    // Affiche directement les comptes actifs (Sam Bernard PENDING est exclu) avec pagination en bas
+    expect(await screen.findByText("Alice Martin")).toBeInTheDocument()
     expect(screen.queryByText(/Sam Bernard/i)).not.toBeInTheDocument()
     expect(screen.getByText("Page 1 sur 2")).toBeInTheDocument()
 

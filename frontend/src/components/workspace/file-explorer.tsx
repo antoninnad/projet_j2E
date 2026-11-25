@@ -1,7 +1,21 @@
-import { ChevronLeft, ChevronRight, FileText, Folder, FolderOpen, Search, Star } from "lucide-react"
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Folder,
+  FolderOpen,
+  SearchX,
+  Star,
+} from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty"
+import { SearchInput } from "@/components/ui/input"
+import { Cluster, IconTile, Stack } from "@/components/ui/layout"
 import { Pagination } from "@/components/ui/pagination"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { PageMeta } from "@/types/api"
 
@@ -38,11 +52,26 @@ type Props<T extends Entry> = {
 }
 
 export function FileExplorer<T extends Entry>({
-  entries, selectedId, folderName, filters, pagination, dirtyIds, loading, error,
-  emptyMessage = "Ce dossier est vide.", sizeLabel, onPage, onOpen, onBack, onRetry,
+  entries,
+  selectedId,
+  folderName,
+  filters,
+  pagination,
+  dirtyIds,
+  loading,
+  error,
+  emptyMessage = "Ce dossier est vide.",
+  sizeLabel,
+  onPage,
+  onOpen,
+  onBack,
+  onRetry,
 }: Props<T>) {
-  const empty = filters?.query ? "Essayez un autre nom de fichier."
-    : filters?.favoritesOnly ? "Aucun favori dans ce dossier." : emptyMessage
+  const empty = filters?.query
+    ? "Essayez un autre nom de fichier."
+    : filters?.favoritesOnly
+      ? "Aucun favori dans ce dossier."
+      : emptyMessage
 
   function changePage(offset: number) {
     if (!pagination || loading) return
@@ -51,17 +80,20 @@ export function FileExplorer<T extends Entry>({
   }
 
   return (
-    <section aria-label="Explorateur de fichiers" className="flex h-full min-w-0 flex-col bg-background">
-      <div className="space-y-4 border-b px-4 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
+    <section aria-label="Explorateur de fichiers" className="flex h-full min-w-0 flex-col bg-card">
+      <Stack gap="sm" className="border-b p-4">
+        <Cluster justify="between" wrap={false}>
+          <Cluster gap="sm" wrap={false} className="min-w-0">
             {onBack ? (
               <Button variant="ghost" size="icon-sm" onClick={onBack} aria-label="Dossier parent">
                 <ChevronLeft aria-hidden="true" />
               </Button>
-            ) : <FolderOpen className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+            ) : (
+              <FolderOpen className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            )}
             <h2 className="truncate text-sm font-semibold">{folderName}</h2>
-          </div>
+          </Cluster>
+
           {filters && (
             <Button
               variant={filters.favoritesOnly ? "secondary" : "ghost"}
@@ -70,85 +102,129 @@ export function FileExplorer<T extends Entry>({
               aria-pressed={filters.favoritesOnly}
               onClick={filters.onToggleFavorites}
             >
-              <Star className={cn("size-4", filters.favoritesOnly && "fill-amber-400 text-amber-600")} aria-hidden="true" />
+              <Star
+                className={cn(filters.favoritesOnly && "fill-warning text-warning")}
+                aria-hidden="true"
+              />
             </Button>
           )}
-        </div>
-        {filters && (
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              aria-label="Rechercher dans le dossier"
-              placeholder="Rechercher un fichier…"
-              value={filters.query}
-              onChange={event => filters.onSearch(event.target.value)}
-              className="pl-9"
-            />
-          </div>
-        )}
-      </div>
+        </Cluster>
 
-      <div className="flex items-center justify-between border-b px-5 py-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-        <span>Nom</span><span>Type / taille</span>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        {filters && (
+          <SearchInput
+            aria-label="Rechercher dans le dossier"
+            placeholder="Rechercher un fichier…"
+            value={filters.query}
+            onChange={(event) => filters.onSearch(event.target.value)}
+          />
+        )}
+      </Stack>
+
+      <Cluster
+        justify="between"
+        className="border-b px-5 py-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+      >
+        <span>Nom</span>
+        <span>Type / taille</span>
+      </Cluster>
+
+      <ScrollArea className="min-h-0 flex-1 p-2">
         {loading ? (
-          <p role="status" className="p-4 text-sm text-muted-foreground">Chargement des documents…</p>
+          <Stack gap="sm" className="p-2">
+            <p role="status" className="sr-only">
+              Chargement des documents…
+            </p>
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </Stack>
         ) : error ? (
-          <div className="space-y-2 p-4">
-            <p role="alert" className="text-sm text-destructive">{error}</p>
-            {onRetry && <Button variant="outline" size="sm" onClick={onRetry}>Réessayer</Button>}
-          </div>
+          <Stack gap="sm" className="p-2">
+            <Alert variant="destructive">
+              <AlertCircle aria-hidden="true" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                Réessayer
+              </Button>
+            )}
+          </Stack>
         ) : entries.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">{empty}</p>
+          <Empty className="my-4">
+            <EmptyIcon>
+              <SearchX aria-hidden="true" />
+            </EmptyIcon>
+            <EmptyDescription>{empty}</EmptyDescription>
+          </Empty>
         ) : (
-          <ul className="space-y-1">
-            {entries.map(entry => {
+          <Stack gap="xs">
+            {entries.map((entry) => {
               const folder = entry.kind === "folder"
+              const selected = entry.id === selectedId
               const Icon = folder ? Folder : FileText
               return (
-                <li key={entry.id}>
-                  <button
-                    type="button"
-                    onClick={() => onOpen(entry)}
-                    aria-current={entry.id === selectedId ? "true" : undefined}
-                    aria-label={(folder ? "Ouvrir le dossier " : "Ouvrir le fichier ") + entry.name}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-accent",
-                      entry.id === selectedId && "bg-accent ring-1 ring-border",
+                <Button
+                  key={entry.id}
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onOpen(entry)}
+                  aria-current={selected ? "true" : undefined}
+                  aria-label={(folder ? "Ouvrir le dossier " : "Ouvrir le fichier ") + entry.name}
+                  className={cn(
+                    "h-auto w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left font-normal",
+                    selected && "bg-primary-subtle/80 ring-1 ring-primary/25",
+                  )}
+                >
+                  <IconTile tone={folder ? "folder" : "file"} size="sm">
+                    <Icon aria-hidden="true" />
+                  </IconTile>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {entry.name}
+                      </span>
+                      {entry.favorite && (
+                        <Star
+                          className="size-3 shrink-0 fill-warning text-warning"
+                          aria-label="Favori"
+                        />
+                      )}
+                      {dirtyIds?.has(entry.id) && (
+                        <span
+                          className="size-1.5 shrink-0 rounded-full bg-info"
+                          aria-label="Modifications non enregistrées"
+                        />
+                      )}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {folder
+                        ? "Dossier"
+                        : entry.updatedAt &&
+                          new Date(entry.updatedAt).toLocaleDateString("fr-FR")}
+                    </span>
+                  </span>
+
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {folder ? (
+                      <ChevronRight className="size-4" aria-hidden="true" />
+                    ) : (
+                      sizeLabel(entry)
                     )}
-                  >
-                    <span className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground",
-                      folder && "border-amber-200 bg-amber-50 text-amber-600",
-                    )}>
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
-                        <span className="truncate text-sm font-medium">{entry.name}</span>
-                        {entry.favorite && <Star className="size-3 shrink-0 fill-amber-400 text-amber-500" aria-label="Favori" />}
-                        {dirtyIds?.has(entry.id) && (
-                          <span className="size-1.5 shrink-0 rounded-full bg-blue-500" aria-label="Modifications non enregistrées" />
-                        )}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">
-                        {folder ? "Dossier" : entry.updatedAt && new Date(entry.updatedAt).toLocaleDateString("fr-FR")}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {folder ? <ChevronRight className="size-4" aria-hidden="true" /> : sizeLabel(entry)}
-                    </span>
-                  </button>
-                </li>
+                  </span>
+                </Button>
               )
             })}
-          </ul>
+          </Stack>
         )}
-      </div>
+      </ScrollArea>
 
       {pagination && (
-        <Pagination aria-label="Pagination des fichiers" className="items-center gap-3 border-t px-3 py-2">
+        <Pagination
+          aria-label="Pagination des fichiers"
+          className="items-center gap-3 border-t px-3 py-2.5"
+        >
           <Button
             type="button"
             variant="ghost"
@@ -162,7 +238,7 @@ export function FileExplorer<T extends Entry>({
           </Button>
           <span className="text-center text-xs text-muted-foreground" aria-live="polite">
             {pagination.totalPages > 0
-              ? (pagination.page + 1) + " / " + pagination.totalPages + " · " + pagination.totalElements + " éléments"
+              ? `${pagination.page + 1} / ${pagination.totalPages} · ${pagination.totalElements} éléments`
               : "0 élément"}
           </span>
           <Button

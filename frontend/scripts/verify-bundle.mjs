@@ -21,7 +21,7 @@ const cssPath = resolve(staticUiDir, 'app.css')
 if (existsSync(cssPath)) {
   const css = readFileSync(cssPath, 'utf8')
   // Classes utilisées spécifiquement dans les templates Thymeleaf (fragments/messages.html, register.html)
-  const expectedTemplateClasses = ['bg-emerald-50', 'bg-amber-50', 'bg-red-50', 'max-w-lg']
+  const expectedTemplateClasses = ['bg-success-subtle', 'bg-warning-subtle', 'bg-destructive-subtle', 'max-w-lg']
   for (const cls of expectedTemplateClasses) {
     if (!css.includes(cls)) {
       errors.push(

@@ -1,5 +1,8 @@
 import { FileText, Folder } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Cluster, IconTile, Stack } from "@/components/ui/layout"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { formatFileSize } from "@/lib/utils"
 import type { DocumentNode, NodePermissions } from "@/types/api"
 
@@ -18,34 +21,60 @@ export function DocumentDetails({ node }: { node: DocumentNode }) {
   const metadata = [
     ["Département", node.departmentName],
     ["Propriétaire", [owner.firstName, owner.lastName].filter(Boolean).join(" ")],
-    ["Dernière mise à jour", new Intl.DateTimeFormat("fr-FR").format(new Date(node.updatedAt ?? node.createdAt))],
-    ...(file ? [["Type", node.contentType], ["Taille", formatFileSize(node.size)]] : []),
+    [
+      "Dernière mise à jour",
+      new Intl.DateTimeFormat("fr-FR").format(new Date(node.updatedAt ?? node.createdAt)),
+    ],
+    ...(file
+      ? [
+          ["Type", node.contentType],
+          ["Taille", formatFileSize(node.size)],
+        ]
+      : []),
   ]
 
   return (
-    <div className="space-y-5">
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+    <Stack gap="lg">
+      <Cluster gap="md" wrap={false}>
+        <IconTile tone={file ? "file" : "folder"}>
+          <Icon aria-hidden="true" />
+        </IconTile>
         <h2 className="break-all text-lg font-semibold">{node.name}</h2>
-      </div>
+      </Cluster>
 
-      <dl className="grid gap-3 sm:grid-cols-2">
-        {metadata.filter(([, value]) => value).map(([label, value]) => (
-          <div key={label} className="min-w-0">
-            <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="break-all text-sm font-medium">{value}</dd>
-          </div>
-        ))}
-      </dl>
+      <Table>
+        <TableBody>
+          {metadata
+            .filter(([, value]) => value)
+            .map(([label, value]) => (
+              <TableRow key={label}>
+                <TableCell className="w-44 text-xs text-muted-foreground">{label}</TableCell>
+                <TableCell className="break-all text-sm font-medium">{value}</TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
 
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">Actions autorisées</h3>
-        <ul aria-label="Actions autorisées" className="flex flex-wrap gap-2">
-          {(Object.keys(ACTIONS) as (keyof NodePermissions)[]).filter(action => permissions[action]).map(action => (
-            <li key={action}><Badge variant="secondary">{ACTIONS[action]}</Badge></li>
-          ))}
-        </ul>
-      </div>
-    </div>
+      <Card className="py-4">
+        <CardHeader>
+          <CardTitle className="text-sm">
+            <h3>Actions autorisées</h3>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul aria-label="Actions autorisées" className="flex flex-wrap gap-2">
+            {(Object.keys(ACTIONS) as (keyof NodePermissions)[])
+              .filter((action) => permissions[action])
+              .map((action) => (
+                <li key={action}>
+                  <Badge variant={action === "manage" ? "brand" : "secondary"}>
+                    {ACTIONS[action]}
+                  </Badge>
+                </li>
+              ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </Stack>
   )
 }

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Inscription', 'Créez votre demande de compte salarié rattaché à votre entreprise sur Lagui.')}"></head>
-<body class="flex min-h-screen flex-col bg-muted/30 text-foreground">
+<body class="flex min-h-screen flex-col bg-canvas text-foreground">
 <header th:replace="~{fragments/header :: header('register')}"></header>
 
 <main id="contenu" tabindex="-1" class="mx-auto flex w-full max-w-7xl flex-1 items-center justify-center px-4 py-10 sm:px-6">
-    <section class="w-full max-w-lg space-y-6 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+    <section class="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div class="brand-top-accent h-1.5 w-full" aria-hidden="true"></div>
+        <div class="space-y-6 p-6 sm:p-8">
         <div class="space-y-1.5">
             <h1 class="text-2xl font-semibold tracking-tight">Demande d'inscription</h1>
             <p class="text-sm text-muted-foreground">
@@ -19,7 +21,7 @@
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
             <div th:if="${#fields.hasGlobalErrors()}" role="alert"
-                 class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 space-y-1">
+                 class="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground space-y-1">
                 <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erreur d'inscription</p>
             </div>
 
@@ -130,10 +132,11 @@
         <div class="border-t border-border pt-4 text-center text-sm text-muted-foreground">
             <p>
                 Vous disposez déjà d'un compte ?
-                <a th:href="@{/login}" class="font-medium text-foreground underline underline-offset-4 hover:opacity-80">
+                <a th:href="@{/login}" class="font-medium text-primary underline underline-offset-4 hover:opacity-80">
                     Se connecter
                 </a>
             </p>
+        </div>
         </div>
     </section>
 </main>
