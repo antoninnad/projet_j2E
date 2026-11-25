@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
-import { Check, ChevronRight, FileText, FolderOpen, Pencil, Save, Star, X } from "lucide-react"
+import { Check, ChevronRight, FileText, FolderOpen, Pencil, Save, Share2, Star, X } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { initialEntries, type WorkspaceEntry } from "@/data/workspace"
+import type { Api } from "@/lib/api"
 import { paginate } from "@/lib/pagination"
 import { cn } from "@/lib/utils"
 import { ContributorAvatars } from "./contributor-avatars"
 import { FileEditor } from "./file-editor"
 import { FileExplorer, PAGE_SIZE } from "./file-explorer"
+import { SharingPanel } from "./sharing-panel"
 
-export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
+export function FileWorkspace({ embedded = false, client }: { embedded?: boolean; client?: Api }) {
   const [entries, setEntries] = useState(initialEntries)
   const [selectedId, setSelectedId] = useState("guide")
   const [folderId, setFolderId] = useState<string | null>(null)
@@ -19,6 +21,7 @@ export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [page, setPage] = useState(1)
   const [editing, setEditing] = useState(false)
+  const [sharingOpen, setSharingOpen] = useState(false)
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [desktop, setDesktop] = useState(() => window.matchMedia("(min-width: 768px)").matches)
 
@@ -117,11 +120,21 @@ export function FileWorkspace({ embedded = false }: { embedded?: boolean }) {
             <ContributorAvatars ids={selected.contributors} />
             <div className="hidden h-6 w-px bg-border sm:block" />
             <div className="flex items-center gap-2">
+              <Button variant={sharingOpen ? "secondary" : "outline"} size="sm" aria-expanded={sharingOpen} onClick={() => setSharingOpen(open => !open)}><Share2 className="size-4" />Partager</Button>
               <Button variant="ghost" size="icon" aria-label={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} aria-pressed={selected.favorite} title={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} onClick={toggleFavorite}><Star className={cn("size-4", selected.favorite && "fill-amber-400 text-amber-600")} /></Button>
               {editing ? <><Button variant="ghost" size="icon" aria-label="Annuler les modifications" title="Annuler les modifications" onClick={clearDraft}><X className="size-4" /></Button><Button size="sm" onClick={save} disabled={!dirty}><Save className="size-4" />Enregistrer</Button></> : <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil className="size-4" />Modifier</Button>}
             </div>
           </div>
         </div>
+
+        {sharingOpen && (
+          <SharingPanel
+            nodeId={selected.id}
+            nodeName={selected.name}
+            client={client}
+            onClose={() => setSharingOpen(false)}
+          />
+        )}
 
         <ResizablePanelGroup key={desktop ? "desktop" : "mobile"} orientation={desktop ? "horizontal" : "vertical"} className={desktop ? "h-[660px]!" : "h-[1080px]!"}>
           <ResizablePanel id="explorer" defaultSize={desktop ? "32%" : "45%"} minSize={desktop ? "25%" : "35%"} maxSize={desktop ? "50%" : "55%"}>

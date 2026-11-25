@@ -5,10 +5,14 @@ import type {
   Company,
   CreateCompanyRequest,
   CreateCompanyResponse,
+  CreateDepartmentRequest,
   Department,
+  DepartmentMember,
   ErrorResponse,
+  NodeSharingInfo,
   Profile,
   SessionResponse,
+  SharingPerson,
   UpdateProfileRequest,
   UpdateUserRequest,
   User,
@@ -80,10 +84,20 @@ const initialProfiles: Record<number, Profile> = {
   },
 }
 
-const departments: Department[] = [
+const initialDepartments: Department[] = [
   { id: 1, companyId: 1, name: "Finance" },
   { id: 2, companyId: 1, name: "Ressources humaines" },
 ]
+
+function toSharingPerson(user: User): SharingPerson {
+  return {
+    id: user.id,
+    username: user.username,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+  }
+}
 
 function error(status: number, code: string, message: string, errors?: Record<string, string>): Response {
   return Response.json({ code, message, ...(errors ? { errors } : {}) } satisfies ErrorResponse, { status })
@@ -117,7 +131,65 @@ export function createPreviewApi() {
     Object.entries(initialProfiles).map(([id, profile]) => [Number(id), { ...profile }]),
   )
   const companies = new Map<number, Company>([[1, { id: 1, name: "CyTech", code: "CYTECH" }]])
+  const departments = new Map<number, Department>(
+    initialDepartments.map((dept) => [dept.id, { ...dept }]),
+  )
+  const memberships = new Map<number, Map<number, number>>([
+    [1, new Map<number, number>([[1, 4], [6, 2], [3, 1]])],
+    [2, new Map<number, number>([[1, 4], [5, 3], [7, 1]])],
+  ])
+  const sharingByNode = new Map<string, NodeSharingInfo>([
+    [
+      "guide",
+      {
+        nodeId: "guide",
+        nodeName: "guide-demarrage.md",
+        departmentName: "Finance",
+        owner: toSharingPerson(admin),
+        minAccessLevel: 1,
+        parentMinAccessLevel: 1,
+        actorAccessLevel: 4,
+        isCompanyAdmin: true,
+        canManageSharing: true,
+        contributors: [toSharingPerson(initialColleagues[0]), toSharingPerson(initialColleagues[1])],
+      },
+    ],
+    [
+      "architecture",
+      {
+        nodeId: "architecture",
+        nodeName: "architecture.md",
+        departmentName: "Ressources humaines",
+        owner: toSharingPerson(initialColleagues[1]),
+        minAccessLevel: 2,
+        parentMinAccessLevel: 1,
+        actorAccessLevel: 4,
+        isCompanyAdmin: true,
+        canManageSharing: true,
+        contributors: [toSharingPerson(initialColleagues[0])],
+      },
+    ],
+  ])
   let currentPassword = "Password123!"
+
+  function getOrCreateNodeSharing(nodeId: string): NodeSharingInfo {
+    const existing = sharingByNode.get(nodeId)
+    if (existing) return existing
+    const fallback: NodeSharingInfo = {
+      nodeId,
+      nodeName: nodeId,
+      departmentName: "Finance",
+      owner: toSharingPerson(admin),
+      minAccessLevel: 1,
+      parentMinAccessLevel: 0,
+      actorAccessLevel: 4,
+      isCompanyAdmin: true,
+      canManageSharing: true,
+      contributors: [],
+    }
+    sharingByNode.set(nodeId, fallback)
+    return fallback
+  }
 
   return createApi({
     fetcher: async (url, { method, body, signal }) => {
@@ -214,7 +286,96 @@ export function createPreviewApi() {
       }
 
       if (method === "GET" && pathname === "/api/departments") {
-        return list(departments.filter((item) => item.name.toLocaleLowerCase("fr").includes(search)), searchParams)
+        return list(
+          [...departments.values()].filter((item) => item.name.toLocaleLowerCase("fr").includes(search)),
+          searchParams,
+        )
+      }
+
+      if (method === "POST" && pathname === "/api/departments") {
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as Partial<CreateDepartmentRequest>
+        const name = (payload.name ?? "").trim()
+        if (!name) {
+          return error(422, "VALIDATION_FAILED", "Le nom du département est obligatoire.", {
+            name: "Le nom du département est obligatoire.",
+          })
+        }
+        const exists = [...departments.values()].some(
+          (dept) => dept.name.toLocaleLowerCase("fr") === name.toLocaleLowerCase("fr"),
+        )
+        if (exists) {
+          return error(409, "CONFLICT", "Un département portant ce nom existe déjà.", {
+            name: "Ce nom de département est déjà utilisé.",
+          })
+        }
+        const id = Math.max(0, ...departments.keys()) + 1
+        const created: Department = { id, companyId: admin.companyId, name }
+        departments.set(id, created)
+        memberships.set(id, new Map<number, number>([[admin.id, 4]]))
+        return Response.json(created satisfies Department, { status: 201 })
+      }
+
+      const deptMembersMatch = /^\/api\/departments\/(\d+)\/members$/.exec(pathname)
+      if (method === "GET" && deptMembersMatch) {
+        const departmentId = Number(deptMembersMatch[1])
+        if (!departments.has(departmentId)) return error(404, "NOT_FOUND", "Département introuvable.")
+        const deptMap = memberships.get(departmentId) ?? new Map<number, number>()
+        const items: DepartmentMember[] = []
+        for (const [userId, accessLevel] of deptMap.entries()) {
+          const member = users.get(userId)
+          if (member && member.status === "ACTIVE") {
+            items.push({
+              userId: member.id,
+              username: member.username,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              email: member.email,
+              accessLevel,
+            })
+          }
+        }
+        items.sort((a, b) => b.accessLevel - a.accessLevel || a.lastName.localeCompare(b.lastName, "fr"))
+        return Response.json(items satisfies DepartmentMember[])
+      }
+
+      const deptMemberItemMatch = /^\/api\/departments\/(\d+)\/members\/(\d+)$/.exec(pathname)
+      if (deptMemberItemMatch) {
+        const departmentId = Number(deptMemberItemMatch[1])
+        const userId = Number(deptMemberItemMatch[2])
+        if (!departments.has(departmentId)) return error(404, "NOT_FOUND", "Département introuvable.")
+        const member = users.get(userId)
+        if (!member || member.companyId !== admin.companyId) {
+          return error(404, "NOT_FOUND", "Membre introuvable.")
+        }
+        const deptMap = memberships.get(departmentId) ?? new Map<number, number>()
+        memberships.set(departmentId, deptMap)
+
+        if (method === "PUT") {
+          if (member.status !== "ACTIVE") {
+            return error(409, "CONFLICT", "Seul un compte actif peut être affecté à un département.")
+          }
+          const payload = (typeof body === "string" ? JSON.parse(body) : {}) as { accessLevel?: number }
+          const accessLevel = Number(payload.accessLevel)
+          if (!Number.isInteger(accessLevel) || accessLevel < 0) {
+            return error(422, "VALIDATION_FAILED", "Le niveau d'accès doit être un entier positif ou nul.", {
+              accessLevel: "Indiquez un entier supérieur ou égal à 0.",
+            })
+          }
+          deptMap.set(userId, accessLevel)
+          return Response.json({
+            userId: member.id,
+            username: member.username,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            email: member.email,
+            accessLevel,
+          } satisfies DepartmentMember)
+        }
+
+        if (method === "DELETE") {
+          deptMap.delete(userId)
+          return new Response(null, { status: 204 })
+        }
       }
 
       if (method === "GET" && pathname === "/api/users") {
@@ -239,10 +400,18 @@ export function createPreviewApi() {
           return Response.json(target satisfies User)
         }
         if (method === "PATCH") {
+          const payload = (typeof body === "string" ? JSON.parse(body) : {}) as UpdateUserRequest
+          if (payload.status !== undefined) {
+            if (id === admin.id && payload.status === "DISABLED") {
+              return error(409, "CONFLICT", "Vous ne pouvez pas désactiver votre propre compte administrateur.")
+            }
+            const updatedStatus: User = { ...target, status: payload.status }
+            users.set(id, updatedStatus)
+            return Response.json(updatedStatus satisfies User)
+          }
           if (id !== admin.id) {
             return error(403, "FORBIDDEN", "La modification d'un profil est réservée à son propriétaire.")
           }
-          const payload = (typeof body === "string" ? JSON.parse(body) : {}) as UpdateUserRequest
           const firstName = payload.firstName !== undefined ? payload.firstName.trim() : target.firstName
           const lastName = payload.lastName !== undefined ? payload.lastName.trim() : target.lastName
           if (!firstName || !lastName) {
@@ -281,6 +450,85 @@ export function createPreviewApi() {
         const approved = { ...user, status: "ACTIVE" } satisfies User
         users.set(id, approved)
         return Response.json(approved)
+      }
+
+      const sharingMatch = /^\/api\/nodes\/([^/]+)\/sharing$/.exec(pathname)
+      if (method === "GET" && sharingMatch) {
+        const nodeId = decodeURIComponent(sharingMatch[1])
+        return Response.json(getOrCreateNodeSharing(nodeId) satisfies NodeSharingInfo)
+      }
+
+      const thresholdMatch = /^\/api\/nodes\/([^/]+)\/threshold$/.exec(pathname)
+      if (method === "PATCH" && thresholdMatch) {
+        const nodeId = decodeURIComponent(thresholdMatch[1])
+        const current = getOrCreateNodeSharing(nodeId)
+        if (!current.canManageSharing) {
+          return error(403, "FORBIDDEN", "Vous n'avez pas le droit de modifier le seuil d'accès de cet élément.")
+        }
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as { minAccessLevel?: number }
+        const minAccessLevel = Number(payload.minAccessLevel)
+        if (!Number.isInteger(minAccessLevel) || minAccessLevel < 0) {
+          return error(422, "VALIDATION_FAILED", "Le seuil d'accès doit être un entier positif ou nul.")
+        }
+        if (minAccessLevel < current.parentMinAccessLevel) {
+          return error(
+            422,
+            "VALIDATION_FAILED",
+            `Le seuil d'un élément ne peut pas être inférieur à celui de son dossier parent (seuil parent : ${current.parentMinAccessLevel}).`,
+          )
+        }
+        if (!current.isCompanyAdmin && minAccessLevel > current.actorAccessLevel) {
+          return error(
+            403,
+            "FORBIDDEN",
+            `Vous ne pouvez pas définir un seuil supérieur à votre propre niveau d'accès (${current.actorAccessLevel}).`,
+          )
+        }
+        const updated: NodeSharingInfo = { ...current, minAccessLevel }
+        sharingByNode.set(nodeId, updated)
+        return Response.json(updated satisfies NodeSharingInfo)
+      }
+
+      const addContributorMatch = /^\/api\/nodes\/([^/]+)\/contributors$/.exec(pathname)
+      if (method === "POST" && addContributorMatch) {
+        const nodeId = decodeURIComponent(addContributorMatch[1])
+        const current = getOrCreateNodeSharing(nodeId)
+        if (!current.canManageSharing) {
+          return error(403, "FORBIDDEN", "Vous n'avez pas le droit de gérer les contributeurs de cet élément.")
+        }
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as { userId?: number }
+        const candidate = payload.userId ? users.get(Number(payload.userId)) : undefined
+        if (!candidate || candidate.companyId !== admin.companyId || candidate.status !== "ACTIVE") {
+          return error(404, "NOT_FOUND", "Membre actif introuvable dans votre entreprise.")
+        }
+        if (candidate.id === current.owner.id) {
+          return error(409, "CONFLICT", "Le propriétaire dispose déjà des droits complets sur cet élément.")
+        }
+        if (current.contributors.some((person) => person.id === candidate.id)) {
+          return error(409, "CONFLICT", "Ce membre est déjà contributeur de cet élément.")
+        }
+        const updated: NodeSharingInfo = {
+          ...current,
+          contributors: [...current.contributors, toSharingPerson(candidate)],
+        }
+        sharingByNode.set(nodeId, updated)
+        return Response.json(updated satisfies NodeSharingInfo)
+      }
+
+      const removeContributorMatch = /^\/api\/nodes\/([^/]+)\/contributors\/(\d+)$/.exec(pathname)
+      if (method === "DELETE" && removeContributorMatch) {
+        const nodeId = decodeURIComponent(removeContributorMatch[1])
+        const userId = Number(removeContributorMatch[2])
+        const current = getOrCreateNodeSharing(nodeId)
+        if (!current.canManageSharing) {
+          return error(403, "FORBIDDEN", "Vous n'avez pas le droit de gérer les contributeurs de cet élément.")
+        }
+        const updated: NodeSharingInfo = {
+          ...current,
+          contributors: current.contributors.filter((person) => person.id !== userId),
+        }
+        sharingByNode.set(nodeId, updated)
+        return Response.json(updated satisfies NodeSharingInfo)
       }
 
       return error(501, "NOT_IMPLEMENTED", "Cette opération n'est pas disponible dans l'aperçu.")
