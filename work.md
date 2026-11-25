@@ -147,10 +147,17 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T11 | Sessions et sécurité | Créer LoginDTO, findByEmail, UserService.findUser et PublicUser en session ; ajouter POST /login et POST /logout, session courante, rotation de session, rôles, CSRF et cookies | B1 | P0 | Terminé | T07 | Connexion par email, session sans secrets et comptes inactifs exclus |
 | T12 | Entreprises et inscription | Créer entreprise/premier administrateur ; créer RegisterDTO et POST /register ; vérifier les mots de passe et hacher via BCrypt dans UserService, persister tous les champs et le profil ; aligner l’API JSON et gérer les doublons | B1 | P0 | À vérifier | T11 | Compte et profil créés dans la bonne entreprise en attente d’approbation |
 | T13 | Écrans d’accès | Avec B1, exposer GET /, /register, /login et /dashboard ; brancher formulaires Thymeleaf et déconnexion avec CSRF, erreurs et redirections ; intégrer création d’entreprise et React ; protéger le dashboard | F1 | P0 | Terminé | T02, T03, T11, T12 | Parcours MVC avec fragments, session et expiration ; dashboard alimenté selon les droits dès T18 |
+<<<<<<< HEAD
 | T14 | Administration des comptes | Afficher les inscriptions en attente et permettre approbation/refus depuis l’interface MVC ; compléter désactivation et contrôle d’accès par entreprise | B1 | P1 | Partiel | T12 | Contrôles de rôle et révocation d’accès effectifs |
 | T15 | Départements | Développer gestion des départements, membres et niveaux ; utiliser la création interne des racines fournie en T05 | B1 | P0 | À faire | T08, T11 | Adhésions et dossiers racines cohérents |
 | T16 | Permissions | Implémenter le service central selon la matrice ; exposer les actions autorisées | B1 | P0 | À faire | T15 | Décisions de droits réutilisables par les services |
 | T17 | Administration frontend | Afficher et modifier en ligne les champs des utilisateurs, éléments, départements et fichiers depuis les listes d’administration ; compléter demandes de comptes, désactivation, adhésions et niveaux des membres | F1 | P1 | À vérifier | T13, T14, T15 | Administration utilisable avec les données réelles et les droits prévus |
+=======
+| T14 | Administration des comptes | Afficher les inscriptions en attente et permettre approbation/refus depuis l’interface MVC ; compléter désactivation et contrôle d’accès par entreprise | B1 | P1 | À vérifier | T12 | Contrôles de rôle et révocation d’accès effectifs |
+| T15 | Départements | Développer gestion des départements, membres et niveaux ; utiliser la création interne des racines fournie en T05 | B1 | P0 | À vérifier | T08, T11 | Adhésions et dossiers racines cohérents |
+| T16 | Permissions | Implémenter le service central selon la matrice ; exposer les actions autorisées | B1 | P0 | À vérifier | T15 | Décisions de droits réutilisables par les services |
+| T17 | Administration frontend | Afficher et modifier en ligne les champs des utilisateurs, éléments, départements et fichiers depuis les listes d’administration ; compléter demandes de comptes, désactivation, adhésions et niveaux des membres | F1 | P1 | Partiel | T13, T14, T15 | Administration utilisable avec les données réelles et les droits prévus |
+>>>>>>> f0891aa (T15-16)
 | T18 | Exploration backend | Créer racines et API des enfants visibles, pagination et métadonnées ; fournir à F1/B1 les services pour alimenter le dashboard Thymeleaf | B2 | P1 | À faire | T08, T16 | Arborescence et dashboard limités aux éléments autorisés |
 | T19 | Exploration frontend | Brancher navigation, fil d’Ariane et pagination ; afficher les actions permises | F2 | P1 | Partiel | T03, T18 | Explorateur connecté à l’API |
 | T20 | Dossiers backend | Créer/renommer/déplacer/supprimer ; contrôler cycles, seuils et sous-arbres | B2 | P1 | À faire | T18 | Opérations cohérentes et protégées |
@@ -160,9 +167,15 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T24 | Import et dossiers frontend | Brancher création et actions dossiers ; ajouter upload, progression et confirmations | F2 | P1 | Partiel | T19, T20, T21 | Documents importables et dossiers administrables selon droits |
 | T25 | Consultation frontend | Afficher détails, aperçus texte/image/PDF et téléchargement des autres formats | F2 | P1 | Partiel | T19, T22 | Consultation réelle des fichiers autorisés |
 | T26 | Édition frontend | Brancher sauvegarde, annulation, remplacement et gestion des conflits ; déplacement/suppression | F2 | P1 | Partiel | T23, T24, T25 | Éditeur persistant et brouillon préservé en cas de conflit |
+<<<<<<< HEAD
 | T27 | Partage backend | Gérer seuils et contributeurs en appliquant permissions et intégrité de l’arbre | B1 | P1 | À faire | T16, T20 | Partage protégé sans contournement des niveaux |
 | T28 | Partage frontend | Ajouter le panneau propriétaire/seuil/contributeurs et les messages de refus | F1 | P1 | À vérifier | T17, T19, T27 | Droits consultables et modifiables selon autorisation |
 | T29 | Profils et annuaire backend | Créer API profils, avatar, changement du mot de passe et recherche paginée des collègues | B1 | P1 | Partiel | T11, T14 | Données validées et consultation interne à l’entreprise |
+=======
+| T27 | Partage backend | Gérer seuils et contributeurs en appliquant permissions et intégrité de l’arbre | B1 | P1 | À vérifier | T16, T20 | Partage protégé sans contournement des niveaux |
+| T28 | Partage frontend | Ajouter le panneau propriétaire/seuil/contributeurs et les messages de refus | F1 | P1 | À faire | T17, T19, T27 | Droits consultables et modifiables selon autorisation |
+| T29 | Profils et annuaire backend | Créer API profils, avatar, changement du mot de passe et recherche paginée des collègues | B1 | P1 | À vérifier | T11, T14 | Données validées et consultation interne à l’entreprise |
+>>>>>>> f0891aa (T15-16)
 | T30 | Profils et annuaire frontend | Créer édition du profil, avatar, mot de passe et recherche de collègues | F1 | P1 | À vérifier | T13, T29 | Profil persistant et annuaire fonctionnel |
 | T31 | Recherche et favoris backend | Ajouter recherche filtrée par droits et favoris personnels persistants | B2 | P1 | À faire | T23 | Résultats et favoris sans fuite de documents |
 | T32 | Recherche et favoris frontend | Brancher recherche et vue des favoris sur les API | F2 | P1 | Partiel | T19, T31 | Favoris conservés et résultats autorisés |

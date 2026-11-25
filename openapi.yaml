@@ -285,6 +285,102 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Departments]
+      summary: Créer un département et son dossier racine
+      operationId: createDepartment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        '200':
+          description: Département créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /departments/{departmentId}:
+    put:
+      tags: [Departments]
+      summary: Renommer un département
+      operationId: updateDepartment
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        '200':
+          description: Département mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /departments/{departmentId}/members:
+    put:
+      tags: [Departments]
+      summary: Ajouter ou modifier le niveau d'un membre
+      operationId: setDepartmentMember
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentMembershipRequest'
+      responses:
+        '200':
+          description: Adhésion enregistrée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentMembership'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /departments/{departmentId}/members/{memberId}:
+    delete:
+      tags: [Departments]
+      summary: Retirer un membre d'un département
+      operationId: removeDepartmentMember
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: memberId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '204':
+          description: Adhésion supprimée
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     CompanyId:
@@ -425,6 +521,27 @@ components:
         id: {type: integer, format: int64}
         name: {type: string}
         companyId: {type: integer, format: int64}
+    CreateDepartmentRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 100}
+    DepartmentMembershipRequest:
+      type: object
+      additionalProperties: false
+      required: [userId, accessLevel]
+      properties:
+        userId: {type: integer, format: int64}
+        accessLevel: {type: integer, minimum: 0}
+    DepartmentMembership:
+      type: object
+      required: [id, userId, departmentId, accessLevel]
+      properties:
+        id: {type: integer, format: int64}
+        userId: {type: integer, format: int64}
+        departmentId: {type: integer, format: int64}
+        accessLevel: {type: integer, minimum: 0}
     PageMeta:
       type: object
       required: [page, size, totalElements, totalPages, first, last]
