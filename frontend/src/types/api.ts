@@ -39,6 +39,32 @@ export type CreateCompanyResponse = {
   admin: User
 }
 export type Department = { id: number; name: string; companyId: number }
+export type CreateDepartmentRequest = { name: string }
+export type DepartmentMember = {
+  userId: number
+  username: string
+  firstName: string
+  lastName: string
+  email: string
+  accessLevel: number
+}
+export type UpsertDepartmentMemberRequest = {
+  userId: number
+  accessLevel: number
+}
+export type SharingPerson = Pick<User, "id" | "username" | "firstName" | "lastName" | "email">
+export type NodeSharingInfo = {
+  nodeId: string
+  nodeName: string
+  departmentName: string
+  owner: SharingPerson
+  minAccessLevel: number
+  parentMinAccessLevel: number
+  actorAccessLevel: number
+  isCompanyAdmin: boolean
+  canManageSharing: boolean
+  contributors: SharingPerson[]
+}
 export type Profile = { id: number; bio: string; profilePictureUrl: string | null }
 export type UpdateProfileRequest = Partial<Omit<Profile, "id">>
 export type ChangePasswordRequest = {

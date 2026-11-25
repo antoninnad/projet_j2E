@@ -8,6 +8,7 @@ import {
   visibleWorkspaceTabs,
   type WorkspaceTabId,
 } from "@/app/routes"
+import { CompanyAdminPanel } from "@/components/admin/company-admin-panel"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
 import { DirectoryProfilePanel } from "@/components/directory/directory-profile-panel"
@@ -112,10 +113,11 @@ export function WorkspaceShell({
         id={`panel-${activeTab}`}
         aria-labelledby={`tab-${activeTab}`}
       >
-        {activeTab === "files" && <FileWorkspace embedded={embedded} />}
+        {activeTab === "files" && <FileWorkspace embedded={embedded} client={client} />}
         {activeTab === "admin" && isAdmin && (
           <div className="space-y-6">
             <PendingRegistrationsPanel client={client} />
+            <CompanyAdminPanel client={client} />
             <CompanyCreationPanel client={client} />
           </div>
         )}
