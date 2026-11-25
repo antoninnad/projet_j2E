@@ -22,8 +22,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import fr.cytech.projetj2e.repository.AdminRepository;
 import fr.cytech.projetj2e.repository.CompanyRepository;
+import fr.cytech.projetj2e.repository.DepartmentRepository;
+import fr.cytech.projetj2e.repository.FileRepository;
+import fr.cytech.projetj2e.repository.NodeRepository;
 import fr.cytech.projetj2e.repository.UserRepository;
 import fr.cytech.projetj2e.service.UserService;
+import fr.cytech.projetj2e.model.Admin;
 import fr.cytech.projetj2e.model.AccountStatus;
 import fr.cytech.projetj2e.model.Company;
 import fr.cytech.projetj2e.model.User;
@@ -33,8 +37,10 @@ import fr.cytech.projetj2e.service.ExplorationService;
 import fr.cytech.projetj2e.service.SessionIdentityService;
 
 import java.util.Optional;
+import java.util.List;
 
-@WebMvcTest({ HomeController.class, PageController.class, LoginController.class, RegisterController.class })
+@WebMvcTest({ HomeController.class, PageController.class, LoginController.class, RegisterController.class,
+        AdminDashboardController.class })
 @Import(FrontendModelAdvice.class)
 class HomeControllerTest {
 
@@ -49,6 +55,15 @@ class HomeControllerTest {
 
     @MockitoBean
     private CompanyRepository companyRepository;
+
+    @MockitoBean
+    private DepartmentRepository departmentRepository;
+
+    @MockitoBean
+    private FileRepository fileRepository;
+
+    @MockitoBean
+    private NodeRepository nodeRepository;
 
     @MockitoBean
     private UserService userService;
@@ -112,6 +127,36 @@ class HomeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("login"))
                 .andExpect(content().string(containsString("en attente d'approbation")));
+    }
+
+    @Test
+    void adminLoginRendersFormAndRedirectsToPlatformAdminPage() throws Exception {
+        Admin admin = new Admin();
+        admin.setId(5L);
+        admin.setUsername("admin");
+        admin.setPassword("$2a$hash");
+        when(adminRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
+        when(passwordEncoder.matches("admin123", admin.getPassword())).thenReturn(true);
+
+        mockMvc.perform(get("/adminLogin"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin-login"))
+                .andExpect(content().string(containsString("action=\"/adminLogin\"")));
+
+        var loginResult = mockMvc.perform(post("/adminLogin").with(csrf())
+                        .param("username", "admin")
+                        .param("password", "admin123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/dashboard/listUsers"))
+                .andExpect(result -> org.junit.jupiter.api.Assertions.assertEquals(
+                        5L, result.getRequest().getSession().getAttribute("adminId")))
+                .andReturn();
+
+        when(userRepository.findAll()).thenReturn(List.of());
+        mockMvc.perform(get("/admin/dashboard/listUsers")
+                        .session((MockHttpSession) loginResult.getRequest().getSession(false)))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin-dashboard-listUsers"));
     }
 
     @Test

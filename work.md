@@ -197,6 +197,8 @@ Les contrôleurs login, inscription et administration des comptes ont été adap
 
 T11 est maintenant vérifié : `LoginDTO`, `findByEmail`, `UserService.findUser`, `PublicUser`, renouvellement de l'identifiant de session, refus des comptes `PENDING`/`DISABLED` et CSRF Spring Security sont en place. Les tests ciblés passent et `/login`, `/register` répondent en HTTP 200 tandis que `/dashboard` redirige l'anonyme.
 
+La connexion de l’administrateur plateforme (`POST /adminLogin`) aboutit maintenant à `/admin/dashboard/listUsers`, une route qui vérifie la session `adminId`. `/admin/dashboard` reste réservé à l’administrateur d’entreprise connecté comme membre.
+
 T12 reste à vérifier : `RegisterDTO`, la concordance des mots de passe dans `UserService`, le hachage BCrypt, les doublons et la création du `UserProfile` sont implémentés. Il manque notamment les parcours JSON bout en bout de l'inscription et la création complète d'une entreprise avec son premier administrateur.
 
 T14 reste à vérifier : l'approbation/refus MVC, la désactivation et l'isolation par entreprise sont implémentés, avec des tests unitaires ciblés. Il reste à couvrir les contrôleurs HTTP réels dans une session administrateur et à vérifier tous les cas d'autorisation dans le navigateur.

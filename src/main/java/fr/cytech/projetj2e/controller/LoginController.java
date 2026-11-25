@@ -94,7 +94,7 @@ public class LoginController {
         }
 
         session.setAttribute("adminId", admin.get().getId());
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/dashboard/listUsers";
     }
 
     @PostMapping("/logout")
