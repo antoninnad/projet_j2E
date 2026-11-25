@@ -465,6 +465,53 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /folders/{folderId}/files:
+    post:
+      tags: [Documents]
+      summary: Importer un fichier dans un dossier
+      description: |
+        Envoi multipart/form-data avec le contenu dans le champ « file » et le jeton CSRF en en-tête.
+        Exige le droit de modification du dossier. Le fichier hérite du département et du seuil du dossier ;
+        le compte connecté en devient propriétaire. Le nom est celui du fichier envoyé, sans chemin ;
+        il doit être libre dans le dossier (le remplacement d'un fichier existant relève de T23).
+        Le contenu est rangé dans le stockage privé de l'entreprise sous un nom généré : aucun chemin
+        n'est renvoyé. Taille maximale : spring.servlet.multipart.max-file-size (20 Mo par défaut).
+      operationId: uploadFile
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Contenu non vide ; son nom et son type MIME sont repris
+      responses:
+        '201':
+          description: Fichier importé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/StorageError'
   /folders/roots:
     get:
       tags: [Documents]
@@ -874,6 +921,18 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/ErrorResponse'}
           example: {code: CONFLICT, message: Identifiant déjà utilisé}
+    PayloadTooLarge:
+      description: Fichier plus gros que la taille maximale configurée
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: PAYLOAD_TOO_LARGE, message: Le fichier dépasse la taille maximale autorisée (20 Mo).}
+    StorageError:
+      description: Échec d'écriture dans le stockage ; aucun élément n'est créé
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: STORAGE_ERROR, message: Le fichier n'a pas pu être enregistré.}
     ValidationFailed:
       description: Validation métier ou des champs échouée
       content:

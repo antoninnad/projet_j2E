@@ -35,35 +35,36 @@ import fr.cytech.projetj2e.repository.NodeRepository;
 @Transactional
 public class FolderManagementService {
 
-    static final int MAX_NAME_LENGTH = 255;
-
     private final CompanyIsolationService isolation;
     private final PermissionService permissions;
     private final NodeRepository nodeRepository;
     private final FolderRepository folderRepository;
     private final CompanyStorage storage;
     private final NodeResponseMapper mapper;
+    private final NodeNames names;
 
     public FolderManagementService(CompanyIsolationService isolation,
                                    PermissionService permissions,
                                    NodeRepository nodeRepository,
                                    FolderRepository folderRepository,
                                    CompanyStorage storage,
-                                   NodeResponseMapper mapper) {
+                                   NodeResponseMapper mapper,
+                                   NodeNames names) {
         this.isolation = isolation;
         this.permissions = permissions;
         this.nodeRepository = nodeRepository;
         this.folderRepository = folderRepository;
         this.storage = storage;
         this.mapper = mapper;
+        this.names = names;
     }
 
     /** Crée un sous-dossier. Il hérite du département et du seuil du parent ; le compte en est propriétaire. */
     public NodeResponse createFolder(User actor, Long parentId, String rawName) {
         Folder parent = requireVisibleFolder(actor, parentId);
         permissions.requireCreateChild(actor, parent);
-        String name = validName(rawName);
-        requireFreeName(parent, name, null);
+        String name = NodeNames.valid(rawName);
+        names.requireFree(parent, name, null);
         Folder folder = folderRepository.save(new Folder(actor, name, parent));
         return mapper.toResponse(actor, folder);
     }
@@ -74,8 +75,8 @@ public class FolderManagementService {
         requireNotRoot(folder, "renommé : renommez son département");
         requireVersion(folder, expectedVersion);
         permissions.requireModify(actor, folder);
-        String name = validName(rawName);
-        requireFreeName(folder.getParent(), name, folder.getId());
+        String name = NodeNames.valid(rawName);
+        names.requireFree(folder.getParent(), name, folder.getId());
         folder.setName(name);
         nodeRepository.flush(); // déclenche le contrôle @Version maintenant, pour renvoyer la nouvelle version
         return mapper.toResponse(actor, folder);
@@ -96,7 +97,7 @@ public class FolderManagementService {
         if (Objects.equals(node.getParent().getId(), target.getId())) {
             return mapper.toResponse(actor, node);
         }
-        requireFreeName(target, node.getName(), node.getId());
+        names.requireFree(target, node.getName(), node.getId());
         target.addChild(node); // refuse cycle, autre entreprise et seuil inférieur à celui de la cible
         nodeRepository.flush();
         return mapper.toResponse(actor, node);
@@ -161,29 +162,6 @@ public class FolderManagementService {
         if (expectedVersion != null && !expectedVersion.equals(node.getVersion())) {
             throw new ConflictException("« " + node.getName() + " » a été modifié entre-temps ; rechargez-le avant de réessayer.");
         }
-    }
-
-    private void requireFreeName(Folder parent, String name, Long excludedId) {
-        boolean taken = excludedId == null
-                ? nodeRepository.existsByParentAndNameIgnoreCase(parent, name)
-                : nodeRepository.existsByParentAndNameIgnoreCaseAndIdNot(parent, name, excludedId);
-        if (taken) {
-            throw new ConflictException("Un élément nommé « " + name + " » existe déjà dans « " + parent.getName() + " ».");
-        }
-    }
-
-    static String validName(String rawName) {
-        String name = rawName == null ? "" : rawName.trim();
-        if (name.isEmpty()) {
-            throw new IllegalArgumentException("Le nom est obligatoire.");
-        }
-        if (name.length() > MAX_NAME_LENGTH) {
-            throw new IllegalArgumentException("Le nom ne doit pas dépasser " + MAX_NAME_LENGTH + " caractères.");
-        }
-        if (name.contains("/") || name.contains("\\") || name.equals(".") || name.equals("..")) {
-            throw new IllegalArgumentException("Le nom ne doit pas contenir « / » ou « \\ » ni valoir « . » ou « .. ».");
-        }
-        return name;
     }
 
     private static void collect(Node node, List<Node> subtree) {
