@@ -46,7 +46,7 @@ import fr.cytech.projetj2e.model.UserRole;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "app.storage.root=target/test-storage"
 })
-@Import({ FolderManagementService.class, NodeResponseMapper.class, PermissionService.class,
+@Import({ FolderManagementService.class, NodeResponseMapper.class, NodeNames.class, PermissionService.class,
         CompanyIsolationService.class, CompanyStorage.class,
         BCryptPasswordEncoder.class }) // BCrypt : requis par le bean init de ProjetJ2eApplication
 class FolderManagementServiceTest {
@@ -136,7 +136,7 @@ class FolderManagementServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.createFolder(alice, financeRoot.getId(), "a/b"));
         assertThrows(IllegalArgumentException.class, () -> service.createFolder(alice, financeRoot.getId(), ".."));
         assertThrows(IllegalArgumentException.class,
-                () -> service.createFolder(alice, financeRoot.getId(), "x".repeat(FolderManagementService.MAX_NAME_LENGTH + 1)));
+                () -> service.createFolder(alice, financeRoot.getId(), "x".repeat(NodeNames.MAX_LENGTH + 1)));
     }
 
     // ---------------------------------------------------------------- Renommage
