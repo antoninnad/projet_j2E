@@ -54,12 +54,8 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ==========================================================================
-   Variation A (Défaut) — "Ardoise & Cobalt"
-   Clarté institutionnelle B2B : ardoise minérale froide & bleu cobalt profond.
-   ========================================================================== */
-:root,
-[data-brand-theme="cobalt"] {
+/* Identité visuelle Lagui — "Ardoise & Cobalt" (Clarté institutionnelle B2B) */
+:root {
   --canvas: oklch(0.978 0.007 255);
   --background: oklch(1 0 0);
   --card: oklch(1 0 0);
@@ -108,74 +104,6 @@
   --brand-gradient-from: oklch(0.425 0.162 262);
   --brand-gradient-to: oklch(0.515 0.155 245);
   --radius: 0.625rem;
-}
-
-/* ==========================================================================
-   Variation B — "Sauge & Forêt"
-   Sérénité documentaire : pierre végétale douce & émeraude pin feutré.
-   ========================================================================== */
-[data-brand-theme="sauge"] {
-  --canvas: oklch(0.979 0.006 158);
-  --background: oklch(1 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.210 0.026 168);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.210 0.026 168);
-  --foreground: oklch(0.210 0.026 168);
-
-  --primary: oklch(0.418 0.098 172);
-  --primary-foreground: oklch(0.988 0.005 165);
-  --primary-subtle: oklch(0.960 0.024 170);
-  --primary-subtle-foreground: oklch(0.335 0.082 172);
-
-  --secondary: oklch(0.958 0.010 162);
-  --secondary-foreground: oklch(0.245 0.030 168);
-  --muted: oklch(0.962 0.008 160);
-  --muted-foreground: oklch(0.470 0.024 166);
-  --accent: oklch(0.944 0.019 170);
-  --accent-foreground: oklch(0.285 0.068 172);
-
-  --border: oklch(0.912 0.013 162);
-  --input: oklch(0.892 0.016 162);
-  --ring: oklch(0.555 0.118 172);
-
-  --brand-gradient-from: oklch(0.418 0.098 172);
-  --brand-gradient-to: oklch(0.510 0.115 190);
-  --radius: 0.75rem;
-}
-
-/* ==========================================================================
-   Variation C — "Encre & Ambre"
-   Sobriété éditoriale : ivoire papier chaud, encre nuit & pointe ambrée.
-   ========================================================================== */
-[data-brand-theme="encre"] {
-  --canvas: oklch(0.979 0.008 80);
-  --background: oklch(0.998 0.002 85);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.205 0.024 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.205 0.024 260);
-  --foreground: oklch(0.205 0.024 260);
-
-  --primary: oklch(0.285 0.048 258);
-  --primary-foreground: oklch(0.985 0.006 82);
-  --primary-subtle: oklch(0.956 0.026 78);
-  --primary-subtle-foreground: oklch(0.365 0.092 62);
-
-  --secondary: oklch(0.954 0.011 80);
-  --secondary-foreground: oklch(0.245 0.026 258);
-  --muted: oklch(0.958 0.009 80);
-  --muted-foreground: oklch(0.475 0.022 255);
-  --accent: oklch(0.940 0.018 78);
-  --accent-foreground: oklch(0.265 0.048 258);
-
-  --border: oklch(0.908 0.014 80);
-  --input: oklch(0.888 0.018 80);
-  --ring: oklch(0.565 0.138 66);
-
-  --brand-gradient-from: oklch(0.285 0.048 258);
-  --brand-gradient-to: oklch(0.485 0.125 65);
-  --radius: 0.5rem;
 }
 
 .dark {
