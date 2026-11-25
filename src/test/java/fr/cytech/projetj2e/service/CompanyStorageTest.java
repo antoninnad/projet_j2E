@@ -48,6 +48,18 @@ class CompanyStorageTest {
     }
 
     @Test
+    void deletesContentsImmediatelyOutsideATransaction() throws Exception {
+        Path content = storage.getRoot().resolve(storage.newStoragePath(companyA));
+        java.nio.file.Files.createDirectories(content.getParent());
+        java.nio.file.Files.writeString(content, "contenu");
+        Path missing = content.resolveSibling("deja-supprime");
+
+        storage.deleteAfterCommit(java.util.List.of(content, missing));
+
+        assertTrue(java.nio.file.Files.notExists(content));
+    }
+
+    @Test
     void pathEscapingTheCompanyDirectoryIsRefused() {
         assertThrows(IllegalStateException.class, () -> storage.resolve(file("companies/2/autre-entreprise")));
         assertThrows(IllegalStateException.class, () -> storage.resolve(file("companies/1/../2/x")));

@@ -45,7 +45,7 @@ import fr.cytech.projetj2e.model.UserRole;
         "spring.flyway.enabled=false",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-@Import({ ExplorationService.class, PermissionService.class, CompanyIsolationService.class,
+@Import({ ExplorationService.class, NodeResponseMapper.class, PermissionService.class, CompanyIsolationService.class,
         BCryptPasswordEncoder.class }) // BCrypt : requis par le bean init de ProjetJ2eApplication
 class ExplorationServiceTest {
 

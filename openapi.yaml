@@ -382,6 +382,89 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /folders:
+    post:
+      tags: [Documents]
+      summary: Créer un sous-dossier
+      description: |
+        Exige le droit de modification du dossier parent. Le dossier hérite du département
+        et du seuil du parent ; le compte connecté en devient propriétaire.
+      operationId: createFolder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateFolderRequest'}
+      responses:
+        '201':
+          description: Dossier créé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /folders/{folderId}:
+    patch:
+      tags: [Documents]
+      summary: Renommer un dossier
+      description: Exige le droit de modification. Une racine de département se renomme avec son département.
+      operationId: renameFolder
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RenameFolderRequest'}
+      responses:
+        '200':
+          description: Dossier renommé (nouvelle version)
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Documents]
+      summary: Supprimer un dossier et tout son contenu
+      description: |
+        Exige le droit de suppression sur chaque élément du sous-arbre, sinon rien n'est supprimé.
+        Les contenus des fichiers sont effacés du stockage après validation. Une racine de département
+        ne peut pas être supprimée ici.
+      operationId: deleteFolder
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: version
+          in: query
+          description: Version chargée par le client ; 409 si elle a changé.
+          schema: {type: integer, format: int64}
+      responses:
+        '204':
+          description: Dossier supprimé
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /folders/roots:
     get:
       tags: [Documents]
@@ -451,6 +534,39 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /nodes/{nodeId}/move:
+    post:
+      tags: [Documents]
+      summary: Déplacer un dossier ou un fichier
+      description: |
+        Exige le droit de suppression sur l'élément et le droit de création dans le dossier cible.
+        Refusé (400, avec explication) si le déplacement crée un cycle ou si le seuil de l'élément
+        est inférieur à celui de la cible. Un dossier emmène son sous-arbre, qui prend le département de la cible.
+      operationId: moveNode
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MoveNodeRequest'}
+      responses:
+        '200':
+          description: Élément déplacé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 components:
   parameters:
     CompanyId:
@@ -638,6 +754,24 @@ components:
           type: array
           items: {$ref: '#/components/schemas/Department'}
         page: {$ref: '#/components/schemas/PageMeta'}
+    CreateFolderRequest:
+      type: object
+      required: [parentId, name]
+      properties:
+        parentId: {type: integer, format: int64}
+        name: {type: string, minLength: 1, maxLength: 255, description: "Sans / ni \\ ; unique dans le dossier (casse ignorée)"}
+    RenameFolderRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 255}
+        version: {type: integer, format: int64, description: Version chargée ; 409 si elle a changé}
+    MoveNodeRequest:
+      type: object
+      required: [targetFolderId]
+      properties:
+        targetFolderId: {type: integer, format: int64}
+        version: {type: integer, format: int64, description: Version chargée ; 409 si elle a changé}
     NodePermissions:
       type: object
       description: Actions autorisées pour le compte connecté (PermissionService).

@@ -24,6 +24,12 @@ public interface NodeRepository extends JpaRepository<Node, Long> {
 
     Page<Node> findByCompany_Id(Long companyId, Pageable pageable);
 
+    /** Nom déjà pris dans le dossier, sans tenir compte de la casse (T20). */
+    boolean existsByParentAndNameIgnoreCase(Folder parent, String name);
+
+    /** Idem en excluant l'élément renommé lui-même. */
+    boolean existsByParentAndNameIgnoreCaseAndIdNot(Folder parent, String name, Long id);
+
     /**
      * Enfants d'un dossier dont le seuil M ne dépasse pas le niveau L du compte (T18).
      * Le filtre est fait en base pour que la pagination ne compte que les éléments visibles.

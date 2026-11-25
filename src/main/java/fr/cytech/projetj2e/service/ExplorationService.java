@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import fr.cytech.projetj2e.dto.NodeDetailResponse;
 import fr.cytech.projetj2e.dto.NodeDetailResponse.BreadcrumbItem;
 import fr.cytech.projetj2e.dto.NodeResponse;
-import fr.cytech.projetj2e.dto.NodeResponse.OwnerResponse;
 import fr.cytech.projetj2e.dto.PageResponse;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
 import fr.cytech.projetj2e.model.Department;
@@ -50,7 +48,7 @@ public class ExplorationService {
     private static final int NO_ACCESS = -1;
 
     private final CompanyIsolationService isolation;
-    private final PermissionService permissions;
+    private final NodeResponseMapper mapper;
     private final NodeRepository nodeRepository;
     private final FolderRepository folderRepository;
     private final FileRepository fileRepository;
@@ -58,14 +56,14 @@ public class ExplorationService {
     private final DepartmentRepository departmentRepository;
 
     public ExplorationService(CompanyIsolationService isolation,
-                              PermissionService permissions,
+                              NodeResponseMapper mapper,
                               NodeRepository nodeRepository,
                               FolderRepository folderRepository,
                               FileRepository fileRepository,
                               MembershipRepository membershipRepository,
                               DepartmentRepository departmentRepository) {
         this.isolation = isolation;
-        this.permissions = permissions;
+        this.mapper = mapper;
         this.nodeRepository = nodeRepository;
         this.folderRepository = folderRepository;
         this.fileRepository = fileRepository;
@@ -95,7 +93,7 @@ public class ExplorationService {
         }
         return roots.stream()
                 .sorted(Comparator.comparing((Folder folder) -> folder.getName().toLowerCase()).thenComparing(Folder::getId))
-                .map(root -> toResponse(actor, root))
+                .map(root -> mapper.toResponse(actor, root))
                 .toList();
     }
 
@@ -106,14 +104,14 @@ public class ExplorationService {
         int level = levelIn(actor, folder.getDepartment());
         requireVisible(level, folder);
         Page<Node> children = nodeRepository.findVisibleChildren(folder, level, PageRequest.of(page, size));
-        return PageResponse.from(children, child -> toResponse(actor, child));
+        return PageResponse.from(children, child -> mapper.toResponse(actor, child));
     }
 
     /** Métadonnées d'un élément visible et fil d'Ariane de ses parents. */
     public NodeDetailResponse getNode(User actor, Long nodeId) {
         Node node = isolation.requireNode(actor, nodeId);
         requireVisible(levelIn(actor, node.getDepartment()), node);
-        return new NodeDetailResponse(toResponse(actor, node), breadcrumb(node));
+        return new NodeDetailResponse(mapper.toResponse(actor, node), breadcrumb(node));
     }
 
     // ---------------------------------------------------------------- Dashboard Thymeleaf
@@ -177,28 +175,6 @@ public class ExplorationService {
         }
         Collections.reverse(path);
         return path;
-    }
-
-    private NodeResponse toResponse(User actor, Node node) {
-        Optional<File> file = node instanceof File f ? Optional.of(f) : Optional.empty();
-        User owner = node.getOwner();
-        Department department = node.getDepartment();
-        return new NodeResponse(
-                node.getId(),
-                node.getName(),
-                file.isPresent() ? NodeResponse.FILE : NodeResponse.FOLDER,
-                node.getParent() == null ? null : node.getParent().getId(),
-                department.getId(),
-                department.getName(),
-                node.getMinAccessLevel(),
-                new OwnerResponse(owner.getId(), owner.getFirstName(), owner.getLastName()),
-                node.getCreatedAt(),
-                node.getUpdatedAt(),
-                node.getVersion(),
-                file.map(File::getOriginalFileName).orElse(null),
-                file.map(File::getContentType).orElse(null),
-                file.map(File::getSize).orElse(null),
-                permissions.permissions(actor, node));
     }
 
     private static boolean isCompanyAdmin(User actor) {
