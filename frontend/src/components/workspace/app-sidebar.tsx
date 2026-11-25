@@ -14,8 +14,8 @@ import {
 } from "lucide-react"
 import {
   MVC_ROUTES,
-  WORKSPACE_TABS,
   resolveAppPath,
+  visibleWorkspaceTabs,
   type WorkspaceTabId,
 } from "@/app/routes"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -82,6 +82,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { state, setOpenMobile } = useSidebar()
   const collapsed = state === "collapsed"
+  const tabs = visibleWorkspaceTabs(isAdmin)
 
   function selectModule(tab: WorkspaceTabId) {
     onSelectTab(tab)
@@ -90,7 +91,6 @@ export function AppSidebar({
 
   return (
     <Sidebar>
-      {/* En-tête : Sélecteur d'espace entreprise type Microsoft Teams */}
       <SidebarHeader>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -135,22 +135,23 @@ export function AppSidebar({
                 <UserRound aria-hidden="true" />
                 Mon profil &amp; annuaire
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => selectModule("admin")}>
-                <ShieldCheck aria-hidden="true" />
-                Administration entreprise
-              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => selectModule("admin")}>
+                  <ShieldCheck aria-hidden="true" />
+                  Administration entreprise
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarHeader>
 
-      {/* Navigation principale verticale façon rail Teams */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Applications</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu role="tablist" aria-label="Modules de l'espace de travail">
-              {WORKSPACE_TABS.map((tab) => {
+              {tabs.map((tab) => {
                 const Icon = TAB_ICONS[tab.id]
                 const selected = activeTab === tab.id
                 return (
@@ -177,7 +178,6 @@ export function AppSidebar({
 
         <SidebarSeparator />
 
-        {/* Raccourcis & menu de création rapide */}
         <SidebarGroup>
           <SidebarGroupLabel>Accès rapides</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -185,7 +185,7 @@ export function AppSidebar({
               <SidebarMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton type="button" tooltip="Nouveau / Raccourcis">
+                    <SidebarMenuButton type="button" tooltip="Nouveau & raccourcis">
                       <Plus aria-hidden="true" />
                       {!collapsed && <span className="truncate">Nouveau &amp; raccourcis</span>}
                     </SidebarMenuButton>
@@ -214,7 +214,6 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Pied de barre latérale : Statut de présence & menu utilisateur */}
       <SidebarFooter>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -239,19 +238,19 @@ export function AppSidebar({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-60">
-            <DropdownMenuLabel>
-              {userName ?? "Mon espace"} {isAdmin ? "(Admin)" : ""}
-            </DropdownMenuLabel>
+            <DropdownMenuLabel>{userName ?? "Mon espace"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => selectModule("directory")}>
                 <UserRound aria-hidden="true" />
                 Modifier mon profil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => selectModule("admin")}>
-                <ShieldCheck aria-hidden="true" />
-                Gérer les comptes &amp; accès
-              </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => selectModule("admin")}>
+                  <ShieldCheck aria-hidden="true" />
+                  Gérer les comptes &amp; accès
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

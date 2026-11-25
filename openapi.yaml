@@ -14,6 +14,7 @@ tags:
   - name: Users
   - name: Profiles
   - name: Departments
+  - name: Documents
 paths:
   /auth/register:
     post:
@@ -285,6 +286,334 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Departments]
+      summary: Créer un département et son dossier racine
+      operationId: createDepartment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        '200':
+          description: Département créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /departments/{departmentId}:
+    put:
+      tags: [Departments]
+      summary: Renommer un département
+      operationId: updateDepartment
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        '200':
+          description: Département mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /departments/{departmentId}/members:
+    put:
+      tags: [Departments]
+      summary: Ajouter ou modifier le niveau d'un membre
+      operationId: setDepartmentMember
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentMembershipRequest'
+      responses:
+        '200':
+          description: Adhésion enregistrée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentMembership'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /departments/{departmentId}/members/{memberId}:
+    delete:
+      tags: [Departments]
+      summary: Retirer un membre d'un département
+      operationId: removeDepartmentMember
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: memberId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '204':
+          description: Adhésion supprimée
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /folders:
+    post:
+      tags: [Documents]
+      summary: Créer un sous-dossier
+      description: |
+        Exige le droit de modification du dossier parent. Le dossier hérite du département
+        et du seuil du parent ; le compte connecté en devient propriétaire.
+      operationId: createFolder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateFolderRequest'}
+      responses:
+        '201':
+          description: Dossier créé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /folders/{folderId}:
+    patch:
+      tags: [Documents]
+      summary: Renommer un dossier
+      description: Exige le droit de modification. Une racine de département se renomme avec son département.
+      operationId: renameFolder
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RenameFolderRequest'}
+      responses:
+        '200':
+          description: Dossier renommé (nouvelle version)
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Documents]
+      summary: Supprimer un dossier et tout son contenu
+      description: |
+        Exige le droit de suppression sur chaque élément du sous-arbre, sinon rien n'est supprimé.
+        Les contenus des fichiers sont effacés du stockage après validation. Une racine de département
+        ne peut pas être supprimée ici.
+      operationId: deleteFolder
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: version
+          in: query
+          description: Version chargée par le client ; 409 si elle a changé.
+          schema: {type: integer, format: int64}
+      responses:
+        '204':
+          description: Dossier supprimé
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /folders/{folderId}/files:
+    post:
+      tags: [Documents]
+      summary: Importer un fichier dans un dossier
+      description: |
+        Envoi multipart/form-data avec le contenu dans le champ « file » et le jeton CSRF en en-tête.
+        Exige le droit de modification du dossier. Le fichier hérite du département et du seuil du dossier ;
+        le compte connecté en devient propriétaire. Le nom est celui du fichier envoyé, sans chemin ;
+        il doit être libre dans le dossier (le remplacement d'un fichier existant relève de T23).
+        Le contenu est rangé dans le stockage privé de l'entreprise sous un nom généré : aucun chemin
+        n'est renvoyé. Taille maximale : spring.servlet.multipart.max-file-size (20 Mo par défaut).
+      operationId: uploadFile
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Contenu non vide ; son nom et son type MIME sont repris
+      responses:
+        '201':
+          description: Fichier importé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/StorageError'
+  /folders/roots:
+    get:
+      tags: [Documents]
+      summary: Lister les dossiers racines des départements accessibles
+      description: |
+        Un membre voit la racine des départements où il a une adhésion de niveau suffisant ;
+        l'administrateur d'entreprise voit toutes les racines. Tri par nom.
+      operationId: listRootFolders
+      responses:
+        '200':
+          description: Dossiers racines visibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Node'}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /folders/{folderId}/children:
+    get:
+      tags: [Documents]
+      summary: Lister les enfants visibles d'un dossier
+      description: |
+        Seuls les éléments dont le seuil minAccessLevel ne dépasse pas le niveau du compte
+        dans le département sont renvoyés et comptés dans la pagination.
+        Tri : dossiers d'abord, puis par nom.
+      operationId: listFolderChildren
+      parameters:
+        - name: folderId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Page d'éléments visibles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePage'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /nodes/{nodeId}:
+    get:
+      tags: [Documents]
+      summary: Lire les métadonnées d'un dossier ou d'un fichier
+      description: Un élément invisible pour le compte ou d'une autre entreprise renvoie 404.
+      operationId: getNode
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Élément et fil d'Ariane
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeDetail'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /nodes/{nodeId}/move:
+    post:
+      tags: [Documents]
+      summary: Déplacer un dossier ou un fichier
+      description: |
+        Exige le droit de suppression sur l'élément et le droit de création dans le dossier cible.
+        Refusé (400, avec explication) si le déplacement crée un cycle ou si le seuil de l'élément
+        est inférieur à celui de la cible. Un dossier emmène son sous-arbre, qui prend le département de la cible.
+      operationId: moveNode
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MoveNodeRequest'}
+      responses:
+        '200':
+          description: Élément déplacé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 components:
   parameters:
     CompanyId:
@@ -425,6 +754,27 @@ components:
         id: {type: integer, format: int64}
         name: {type: string}
         companyId: {type: integer, format: int64}
+    CreateDepartmentRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 100}
+    DepartmentMembershipRequest:
+      type: object
+      additionalProperties: false
+      required: [userId, accessLevel]
+      properties:
+        userId: {type: integer, format: int64}
+        accessLevel: {type: integer, minimum: 0}
+    DepartmentMembership:
+      type: object
+      required: [id, userId, departmentId, accessLevel]
+      properties:
+        id: {type: integer, format: int64}
+        userId: {type: integer, format: int64}
+        departmentId: {type: integer, format: int64}
+        accessLevel: {type: integer, minimum: 0}
     PageMeta:
       type: object
       required: [page, size, totalElements, totalPages, first, last]
@@ -451,6 +801,84 @@ components:
           type: array
           items: {$ref: '#/components/schemas/Department'}
         page: {$ref: '#/components/schemas/PageMeta'}
+    CreateFolderRequest:
+      type: object
+      required: [parentId, name]
+      properties:
+        parentId: {type: integer, format: int64}
+        name: {type: string, minLength: 1, maxLength: 255, description: "Sans / ni \\ ; unique dans le dossier (casse ignorée)"}
+    RenameFolderRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 255}
+        version: {type: integer, format: int64, description: Version chargée ; 409 si elle a changé}
+    MoveNodeRequest:
+      type: object
+      required: [targetFolderId]
+      properties:
+        targetFolderId: {type: integer, format: int64}
+        version: {type: integer, format: int64, description: Version chargée ; 409 si elle a changé}
+    NodePermissions:
+      type: object
+      description: Actions autorisées pour le compte connecté (PermissionService).
+      required: [view, modify, delete, manage, createChild]
+      properties:
+        view: {type: boolean}
+        modify: {type: boolean}
+        delete: {type: boolean}
+        manage: {type: boolean, description: Gérer le partage (seuil, contributeurs)}
+        createChild: {type: boolean}
+    NodeOwner:
+      type: object
+      required: [id, firstName, lastName]
+      properties:
+        id: {type: integer, format: int64}
+        firstName: {type: string}
+        lastName: {type: string}
+    Node:
+      type: object
+      description: Dossier ou fichier. Le chemin de stockage n'est jamais exposé ; les champs fichier sont null pour un dossier.
+      required: [id, name, kind, departmentId, departmentName, minAccessLevel, owner, createdAt, version, permissions]
+      properties:
+        id: {type: integer, format: int64}
+        name: {type: string}
+        kind: {type: string, enum: [folder, file]}
+        parentId: {type: [integer, 'null'], format: int64, description: null pour une racine de département}
+        departmentId: {type: integer, format: int64}
+        departmentName: {type: string}
+        minAccessLevel: {type: integer, minimum: 0}
+        owner: {$ref: '#/components/schemas/NodeOwner'}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: [string, 'null'], format: date-time}
+        version: {type: integer, format: int64, description: Version de verrouillage optimiste}
+        originalFileName: {type: [string, 'null']}
+        contentType: {type: [string, 'null']}
+        size: {type: [integer, 'null'], format: int64}
+        permissions: {$ref: '#/components/schemas/NodePermissions'}
+    NodePage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Node'}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    BreadcrumbItem:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: integer, format: int64}
+        name: {type: string}
+    NodeDetail:
+      type: object
+      required: [node, path]
+      properties:
+        node: {$ref: '#/components/schemas/Node'}
+        path:
+          type: array
+          description: Dossiers parents, de la racine du département au parent direct (vide pour une racine).
+          items: {$ref: '#/components/schemas/BreadcrumbItem'}
     ErrorResponse:
       type: object
       required: [code, message]
@@ -493,6 +921,18 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/ErrorResponse'}
           example: {code: CONFLICT, message: Identifiant déjà utilisé}
+    PayloadTooLarge:
+      description: Fichier plus gros que la taille maximale configurée
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: PAYLOAD_TOO_LARGE, message: Le fichier dépasse la taille maximale autorisée (20 Mo).}
+    StorageError:
+      description: Échec d'écriture dans le stockage ; aucun élément n'est créé
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/ErrorResponse'}
+          example: {code: STORAGE_ERROR, message: Le fichier n'a pas pu être enregistré.}
     ValidationFailed:
       description: Validation métier ou des champs échouée
       content:

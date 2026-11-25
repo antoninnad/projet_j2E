@@ -2,7 +2,6 @@
 
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import App from "./App.tsx"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { SiteHeader } from "@/components/site-header"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
@@ -14,11 +13,13 @@ function mountReactIslands() {
   // 1. Mode autonome Vite (frontend/index.html)
   const standaloneRoot = document.getElementById("root")
   if (import.meta.env.DEV && standaloneRoot) {
-    createRoot(standaloneRoot).render(
-      <StrictMode>
-        <App baseUrl={standaloneRoot.dataset.baseUrl || "/"} />
-      </StrictMode>,
-    )
+    void import("./App.tsx").then(({ default: App }) => {
+      createRoot(standaloneRoot).render(
+        <StrictMode>
+          <App baseUrl={standaloneRoot.dataset.baseUrl || "/"} />
+        </StrictMode>,
+      )
+    })
   }
 
   // 2. Îlot principal intégré dans dashboard.html (Thymeleaf)

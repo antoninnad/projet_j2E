@@ -7,7 +7,9 @@ import type {
   CreateDepartmentRequest,
   Department,
   DepartmentMember,
+  DocumentNode,
   LoginRequest,
+  NodeDetail,
   NodeSharingInfo,
   Page,
   PageQuery,
@@ -66,6 +68,10 @@ export function createApi(options?: ApiClientOptions) {
       }),
     removeDepartmentMember: (departmentId: number, userId: number, signal?: AbortSignal) =>
       noContent(`/departments/${departmentId}/members/${userId}`, { method: "DELETE", signal }),
+    listRootFolders: (signal?: AbortSignal) => json<DocumentNode[]>("/folders/roots", { signal }),
+    listFolderChildren: (id: number, query?: Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
+      json<Page<DocumentNode>>(`/folders/${id}/children`, { query, signal }),
+    getNode: (id: number, signal?: AbortSignal) => json<NodeDetail>(`/nodes/${id}`, { signal }),
     getNodeSharing: (nodeId: string, signal?: AbortSignal) =>
       json<NodeSharingInfo>(`/nodes/${encodeURIComponent(nodeId)}/sharing`, { signal }),
     updateNodeThreshold: (nodeId: string, minAccessLevel: number, signal?: AbortSignal) =>

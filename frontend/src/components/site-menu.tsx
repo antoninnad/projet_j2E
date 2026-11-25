@@ -30,7 +30,13 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 
-export function DropdownMenuUser({ baseUrl = "/" }: { baseUrl?: string }) {
+export function DropdownMenuUser({
+  baseUrl = "/",
+  isAdmin = true,
+}: {
+  baseUrl?: string
+  isAdmin?: boolean
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -52,12 +58,14 @@ export function DropdownMenuUser({ baseUrl = "/" }: { baseUrl?: string }) {
               Tableau de bord
             </a>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <a href={`${resolveAppPath(baseUrl, MVC_ROUTES.dashboard)}?tab=admin`}>
-              <ShieldCheck className="size-4" aria-hidden="true" />
-              Administration
-            </a>
-          </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem asChild>
+              <a href={`${resolveAppPath(baseUrl, MVC_ROUTES.dashboard)}?tab=admin`}>
+                <ShieldCheck className="size-4" aria-hidden="true" />
+                Administration
+              </a>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

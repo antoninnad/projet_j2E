@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { MessageSquare } from "lucide-react"
 import {
   WORKSPACE_TABS,
   parseWorkspaceTab,
   readTabFromLocation,
+  restrictWorkspaceTab,
   syncTabToLocation,
   type WorkspaceTabId,
 } from "@/app/routes"
@@ -39,6 +40,7 @@ interface WorkspaceShellProps {
   embedded?: boolean
   baseUrl?: string
   client?: Api
+  documents?: ReactNode
 }
 
 export function WorkspaceShell({
@@ -48,23 +50,27 @@ export function WorkspaceShell({
   embedded = false,
   baseUrl = "/",
   client,
+  documents,
 }: WorkspaceShellProps) {
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
-    readTabFromLocation(parseWorkspaceTab(initialTab, "files")),
+    restrictWorkspaceTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")), isAdmin),
   )
   const [selectedChatPeer, setSelectedChatPeer] = useState<User | null>(null)
 
   useEffect(() => {
     const onPopState = () => {
-      setActiveTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")))
+      setActiveTab(
+        restrictWorkspaceTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")), isAdmin),
+      )
     }
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [initialTab])
+  }, [initialTab, isAdmin])
 
   function handleSelectTab(tab: WorkspaceTabId) {
-    setActiveTab(tab)
-    syncTabToLocation(tab)
+    const allowed = restrictWorkspaceTab(tab, isAdmin)
+    setActiveTab(allowed)
+    syncTabToLocation(allowed)
   }
 
   function handleOpenConversation(colleague: User) {
@@ -74,7 +80,11 @@ export function WorkspaceShell({
       const url = new URL(window.location.href)
       url.searchParams.set("tab", "chat")
       url.searchParams.set("peer", String(colleague.id))
-      window.history.pushState({ tab: "chat", peer: colleague.id }, "", `${url.pathname}${url.search}${url.hash}`)
+      window.history.pushState(
+        { tab: "chat", peer: colleague.id },
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      )
     }
   }
 
@@ -91,12 +101,11 @@ export function WorkspaceShell({
       />
 
       <SidebarInset>
-        {/* Barre supérieure de commandes façon Microsoft Teams */}
         <TopCommandBar>
           <Cluster gap="sm" wrap={false}>
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
-            <Breadcrumb>
+            <Breadcrumb aria-label="Navigation du module">
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <span>Lagui</span>
@@ -111,7 +120,7 @@ export function WorkspaceShell({
 
           <Cluster gap="xs">
             <DropdownMenuFile />
-            <DropdownMenuUser baseUrl={baseUrl} />
+            <DropdownMenuUser baseUrl={baseUrl} isAdmin={isAdmin} />
           </Cluster>
         </TopCommandBar>
 
@@ -121,9 +130,10 @@ export function WorkspaceShell({
           id={`panel-${activeTab}`}
           aria-labelledby={`tab-${activeTab}`}
         >
-          {activeTab === "files" && <FileWorkspace embedded client={client} />}
+          {activeTab === "files" &&
+            (documents ?? <FileWorkspace embedded={embedded} client={client} />)}
 
-          {activeTab === "admin" && (
+          {activeTab === "admin" && isAdmin && (
             <Tabs defaultValue="overview">
               <Cluster justify="between" gap="md">
                 <TabsList aria-label="Sous-sections d'administration">
@@ -161,9 +171,7 @@ export function WorkspaceShell({
             <DirectoryProfilePanel client={client} onOpenConversation={handleOpenConversation} />
           )}
 
-          {activeTab === "chat" && (
-            <ChatModulePlaceholder peer={selectedChatPeer} />
-          )}
+          {activeTab === "chat" && <ChatModulePlaceholder peer={selectedChatPeer} />}
         </WorkspaceBody>
 
         <Toaster position="top-right" richColors closeButton />

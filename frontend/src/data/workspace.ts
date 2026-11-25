@@ -1,3 +1,5 @@
+import { formatFileSize } from "@/lib/utils"
+
 export type Contributor = { id: string; name: string; initials: string; avatar: string }
 export type WorkspaceEntry = {
   id: string
@@ -46,6 +48,5 @@ export const initialEntries: WorkspaceEntry[] = [
 ]
 
 export function fileSize(content: string) {
-  const bytes = new TextEncoder().encode(content).length
-  return bytes < 1024 ? `${bytes} o` : `${(bytes / 1024).toFixed(1)} Ko`
+  return formatFileSize(new TextEncoder().encode(content).length)
 }

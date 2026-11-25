@@ -27,7 +27,9 @@ import fr.cytech.projetj2e.service.UserService;
 import fr.cytech.projetj2e.model.AccountStatus;
 import fr.cytech.projetj2e.model.Company;
 import fr.cytech.projetj2e.model.User;
+import fr.cytech.projetj2e.model.UserRole;
 import fr.cytech.projetj2e.exception.InactiveAccountException;
+import fr.cytech.projetj2e.service.ExplorationService;
 import fr.cytech.projetj2e.service.SessionIdentityService;
 
 import java.util.Optional;
@@ -56,6 +58,9 @@ class HomeControllerTest {
 
     @MockitoBean
     private SessionIdentityService sessionIdentityService;
+
+    @MockitoBean
+    private ExplorationService explorationService;
 
     @BeforeEach
     void setUpActiveUsers() {
@@ -171,6 +176,7 @@ class HomeControllerTest {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(FrontendModelAdvice.ATTR_USER_ID, 42L);
         session.setAttribute(FrontendModelAdvice.ATTR_USERNAME, "alice.dupont");
+        when(sessionIdentityService.requireActiveMember(session)).thenReturn(activeUser(42L, UserRole.COMPANY_ADMIN));
 
         mockMvc.perform(get("/dashboard").param("tab", "admin").session(session))
                 .andExpect(status().isOk())
@@ -178,8 +184,37 @@ class HomeControllerTest {
                 .andExpect(content().string(containsString("Tableau de bord — Lagui")))
                 .andExpect(content().string(containsString("data-react-mount=\"workspace\"")))
                 .andExpect(content().string(containsString("data-initial-tab=\"admin\"")))
+                .andExpect(content().string(containsString("data-is-admin=\"true\"")))
                 .andExpect(content().string(containsString("alice.dupont")))
                 .andExpect(content().string(containsString("action=\"/logout\"")));
+    }
+
+    @Test
+    void dashboardFallsBackToFilesTabWhenMemberRequestsAdminTab() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(FrontendModelAdvice.ATTR_USER_ID, 7L);
+        when(sessionIdentityService.requireActiveMember(session)).thenReturn(activeUser(7L, UserRole.MEMBER));
+
+        mockMvc.perform(get("/dashboard").param("tab", "admin").session(session))
+                .andExpect(status().isOk())
+                .andExpect(view().name("dashboard"))
+                .andExpect(content().string(containsString("data-initial-tab=\"files\"")))
+                .andExpect(content().string(containsString("data-is-admin=\"false\"")));
+    }
+
+    private static User activeUser(Long id, UserRole role) {
+        Company company = new Company("Entreprise", "DEMO");
+        company.setId(1L);
+        User user = new User();
+        user.setId(id);
+        user.setUsername("alice.dupont");
+        user.setEmail("alice@example.com");
+        user.setFirstName("Alice");
+        user.setLastName("Dupont");
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setRole(role);
+        user.setCompany(company);
+        return user;
     }
 
     @Test

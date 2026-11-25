@@ -5,11 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import fr.cytech.projetj2e.model.Company;
 import fr.cytech.projetj2e.model.Department;
@@ -17,7 +23,7 @@ import fr.cytech.projetj2e.model.File;
 import fr.cytech.projetj2e.model.Folder;
 import fr.cytech.projetj2e.model.User;
 
-/** Cloisonnement des chemins de stockage par entreprise (sans écriture disque). */
+/** Cloisonnement des chemins de stockage par entreprise et écriture des contenus (dossier temporaire). */
 class CompanyStorageTest {
 
     @TempDir
@@ -45,6 +51,53 @@ class CompanyStorageTest {
         assertNotEquals(first, second);
         Path resolved = storage.resolve(file(first));
         assertTrue(resolved.startsWith(tempDir.resolve("companies").resolve("1")));
+    }
+
+    @Test
+    void deletesContentsImmediatelyOutsideATransaction() throws Exception {
+        Path content = storage.getRoot().resolve(storage.newStoragePath(companyA));
+        Files.createDirectories(content.getParent());
+        Files.writeString(content, "contenu");
+        Path missing = content.resolveSibling("deja-supprime");
+
+        storage.deleteAfterCommit(List.of(content, missing));
+
+        assertTrue(Files.notExists(content));
+    }
+
+    @Test
+    void storesContentUnderAGeneratedNameInTheCompanyDirectory() throws Exception {
+        CompanyStorage.StoredContent stored = storage.store(companyA,
+                new ByteArrayInputStream("contenu".getBytes(StandardCharsets.UTF_8)));
+
+        assertEquals(7, stored.size());
+        Path content = storage.resolve(file(stored.storagePath()));
+        assertEquals("contenu", Files.readString(content));
+    }
+
+    @Test
+    void storedContentIsRemovedWhenTheTransactionRollsBack() {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            CompanyStorage.StoredContent kept = storage.store(companyA, new ByteArrayInputStream(new byte[] { 1 }));
+            completeTransaction(TransactionSynchronization.STATUS_COMMITTED);
+            assertTrue(Files.exists(storage.resolve(file(kept.storagePath()))));
+
+            CompanyStorage.StoredContent dropped = storage.store(companyA, new ByteArrayInputStream(new byte[] { 1 }));
+            completeTransaction(TransactionSynchronization.STATUS_ROLLED_BACK);
+            assertTrue(Files.notExists(storage.resolve(file(dropped.storagePath()))));
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    /** Simule la fin de transaction : appelle puis retire les synchronisations enregistrées. */
+    private static void completeTransaction(int status) {
+        for (var synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+            synchronization.afterCompletion(status);
+        }
+        TransactionSynchronizationManager.clearSynchronization();
+        TransactionSynchronizationManager.initSynchronization();
     }
 
     @Test

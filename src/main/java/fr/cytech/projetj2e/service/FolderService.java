@@ -54,4 +54,12 @@ public class FolderService {
     public Optional<Folder> findDepartmentRoot(Department department) {
         return folderRepository.findByDepartmentAndParentIsNull(department);
     }
+
+    @Transactional
+    public void renameDepartmentRoot(Department department, String name) {
+        findDepartmentRoot(department).ifPresent(root -> {
+            root.setName(name);
+            folderRepository.save(root);
+        });
+    }
 }
