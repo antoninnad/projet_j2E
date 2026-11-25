@@ -29,6 +29,7 @@ import fr.cytech.projetj2e.model.Company;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.model.UserRole;
 import fr.cytech.projetj2e.exception.InactiveAccountException;
+import fr.cytech.projetj2e.service.ExplorationService;
 import fr.cytech.projetj2e.service.SessionIdentityService;
 
 import java.util.Optional;
@@ -57,6 +58,9 @@ class HomeControllerTest {
 
     @MockitoBean
     private SessionIdentityService sessionIdentityService;
+
+    @MockitoBean
+    private ExplorationService explorationService;
 
     @BeforeEach
     void setUpActiveUsers() {
