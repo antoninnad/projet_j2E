@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { FolderOpen, MessageSquare, ShieldCheck, Users } from "lucide-react"
+import { MessageSquare } from "lucide-react"
 import {
   WORKSPACE_TABS,
   parseWorkspaceTab,
@@ -11,11 +11,25 @@ import { CompanyAdminPanel } from "@/components/admin/company-admin-panel"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
 import { DirectoryProfilePanel } from "@/components/directory/directory-profile-panel"
+import { DropdownMenuFile, DropdownMenuUser } from "@/components/site-menu"
 import { Badge } from "@/components/ui/badge"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Card, CardContent } from "@/components/ui/card"
+import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
+import { Cluster, Stack, TopCommandBar, WorkspaceBody } from "@/components/ui/layout"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AppSidebar } from "@/components/workspace/app-sidebar"
 import { FileWorkspace } from "@/components/workspace/file-workspace"
 import type { Api } from "@/lib/api"
-import { cn } from "@/lib/utils"
 import type { User } from "@/types/api"
 
 interface WorkspaceShellProps {
@@ -23,14 +37,8 @@ interface WorkspaceShellProps {
   userName?: string
   isAdmin?: boolean
   embedded?: boolean
+  baseUrl?: string
   client?: Api
-}
-
-const TAB_ICONS: Record<WorkspaceTabId, typeof FolderOpen> = {
-  files: FolderOpen,
-  directory: Users,
-  chat: MessageSquare,
-  admin: ShieldCheck,
 }
 
 export function WorkspaceShell({
@@ -38,6 +46,7 @@ export function WorkspaceShell({
   userName,
   isAdmin = false,
   embedded = false,
+  baseUrl = "/",
   client,
 }: WorkspaceShellProps) {
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
@@ -69,92 +78,120 @@ export function WorkspaceShell({
     }
   }
 
+  const currentTabMeta = WORKSPACE_TABS.find((tab) => tab.id === activeTab) ?? WORKSPACE_TABS[0]
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-xs">
-        <div role="tablist" aria-label="Modules de l'espace de travail" className="flex flex-wrap items-center gap-1.5">
-          {WORKSPACE_TABS.map((tab) => {
-            const Icon = TAB_ICONS[tab.id]
-            const selected = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                id={`tab-${tab.id}`}
-                aria-selected={selected}
-                aria-controls={`panel-${tab.id}`}
-                onClick={() => handleSelectTab(tab.id)}
-                className={cn(
-                  "inline-flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  selected
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                <Icon className="size-4" aria-hidden="true" />
-                <span>{tab.label}</span>
-              </button>
-            )
-          })}
-        </div>
+    <SidebarProvider contained={embedded}>
+      <AppSidebar
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
+        userName={userName}
+        isAdmin={isAdmin}
+        baseUrl={baseUrl}
+      />
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {userName && <span className="font-medium text-foreground">{userName}</span>}
-          {isAdmin && <Badge variant="brand">Admin</Badge>}
-        </div>
-      </div>
+      <SidebarInset>
+        {/* Barre supérieure de commandes façon Microsoft Teams */}
+        <TopCommandBar>
+          <Cluster gap="sm" wrap={false}>
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="h-5" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <span>Lagui</span>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{currentTabMeta.label}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </Cluster>
 
-      <div
-        role="tabpanel"
-        id={`panel-${activeTab}`}
-        aria-labelledby={`tab-${activeTab}`}
-      >
-        {activeTab === "files" && <FileWorkspace embedded={embedded} client={client} />}
-        {activeTab === "admin" && (
-          <div className="space-y-6">
-            <PendingRegistrationsPanel client={client} />
-            <CompanyAdminPanel client={client} />
-            <CompanyCreationPanel client={client} />
-          </div>
-        )}
-        {activeTab === "directory" && (
-          <DirectoryProfilePanel client={client} onOpenConversation={handleOpenConversation} />
-        )}
-        {activeTab === "chat" && (
-          <ModulePlaceholder
-            title={
-              selectedChatPeer
-                ? `Conversation privée avec ${selectedChatPeer.firstName} ${selectedChatPeer.lastName}`
-                : "Chat privé en temps réel"
-            }
-            description="La liste des conversations à deux, l'historique paginé et la livraison WebSocket seront intégrés en tâche T35."
-            badge="Prévu en T35"
-          />
-        )}
-      </div>
+          <Cluster gap="xs">
+            <DropdownMenuFile />
+            <DropdownMenuUser baseUrl={baseUrl} />
+          </Cluster>
+        </TopCommandBar>
 
-      <Toaster position="top-right" richColors closeButton />
-    </div>
+        <WorkspaceBody
+          flush={activeTab === "files"}
+          role="tabpanel"
+          id={`panel-${activeTab}`}
+          aria-labelledby={`tab-${activeTab}`}
+        >
+          {activeTab === "files" && <FileWorkspace embedded client={client} />}
+
+          {activeTab === "admin" && (
+            <Tabs defaultValue="overview">
+              <Cluster justify="between" gap="md">
+                <TabsList aria-label="Sous-sections d'administration">
+                  <TabsTrigger value="overview">Vue complète</TabsTrigger>
+                  <TabsTrigger value="registrations">Demandes d&apos;accès</TabsTrigger>
+                  <TabsTrigger value="departments">Comptes &amp; Départements</TabsTrigger>
+                  <TabsTrigger value="companies">Créer une entreprise</TabsTrigger>
+                </TabsList>
+                <Badge variant="brand">Console d&apos;administration</Badge>
+              </Cluster>
+
+              <TabsContent value="overview">
+                <Stack gap="lg">
+                  <PendingRegistrationsPanel client={client} />
+                  <CompanyAdminPanel client={client} />
+                  <CompanyCreationPanel client={client} />
+                </Stack>
+              </TabsContent>
+
+              <TabsContent value="registrations">
+                <PendingRegistrationsPanel client={client} />
+              </TabsContent>
+
+              <TabsContent value="departments">
+                <CompanyAdminPanel client={client} />
+              </TabsContent>
+
+              <TabsContent value="companies">
+                <CompanyCreationPanel client={client} />
+              </TabsContent>
+            </Tabs>
+          )}
+
+          {activeTab === "directory" && (
+            <DirectoryProfilePanel client={client} onOpenConversation={handleOpenConversation} />
+          )}
+
+          {activeTab === "chat" && (
+            <ChatModulePlaceholder peer={selectedChatPeer} />
+          )}
+        </WorkspaceBody>
+
+        <Toaster position="top-right" richColors closeButton />
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 
-function ModulePlaceholder({
-  title,
-  description,
-  badge,
-}: {
-  title: string
-  description: string
-  badge: string
-}) {
+function ChatModulePlaceholder({ peer }: { peer: User | null }) {
+  const title = peer
+    ? `Conversation privée avec ${peer.firstName} ${peer.lastName}`
+    : "Chat privé en temps réel"
+
   return (
-    <section className="rounded-xl border border-dashed border-border bg-background p-8 text-center shadow-xs">
-      <Badge variant="outline" className="mb-3">
-        {badge}
-      </Badge>
-      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{description}</p>
-    </section>
+    <Card>
+      <CardContent>
+        <Empty>
+          <EmptyIcon>
+            <MessageSquare aria-hidden="true" />
+          </EmptyIcon>
+          <Badge variant="outline">Prévu en T35</Badge>
+          <EmptyTitle>{title}</EmptyTitle>
+          <EmptyDescription>
+            La liste des conversations à deux, l&apos;historique paginé et la livraison WebSocket
+            seront intégrés en tâche T35.
+          </EmptyDescription>
+        </Empty>
+      </CardContent>
+    </Card>
   )
 }

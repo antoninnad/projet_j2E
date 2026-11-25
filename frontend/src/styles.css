@@ -28,6 +28,15 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --color-success: var(--success);
   --color-success-subtle: var(--success-subtle);
   --color-success-border: var(--success-border);
@@ -54,9 +63,9 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Identité visuelle Lagui — "Ardoise & Cobalt" (Clarté institutionnelle B2B) */
+/* Identité visuelle Lagui — "Ardoise & Cobalt" avec barre latérale type Teams */
 :root {
-  --canvas: oklch(0.978 0.007 255);
+  --canvas: oklch(0.976 0.007 255);
   --background: oklch(1 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.205 0.032 258);
@@ -79,6 +88,16 @@
   --border: oklch(0.914 0.013 255);
   --input: oklch(0.895 0.016 255);
   --ring: oklch(0.565 0.165 260);
+
+  /* Barre latérale type Microsoft Teams (Ardoise-Cobalt profond) */
+  --sidebar: oklch(0.235 0.062 262);
+  --sidebar-foreground: oklch(0.945 0.010 255);
+  --sidebar-primary: oklch(0.595 0.172 258);
+  --sidebar-primary-foreground: oklch(0.990 0.003 255);
+  --sidebar-accent: oklch(0.310 0.070 262);
+  --sidebar-accent-foreground: oklch(0.985 0.005 255);
+  --sidebar-border: oklch(0.320 0.055 262);
+  --sidebar-ring: oklch(0.620 0.170 258);
 
   /* Couleurs sémantiques transverses harmonisées */
   --success: oklch(0.585 0.145 163);
@@ -130,6 +149,15 @@
   --border: oklch(0.305 0.025 258);
   --input: oklch(0.320 0.028 258);
   --ring: oklch(0.635 0.165 258);
+
+  --sidebar: oklch(0.165 0.030 260);
+  --sidebar-foreground: oklch(0.950 0.008 255);
+  --sidebar-primary: oklch(0.635 0.165 258);
+  --sidebar-primary-foreground: oklch(0.145 0.025 258);
+  --sidebar-accent: oklch(0.240 0.040 260);
+  --sidebar-accent-foreground: oklch(0.960 0.008 255);
+  --sidebar-border: oklch(0.275 0.030 260);
+  --sidebar-ring: oklch(0.635 0.165 258);
 }
 
 @layer base {

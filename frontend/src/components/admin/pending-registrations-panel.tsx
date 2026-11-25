@@ -1,8 +1,35 @@
 import { useEffect, useState } from "react"
-import { Check, RefreshCw, ShieldCheck, UserX } from "lucide-react"
+import { AlertCircle, Check, MoreHorizontal, RefreshCw, ShieldCheck, UserX } from "lucide-react"
 import { toast } from "sonner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
+import { Cluster, IconTile, Stack } from "@/components/ui/layout"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { api, type Api } from "@/lib/api"
 import { ApiError } from "@/lib/api-client"
 import type { Page, User } from "@/types/api"
@@ -24,7 +51,8 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
   useEffect(() => {
     const controller = new AbortController()
 
-    client.listUsers({ ...query, status: "PENDING" }, controller.signal)
+    client
+      .listUsers({ ...query, status: "PENDING" }, controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return
         const lastPage = Math.max(0, data.page.totalPages - 1)
@@ -38,9 +66,11 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
       .catch((err: unknown) => {
         if (controller.signal.aborted) return
         const message = err instanceof Error ? err.message : "Impossible de joindre le serveur."
-        setError(err instanceof ApiError && err.status === 403
-          ? "Accès administrateur requis pour consulter les demandes d'inscription."
-          : message)
+        setError(
+          err instanceof ApiError && err.status === 403
+            ? "Accès administrateur requis pour consulter les demandes d'inscription."
+            : message,
+        )
         setResult(null)
         setLoading(false)
       })
@@ -77,100 +107,172 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
-            <ShieldCheck className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold tracking-tight">Demandes d'inscription en attente</h2>
-            <p className="text-xs text-muted-foreground">
+    <Card>
+      <CardHeader className="border-b">
+        <Cluster gap="md" wrap={false}>
+          <IconTile tone="brand">
+            <ShieldCheck aria-hidden="true" />
+          </IconTile>
+          <Stack gap="xs">
+            <CardTitle>
+              <h2>Demandes d&apos;inscription en attente</h2>
+            </CardTitle>
+            <CardDescription>
               Approuvez les nouveaux salariés de votre entreprise ou refusez les demandes non reconnues.
-            </p>
-          </div>
-        </div>
+            </CardDescription>
+          </Stack>
+        </Cluster>
 
-        <div className="flex items-center gap-2">
-          {result && (
-            <Badge variant={result.page.totalElements > 0 ? "warning" : "outline"}>
-              {result.page.totalElements} en attente
-            </Badge>
+        <CardAction>
+          <Cluster gap="sm">
+            {result && (
+              <Badge variant={result.page.totalElements > 0 ? "warning" : "outline"}>
+                {result.page.totalElements} en attente
+              </Badge>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => loadPage(query.page)}
+              disabled={loading || busy}
+            >
+              <RefreshCw className={loading ? "animate-spin" : undefined} aria-hidden="true" />
+              Actualiser
+            </Button>
+          </Cluster>
+        </CardAction>
+      </CardHeader>
+
+      <CardContent>
+        <Stack gap="md">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle aria-hidden="true" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
-          <Button type="button" variant="outline" size="sm" onClick={() => loadPage(query.page)} disabled={loading || busy}>
-            <RefreshCw className={loading ? "size-4 animate-spin" : "size-4"} aria-hidden="true" />
-            Actualiser
-          </Button>
-        </div>
-      </div>
 
-      <div className="p-5">
-        {error && (
-          <div role="alert" className="mb-4 rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
-            {error}
-          </div>
-        )}
+          {loading ? (
+            <Stack gap="sm" aria-label="Chargement des demandes d'inscription">
+              <Skeleton className="h-11 w-full" />
+              <Skeleton className="h-11 w-full" />
+            </Stack>
+          ) : result?.items.length === 0 ? (
+            <Empty>
+              <EmptyIcon>
+                <ShieldCheck aria-hidden="true" />
+              </EmptyIcon>
+              <EmptyTitle>Aucune demande en attente</EmptyTitle>
+              <EmptyDescription>
+                Les nouvelles inscriptions nécessitant votre approbation apparaîtront automatiquement ici.
+              </EmptyDescription>
+            </Empty>
+          ) : (
+            result && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Candidat</TableHead>
+                    <TableHead>Coordonnées</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Décision</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {result.items.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{formatDisplayName(user)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {user.email}
+                        {user.username ? ` · @${user.username}` : ""}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="warning">En attente</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Cluster justify="end" gap="xs">
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={busy}
+                            onClick={() => void handleAction(user, "approve")}
+                          >
+                            <Check aria-hidden="true" />
+                            Approuver
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={busy}
+                            onClick={() => void handleAction(user, "decline")}
+                          >
+                            <UserX aria-hidden="true" />
+                            Refuser
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                disabled={busy}
+                                aria-label={`Plus d'actions pour ${formatDisplayName(user)}`}
+                              >
+                                <MoreHorizontal aria-hidden="true" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => void handleAction(user, "approve")}>
+                                <Check aria-hidden="true" />
+                                Approuver le compte
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => void handleAction(user, "decline")}
+                              >
+                                <UserX aria-hidden="true" />
+                                Refuser et supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </Cluster>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )
+          )}
+        </Stack>
+      </CardContent>
 
-        {loading ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            Chargement des demandes d'inscription…
-          </p>
-        ) : result?.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
-            <p className="text-sm font-medium text-foreground">Aucune demande en attente</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Les nouvelles inscriptions nécessitant votre approbation apparaîtront automatiquement ici.
-            </p>
-          </div>
-        ) : result && (
-          <ul className="divide-y divide-border rounded-lg border border-border">
-            {result.items.map((user) => (
-              <li key={user.id} className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{formatDisplayName(user)}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {user.email}
-                    {user.username ? ` · @${user.username}` : ""}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => void handleAction(user, "approve")}
-                  >
-                    <Check className="size-4" aria-hidden="true" />
-                    Approuver
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => void handleAction(user, "decline")}
-                  >
-                    <UserX className="size-4" aria-hidden="true" />
-                    Refuser
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {result && !loading && result.page.totalPages > 1 && (
-          <nav aria-label="Pagination des demandes" className="mt-4 flex items-center justify-end gap-3">
-            <Button variant="outline" size="sm" disabled={result.page.first || busy} onClick={() => loadPage(query.page - 1)}>
+      {result && !loading && result.page.totalPages > 1 && (
+        <CardFooter className="border-t">
+          <span className="text-xs text-muted-foreground">
+            Page {result.page.page + 1} / {result.page.totalPages}
+          </span>
+          <Cluster gap="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={result.page.first || busy}
+              onClick={() => loadPage(query.page - 1)}
+            >
               Précédente
             </Button>
-            <span className="text-sm text-muted-foreground">{result.page.page + 1} / {result.page.totalPages}</span>
-            <Button variant="outline" size="sm" disabled={result.page.last || busy} onClick={() => loadPage(query.page + 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={result.page.last || busy}
+              onClick={() => loadPage(query.page + 1)}
+            >
               Suivante
             </Button>
-          </nav>
-        )}
-      </div>
-    </section>
+          </Cluster>
+        </CardFooter>
+      )}
+    </Card>
   )
 }

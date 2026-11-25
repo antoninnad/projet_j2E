@@ -1,8 +1,21 @@
 import { useState, type FormEvent } from "react"
-import { Building2, Plus } from "lucide-react"
+import { AlertCircle, Building2, CheckCircle2, Plus } from "lucide-react"
 import { toast } from "sonner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Field, FieldError, FieldGroup, FieldRow } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Cluster, IconTile, Stack } from "@/components/ui/layout"
+import { Separator } from "@/components/ui/separator"
 import { api, type Api } from "@/lib/api"
 import { ApiError } from "@/lib/api-client"
 import type { CreateCompanyRequest, CreateCompanyResponse } from "@/types/api"
@@ -91,210 +104,173 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
   }
 
   return (
-    <section
-      aria-labelledby="creation-entreprise-titre"
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15">
-            <Building2 className="size-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h2 id="creation-entreprise-titre" className="text-base font-semibold tracking-tight">
-              Créer une entreprise et son premier administrateur
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Isolée des autres entreprises, elle disposera de son code d'inscription et de son compte administrateur actif.
-            </p>
-          </div>
-        </div>
-      </div>
+    <Card aria-labelledby="creation-entreprise-titre">
+      <CardHeader className="border-b">
+        <Cluster gap="md" wrap={false}>
+          <IconTile tone="brand">
+            <Building2 aria-hidden="true" />
+          </IconTile>
+          <Stack gap="xs">
+            <CardTitle>
+              <h2 id="creation-entreprise-titre">
+                Créer une entreprise et son premier administrateur
+              </h2>
+            </CardTitle>
+            <CardDescription>
+              Isolée des autres entreprises, elle disposera de son code d&apos;inscription et de son compte administrateur actif.
+            </CardDescription>
+          </Stack>
+        </Cluster>
+      </CardHeader>
 
-      <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4 p-5" noValidate>
-        {formError && (
-          <div role="alert" className="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground">
-            {formError}
-          </div>
-        )}
-
-        {created && (
-          <div role="status" className="rounded-lg border border-success-border bg-success-subtle px-4 py-3 text-sm text-success-foreground">
-            Entreprise <strong>{created.company.name}</strong> (code{" "}
-            <strong>{created.company.code ?? "—"}</strong>) créée avec l'administrateur{" "}
-            <strong>{created.admin.username}</strong> ({created.admin.email}).
-          </div>
-        )}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="company-name" className="block text-sm font-medium text-foreground">
-              Nom de l'entreprise
-            </label>
-            <Input
-              id="company-name"
-              name="companyName"
-              value={form.companyName}
-              onChange={(event) => updateField("companyName", event.target.value)}
-              placeholder="Ex : Acme SAS"
-              required
-            />
-            {fieldErrors.companyName && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.companyName}
-              </p>
+      <form onSubmit={(event) => void handleSubmit(event)} noValidate>
+        <CardContent>
+          <FieldGroup>
+            {formError && (
+              <Alert variant="destructive">
+                <AlertCircle aria-hidden="true" />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
             )}
-          </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="company-code" className="block text-sm font-medium text-foreground">
-              Code d'entreprise
-            </label>
-            <Input
-              id="company-code"
-              name="companyCode"
-              value={form.companyCode}
-              onChange={(event) => updateField("companyCode", event.target.value)}
-              placeholder="EX : ACME-2026"
-              className="uppercase placeholder:normal-case"
-              required
-            />
-            {fieldErrors.companyCode && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.companyCode}
-              </p>
+            {created && (
+              <Alert variant="success">
+                <CheckCircle2 aria-hidden="true" />
+                <AlertDescription>
+                  Entreprise <strong>{created.company.name}</strong> (code{" "}
+                  <strong>{created.company.code ?? "—"}</strong>) créée avec l&apos;administrateur{" "}
+                  <strong>{created.admin.username}</strong> ({created.admin.email}).
+                </AlertDescription>
+              </Alert>
             )}
-          </div>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="admin-first-name" className="block text-sm font-medium text-foreground">
-              Prénom de l'administrateur
-            </label>
-            <Input
-              id="admin-first-name"
-              name="adminFirstName"
-              value={form.adminFirstName}
-              onChange={(event) => updateField("adminFirstName", event.target.value)}
-              required
-            />
-            {fieldErrors.adminFirstName && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.adminFirstName}
-              </p>
-            )}
-          </div>
+            <FieldRow>
+              <Field>
+                <Label htmlFor="company-name">Nom de l&apos;entreprise</Label>
+                <Input
+                  id="company-name"
+                  name="companyName"
+                  value={form.companyName}
+                  onChange={(event) => updateField("companyName", event.target.value)}
+                  placeholder="Ex : Acme SAS"
+                  required
+                />
+                {fieldErrors.companyName && <FieldError>{fieldErrors.companyName}</FieldError>}
+              </Field>
 
-          <div className="space-y-1.5">
-            <label htmlFor="admin-last-name" className="block text-sm font-medium text-foreground">
-              Nom de l'administrateur
-            </label>
-            <Input
-              id="admin-last-name"
-              name="adminLastName"
-              value={form.adminLastName}
-              onChange={(event) => updateField("adminLastName", event.target.value)}
-              required
-            />
-            {fieldErrors.adminLastName && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.adminLastName}
-              </p>
-            )}
-          </div>
-        </div>
+              <Field>
+                <Label htmlFor="company-code">Code d&apos;entreprise</Label>
+                <Input
+                  id="company-code"
+                  name="companyCode"
+                  value={form.companyCode}
+                  onChange={(event) => updateField("companyCode", event.target.value)}
+                  placeholder="EX : ACME-2026"
+                  className="uppercase placeholder:normal-case"
+                  required
+                />
+                {fieldErrors.companyCode && <FieldError>{fieldErrors.companyCode}</FieldError>}
+              </Field>
+            </FieldRow>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="admin-username" className="block text-sm font-medium text-foreground">
-              Identifiant administrateur
-            </label>
-            <Input
-              id="admin-username"
-              name="adminUsername"
-              value={form.adminUsername}
-              onChange={(event) => updateField("adminUsername", event.target.value)}
-              placeholder="prenom.nom"
-              required
-            />
-            {fieldErrors.adminUsername && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.adminUsername}
-              </p>
-            )}
-          </div>
+            <Separator />
 
-          <div className="space-y-1.5">
-            <label htmlFor="admin-email" className="block text-sm font-medium text-foreground">
-              Email administrateur
-            </label>
-            <Input
-              id="admin-email"
-              type="email"
-              name="adminEmail"
-              value={form.adminEmail}
-              onChange={(event) => updateField("adminEmail", event.target.value)}
-              placeholder="admin@entreprise.fr"
-              required
-            />
-            {fieldErrors.adminEmail && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.adminEmail}
-              </p>
-            )}
-          </div>
-        </div>
+            <FieldRow>
+              <Field>
+                <Label htmlFor="admin-first-name">Prénom de l&apos;administrateur</Label>
+                <Input
+                  id="admin-first-name"
+                  name="adminFirstName"
+                  value={form.adminFirstName}
+                  onChange={(event) => updateField("adminFirstName", event.target.value)}
+                  required
+                />
+                {fieldErrors.adminFirstName && <FieldError>{fieldErrors.adminFirstName}</FieldError>}
+              </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="admin-password" className="block text-sm font-medium text-foreground">
-              Mot de passe initial
-            </label>
-            <Input
-              id="admin-password"
-              type="password"
-              name="adminPassword"
-              value={form.adminPassword}
-              onChange={(event) => updateField("adminPassword", event.target.value)}
-              minLength={8}
-              required
-            />
-            {fieldErrors.adminPassword && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.adminPassword}
-              </p>
-            )}
-          </div>
+              <Field>
+                <Label htmlFor="admin-last-name">Nom de l&apos;administrateur</Label>
+                <Input
+                  id="admin-last-name"
+                  name="adminLastName"
+                  value={form.adminLastName}
+                  onChange={(event) => updateField("adminLastName", event.target.value)}
+                  required
+                />
+                {fieldErrors.adminLastName && <FieldError>{fieldErrors.adminLastName}</FieldError>}
+              </Field>
+            </FieldRow>
 
-          <div className="space-y-1.5">
-            <label htmlFor="admin-confirm-password" className="block text-sm font-medium text-foreground">
-              Confirmation du mot de passe
-            </label>
-            <Input
-              id="admin-confirm-password"
-              type="password"
-              name="adminConfirmPassword"
-              value={form.adminConfirmPassword}
-              onChange={(event) => updateField("adminConfirmPassword", event.target.value)}
-              minLength={8}
-              required
-            />
-            {fieldErrors.adminConfirmPassword && (
-              <p role="alert" className="text-xs text-destructive">
-                {fieldErrors.adminConfirmPassword}
-              </p>
-            )}
-          </div>
-        </div>
+            <FieldRow>
+              <Field>
+                <Label htmlFor="admin-username">Identifiant administrateur</Label>
+                <Input
+                  id="admin-username"
+                  name="adminUsername"
+                  value={form.adminUsername}
+                  onChange={(event) => updateField("adminUsername", event.target.value)}
+                  placeholder="prenom.nom"
+                  required
+                />
+                {fieldErrors.adminUsername && <FieldError>{fieldErrors.adminUsername}</FieldError>}
+              </Field>
 
-        <div className="flex justify-end pt-1">
+              <Field>
+                <Label htmlFor="admin-email">Email administrateur</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  name="adminEmail"
+                  value={form.adminEmail}
+                  onChange={(event) => updateField("adminEmail", event.target.value)}
+                  placeholder="admin@entreprise.fr"
+                  required
+                />
+                {fieldErrors.adminEmail && <FieldError>{fieldErrors.adminEmail}</FieldError>}
+              </Field>
+            </FieldRow>
+
+            <FieldRow>
+              <Field>
+                <Label htmlFor="admin-password">Mot de passe initial</Label>
+                <Input
+                  id="admin-password"
+                  type="password"
+                  name="adminPassword"
+                  value={form.adminPassword}
+                  onChange={(event) => updateField("adminPassword", event.target.value)}
+                  minLength={8}
+                  required
+                />
+                {fieldErrors.adminPassword && <FieldError>{fieldErrors.adminPassword}</FieldError>}
+              </Field>
+
+              <Field>
+                <Label htmlFor="admin-confirm-password">Confirmation du mot de passe</Label>
+                <Input
+                  id="admin-confirm-password"
+                  type="password"
+                  name="adminConfirmPassword"
+                  value={form.adminConfirmPassword}
+                  onChange={(event) => updateField("adminConfirmPassword", event.target.value)}
+                  minLength={8}
+                  required
+                />
+                {fieldErrors.adminConfirmPassword && (
+                  <FieldError>{fieldErrors.adminConfirmPassword}</FieldError>
+                )}
+              </Field>
+            </FieldRow>
+          </FieldGroup>
+        </CardContent>
+
+        <CardFooter className="mt-5 justify-end border-t">
           <Button type="submit" disabled={submitting}>
-            <Plus className="size-4" aria-hidden="true" />
+            <Plus aria-hidden="true" />
             {submitting ? "Création en cours…" : "Créer l'entreprise"}
           </Button>
-        </div>
+        </CardFooter>
       </form>
-    </section>
+    </Card>
   )
 }

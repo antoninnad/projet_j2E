@@ -106,4 +106,18 @@ describe("WorkspaceShell", () => {
     expect(window.location.search).toContain("tab=chat")
     expect(window.location.search).toContain("peer=3")
   })
+
+  it("permet de réduire puis redéployer la barre latérale façon Teams", async () => {
+    const user = userEvent.setup()
+    render(<WorkspaceShell embedded userName="Alice Dupont" isAdmin />)
+
+    const sidebar = screen.getByLabelText("Barre latérale d'application")
+    expect(sidebar).toHaveAttribute("data-state", "expanded")
+
+    await user.click(screen.getByRole("button", { name: "Réduire la barre latérale" }))
+    expect(sidebar).toHaveAttribute("data-state", "collapsed")
+
+    await user.click(screen.getByRole("button", { name: "Développer la barre latérale" }))
+    expect(sidebar).toHaveAttribute("data-state", "expanded")
+  })
 })
