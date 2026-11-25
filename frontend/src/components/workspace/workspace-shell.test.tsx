@@ -50,7 +50,7 @@ describe("WorkspaceShell", () => {
 
     await user.click(screen.getByRole("tab", { name: "Annuaire" }))
     expect(screen.getByRole("tab", { name: "Annuaire" })).toHaveAttribute("aria-selected", "true")
-    expect(await screen.findByText(/Annuaire de l'entreprise/i)).toBeInTheDocument()
+    expect(await screen.findByRole("textbox", { name: "Rechercher un collègue" })).toBeInTheDocument()
     expect(window.location.search).toBe("?tab=directory")
 
     await user.click(screen.getByRole("tab", { name: "Chat privé" }))

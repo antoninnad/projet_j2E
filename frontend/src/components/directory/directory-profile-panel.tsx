@@ -4,11 +4,9 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  KeyRound,
   Mail,
   MessageSquare,
   MoreHorizontal,
-  RefreshCw,
   Save,
   UserRound,
   Users,
@@ -20,9 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -39,7 +35,6 @@ import { Input, SearchInput } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Cluster,
-  IconTile,
   PresenceAvatar,
   SplitAside,
   SplitGrid,
@@ -60,8 +55,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
@@ -339,19 +332,9 @@ export function DirectoryProfilePanel({
         <SplitAside>
           <Card aria-labelledby="mon-profil-titre">
             <CardHeader className="border-b">
-              <Cluster gap="md" wrap={false}>
-                <IconTile tone="brand">
-                  <UserRound aria-hidden="true" />
-                </IconTile>
-                <Stack gap="xs">
-                  <CardTitle>
-                    <h2 id="mon-profil-titre">Mon profil</h2>
-                  </CardTitle>
-                  <CardDescription>
-                    Informations visibles par les collègues actifs de votre entreprise.
-                  </CardDescription>
-                </Stack>
-              </Cluster>
+              <CardTitle>
+                <h2 id="mon-profil-titre">Mon profil</h2>
+              </CardTitle>
             </CardHeader>
 
             {profileLoading ? (
@@ -474,19 +457,9 @@ export function DirectoryProfilePanel({
 
           <Card aria-labelledby="mot-de-passe-titre">
             <CardHeader className="border-b">
-              <Cluster gap="md" wrap={false}>
-                <IconTile tone="brand">
-                  <KeyRound aria-hidden="true" />
-                </IconTile>
-                <Stack gap="xs">
-                  <CardTitle>
-                    <h2 id="mot-de-passe-titre">Modifier mon mot de passe</h2>
-                  </CardTitle>
-                  <CardDescription>
-                    Minimum 8 caractères, chiffré côté serveur avec BCrypt.
-                  </CardDescription>
-                </Stack>
-              </Cluster>
+              <CardTitle>
+                <h2 id="mot-de-passe-titre">Mot de passe</h2>
+              </CardTitle>
             </CardHeader>
 
             <form onSubmit={(event) => void handleSavePassword(event)} noValidate>
@@ -566,185 +539,134 @@ export function DirectoryProfilePanel({
           </Card>
         </SplitAside>
 
-        {/* Colonne droite : Annuaire de l'entreprise */}
+        {/* Colonne droite : Recherche + Comptes + Pagination uniquement */}
         <SplitMain>
-          <Card aria-labelledby="annuaire-entreprise-titre">
-            <CardHeader className="border-b">
-              <Cluster gap="md" wrap={false}>
-                <IconTile tone="brand">
+          <Stack gap="md">
+            <SearchInput
+              aria-label="Rechercher un collègue"
+              placeholder="Rechercher par nom, prénom, identifiant ou email…"
+              value={search}
+              onChange={(event) => handleSearchChange(event.target.value)}
+            />
+
+            {directoryError && (
+              <Alert variant="destructive">
+                <AlertCircle aria-hidden="true" />
+                <AlertDescription>{directoryError}</AlertDescription>
+              </Alert>
+            )}
+
+            {directoryLoading ? (
+              <Stack gap="sm">
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+              </Stack>
+            ) : colleagues.length === 0 ? (
+              <Empty>
+                <EmptyIcon>
                   <Users aria-hidden="true" />
-                </IconTile>
-                <Stack gap="xs">
-                  <CardTitle>
-                    <h2 id="annuaire-entreprise-titre">Annuaire de l&apos;entreprise</h2>
-                  </CardTitle>
-                  <CardDescription>
-                    Recherchez vos collègues actifs, consultez leur profil et lancez une
-                    conversation privée.
-                  </CardDescription>
-                </Stack>
-              </Cluster>
-
-              <CardAction>
-                <Cluster gap="sm">
-                  <Badge variant="success">
-                    {directoryResult?.page.totalElements ?? 0} membre
-                    {(directoryResult?.page.totalElements ?? 0) > 1 ? "s" : ""} actif
-                    {(directoryResult?.page.totalElements ?? 0) > 1 ? "s" : ""}
-                  </Badge>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefreshDirectory}
-                    disabled={directoryLoading}
-                  >
-                    <RefreshCw
-                      className={directoryLoading ? "animate-spin" : undefined}
-                      aria-hidden="true"
-                    />
-                    Actualiser
-                  </Button>
-                </Cluster>
-              </CardAction>
-            </CardHeader>
-
-            <CardContent>
-              <Stack gap="md">
-                <SearchInput
-                  aria-label="Rechercher un collègue"
-                  placeholder="Rechercher par nom, prénom, identifiant ou email…"
-                  value={search}
-                  onChange={(event) => handleSearchChange(event.target.value)}
-                />
-
-                {directoryError && (
-                  <Alert variant="destructive">
-                    <AlertCircle aria-hidden="true" />
-                    <AlertDescription>{directoryError}</AlertDescription>
-                  </Alert>
-                )}
-
-                {directoryLoading ? (
-                  <Stack gap="sm">
-                    <Skeleton className="h-14 w-full" />
-                    <Skeleton className="h-14 w-full" />
-                    <Skeleton className="h-14 w-full" />
-                  </Stack>
-                ) : colleagues.length === 0 ? (
-                  <Empty>
-                    <EmptyIcon>
-                      <Users aria-hidden="true" />
-                    </EmptyIcon>
-                    <EmptyTitle>Aucun collègue trouvé</EmptyTitle>
-                    <EmptyDescription>
-                      Modifiez votre recherche pour parcourir les membres actifs de votre
-                      entreprise.
-                    </EmptyDescription>
-                  </Empty>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Collaborateur</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {colleagues.map((colleague) => {
-                        const isMe = me?.id === colleague.id
-                        const isSelected = selectedColleague?.id === colleague.id
-                        return (
-                          <TableRow
-                            key={colleague.id}
-                            data-state={isSelected ? "selected" : undefined}
-                          >
-                            <TableCell>
-                              <Cluster gap="md" wrap={false}>
-                                <PresenceAvatar
-                                  initials={initialsOf(
-                                    colleague.firstName,
-                                    colleague.lastName,
-                                    colleague.username,
-                                  )}
-                                />
-                                <Stack gap="xs">
-                                  <Cluster gap="xs">
-                                    <span className="font-medium">{fullNameOf(colleague)}</span>
-                                    {isMe && <Badge variant="brand">Vous</Badge>}
-                                    {colleague.role === "COMPANY_ADMIN" && (
-                                      <Badge variant="outline">Admin</Badge>
-                                    )}
-                                  </Cluster>
-                                  <span className="text-xs text-muted-foreground">
-                                    @{colleague.username} · {colleague.email}
-                                  </span>
-                                </Stack>
+                </EmptyIcon>
+                <EmptyTitle>Aucun collègue trouvé</EmptyTitle>
+                <EmptyDescription>
+                  Aucun membre actif ne correspond à votre recherche.
+                </EmptyDescription>
+              </Empty>
+            ) : (
+              <Table>
+                <TableBody>
+                  {colleagues.map((colleague) => {
+                    const isMe = me?.id === colleague.id
+                    const isSelected = selectedColleague?.id === colleague.id
+                    return (
+                      <TableRow
+                        key={colleague.id}
+                        data-state={isSelected ? "selected" : undefined}
+                      >
+                        <TableCell>
+                          <Cluster gap="md" wrap={false}>
+                            <PresenceAvatar
+                              initials={initialsOf(
+                                colleague.firstName,
+                                colleague.lastName,
+                                colleague.username,
+                              )}
+                            />
+                            <Stack gap="xs">
+                              <Cluster gap="xs">
+                                <span className="font-medium">{fullNameOf(colleague)}</span>
+                                {isMe && <Badge variant="brand">Vous</Badge>}
+                                {colleague.role === "COMPANY_ADMIN" && (
+                                  <Badge variant="outline">Admin</Badge>
+                                )}
                               </Cluster>
-                            </TableCell>
+                              <span className="text-xs text-muted-foreground">
+                                @{colleague.username} · {colleague.email}
+                              </span>
+                            </Stack>
+                          </Cluster>
+                        </TableCell>
 
-                            <TableCell className="text-right">
-                              <Cluster justify="end" gap="xs">
+                        <TableCell className="text-right">
+                          <Cluster justify="end" gap="xs">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelectColleague(colleague)}
+                            >
+                              Voir le profil
+                            </Button>
+                            {!isMe && onOpenConversation && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                aria-label={`Envoyer un message à ${fullNameOf(colleague)}`}
+                                onClick={() => onOpenConversation(colleague)}
+                              >
+                                <MessageSquare aria-hidden="true" />
+                                Message
+                              </Button>
+                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <Button
                                   type="button"
-                                  variant="outline"
-                                  size="sm"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={`Menu de ${fullNameOf(colleague)}`}
+                                >
+                                  <MoreHorizontal aria-hidden="true" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
                                   onClick={() => handleSelectColleague(colleague)}
                                 >
-                                  Voir le profil
-                                </Button>
+                                  <UserRound aria-hidden="true" />
+                                  Consulter la fiche
+                                </DropdownMenuItem>
                                 {!isMe && onOpenConversation && (
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    aria-label={`Envoyer un message à ${fullNameOf(colleague)}`}
+                                  <DropdownMenuItem
                                     onClick={() => onOpenConversation(colleague)}
                                   >
                                     <MessageSquare aria-hidden="true" />
-                                    Message
-                                  </Button>
+                                    Démarrer un chat privé
+                                  </DropdownMenuItem>
                                 )}
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon-sm"
-                                      aria-label={`Menu de ${fullNameOf(colleague)}`}
-                                    >
-                                      <MoreHorizontal aria-hidden="true" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => handleSelectColleague(colleague)}
-                                    >
-                                      <UserRound aria-hidden="true" />
-                                      Consulter la fiche
-                                    </DropdownMenuItem>
-                                    {!isMe && onOpenConversation && (
-                                      <DropdownMenuItem
-                                        onClick={() => onOpenConversation(colleague)}
-                                      >
-                                        <MessageSquare aria-hidden="true" />
-                                        Démarrer un chat privé
-                                      </DropdownMenuItem>
-                                    )}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </Cluster>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                )}
-              </Stack>
-            </CardContent>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </Cluster>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
 
-            <CardFooter className="border-t">
-              <span className="text-xs text-muted-foreground">
+            <Cluster justify="between" className="pt-1 text-xs text-muted-foreground">
+              <span>
                 Page {page + 1} sur {totalPages}
               </span>
               <Cluster gap="sm">
@@ -771,8 +693,8 @@ export function DirectoryProfilePanel({
                   <ChevronRight aria-hidden="true" />
                 </Button>
               </Cluster>
-            </CardFooter>
-          </Card>
+            </Cluster>
+          </Stack>
         </SplitMain>
       </SplitGrid>
 
