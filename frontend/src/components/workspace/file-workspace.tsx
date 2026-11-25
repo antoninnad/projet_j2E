@@ -1,98 +1,72 @@
-import { useEffect, useMemo, useState } from "react"
-import { Check, ChevronRight, FileText, FolderOpen, Pencil, Save, Share2, Star, X } from "lucide-react"
-import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react"
+import { ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { initialEntries, type WorkspaceEntry } from "@/data/workspace"
-import type { Api } from "@/lib/api"
-import { paginate } from "@/lib/pagination"
-import { cn } from "@/lib/utils"
-import { ContributorAvatars } from "./contributor-avatars"
-import { FileEditor } from "./file-editor"
+import { api, type Api } from "@/lib/api"
+import { formatFileSize } from "@/lib/utils"
+import type { BreadcrumbItem, DocumentNode, NodeDetail, PageMeta } from "@/types/api"
+import { DocumentDetails } from "./document-details"
 import { FileExplorer, PAGE_SIZE } from "./file-explorer"
-import { SharingPanel } from "./sharing-panel"
+import { WorkspacePanels } from "./workspace-panels"
 
-export function FileWorkspace({ embedded = false, client }: { embedded?: boolean; client?: Api }) {
-  const [entries, setEntries] = useState(initialEntries)
-  const [selectedId, setSelectedId] = useState("guide")
-  const [folderId, setFolderId] = useState<string | null>(null)
-  const [query, setQuery] = useState("")
-  const [favoritesOnly, setFavoritesOnly] = useState(false)
-  const [page, setPage] = useState(1)
-  const [editing, setEditing] = useState(false)
-  const [sharingOpen, setSharingOpen] = useState(false)
-  const [drafts, setDrafts] = useState<Record<string, string>>({})
-  const [desktop, setDesktop] = useState(() => window.matchMedia("(min-width: 768px)").matches)
+type BrowseRequest = { path: BreadcrumbItem[]; page: number }
+type Listing = { items: DocumentNode[]; page?: PageMeta }
+
+type Result<Q, T> = { request: Q } & (
+  { data: T; error?: never } | { data?: never; error: string }
+)
+
+export function FileWorkspace({ embedded = false, client = api }: { embedded?: boolean; client?: Api }) {
+  const [browse, setBrowse] = useState<BrowseRequest>({ path: [], page: 0 })
+  const [selection, setSelection] = useState<BreadcrumbItem | null>(null)
+  const [listing, setListing] = useState<Result<BrowseRequest, Listing>>()
+  const [detail, setDetail] = useState<Result<BreadcrumbItem, NodeDetail>>()
+
+  const folder = browse.path.at(-1)
+  // Only show results for the current request, even before effect cleanup.
+  const currentListing = listing?.request === browse ? listing : undefined
+  // Keep the controls mounted while another page in the folder loads.
+  const pagination = listing?.request.path === browse.path ? listing.data?.page : undefined
+  const currentDetail = detail?.request === selection ? detail : undefined
+  const detailData = currentDetail?.data
 
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px)")
-    const update = () => setDesktop(media.matches)
-    media.addEventListener("change", update)
-    return () => media.removeEventListener("change", update)
-  }, [])
+    const controller = new AbortController()
+    const { signal } = controller
+    const request = folder
+      ? client.listFolderChildren(folder.id, { page: browse.page, size: PAGE_SIZE }, signal)
+      : client.listRootFolders(signal).then(items => ({ items }))
 
-  const { byId, byParent } = useMemo(() => {
-    const byId = new Map<string, WorkspaceEntry>()
-    const byParent = new Map<string | null, WorkspaceEntry[]>()
-    for (const entry of entries) {
-      byId.set(entry.id, entry)
-      const siblings = byParent.get(entry.parentId)
-      if (siblings) siblings.push(entry)
-      else byParent.set(entry.parentId, [entry])
-    }
-    return { byId, byParent }
-  }, [entries])
+    void request.then(data => {
+      if (!signal.aborted) setListing({ request: browse, data })
+    }).catch((error: Error) => {
+      if (!signal.aborted) setListing({ request: browse, error: error.message })
+    })
+    return () => controller.abort()
+  }, [client, browse, folder])
 
-  const selected = byId.get(selectedId)!
-  const folder = folderId === null ? undefined : byId.get(folderId)
-  const value = drafts[selectedId] ?? selected.content
-  const dirty = value !== selected.content
-  const dirtyIds = new Set(Object.keys(drafts).filter(id => drafts[id] !== byId.get(id)?.content))
-  const filtered = useMemo(() => {
-    const search = query.toLocaleLowerCase("fr")
-    return (byParent.get(folderId) ?? [])
-      .filter(entry => entry.name.toLocaleLowerCase("fr").includes(search) && (!favoritesOnly || entry.favorite))
-      .sort((a, b) => Number(b.kind === "folder") - Number(a.kind === "folder") ||
-        Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name, "fr"))
-  }, [byParent, folderId, query, favoritesOnly])
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, pageCount)
-  const listing = paginate(filtered, currentPage - 1, PAGE_SIZE)
+  useEffect(() => {
+    if (!selection) return
+    const controller = new AbortController()
+    const { signal } = controller
 
-  function selectFolder(id: string | null) {
-    setFolderId(id)
-    setQuery("")
-    setPage(1)
-    setFavoritesOnly(false)
+    void client.getNode(selection.id, signal).then(data => {
+      if (!signal.aborted) setDetail({ request: selection, data })
+    }).catch((error: Error) => {
+      if (!signal.aborted) setDetail({ request: selection, error: error.message })
+    })
+    return () => controller.abort()
+  }, [client, selection])
+
+  function openFolder(path: BreadcrumbItem[]) {
+    setBrowse({ path, page: 0 })
+    setSelection(path.at(-1) ?? null)
   }
 
-  function open(entry: WorkspaceEntry) {
-    if (entry.kind === "folder") {
-      selectFolder(entry.id)
-      return
-    }
-    setSelectedId(entry.id)
-    setEditing(drafts[entry.id] !== undefined)
-    toast.success("Fichier ouvert avec succès", { description: entry.name })
-  }
-
-  function save() {
-    if (!dirty) return
-    setEntries(current => current.map(entry => entry.id === selectedId ? { ...entry, content: value, updatedAt: new Date().toISOString(), contributors: ["antonin", ...entry.contributors.filter(id => id !== "antonin")] } : entry))
-    clearDraft()
-    toast.success("Fichier enregistré avec succès", { description: selected.name })
-  }
-
-  function clearDraft() {
-    setDrafts(current => { const next = { ...current }; delete next[selectedId]; return next })
-    setEditing(false)
-  }
-
-  function toggleFavorite() {
-    setEntries(current => current.map(entry => entry.id === selectedId ? { ...entry, favorite: !entry.favorite } : entry))
-  }
-
+  const currentPath = detailData?.path ?? browse.path
+  const breadcrumb = detailData ? [...currentPath, detailData.node] : currentPath
+  const folderPath = detailData && detailData.node.id === folder?.id
+    ? breadcrumb
+    : browse.path
   const Wrapper = embedded ? "div" : "main"
 
   return (
@@ -101,68 +75,76 @@ export function FileWorkspace({ embedded = false, client }: { embedded?: boolean
       tabIndex={embedded ? undefined : -1}
       className={embedded ? "w-full" : "mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9"}
     >
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground"><FolderOpen className="size-3.5" aria-hidden="true" /><span>Entreprise</span><ChevronRight className="size-3" aria-hidden="true" /><span>Documents</span></div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Espace de travail</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Vos fichiers, vos idées et votre équipe, au même endroit.</p>
-        </div>
-        <Badge variant="outline" className="bg-background py-1.5">Données de démonstration</Badge>
-      </div>
-
+      <h1 className="mb-5 text-2xl font-semibold tracking-tight sm:text-3xl">Espace de travail</h1>
       <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b px-4 py-4 sm:px-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted"><FileText className="size-5 text-muted-foreground" aria-hidden="true" /></div>
-            <div className="min-w-0"><p className="truncate text-sm font-semibold">{selected.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{dirty ? "Brouillon en cours" : "Document ouvert"}</p></div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <ContributorAvatars ids={selected.contributors} />
-            <div className="hidden h-6 w-px bg-border sm:block" />
-            <div className="flex items-center gap-2">
-              <Button variant={sharingOpen ? "secondary" : "outline"} size="sm" aria-expanded={sharingOpen} onClick={() => setSharingOpen(open => !open)}><Share2 className="size-4" />Partager</Button>
-              <Button variant="ghost" size="icon" aria-label={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} aria-pressed={selected.favorite} title={selected.favorite ? "Retirer des favoris" : "Ajouter aux favoris"} onClick={toggleFavorite}><Star className={cn("size-4", selected.favorite && "fill-amber-400 text-amber-600")} /></Button>
-              {editing ? <><Button variant="ghost" size="icon" aria-label="Annuler les modifications" title="Annuler les modifications" onClick={clearDraft}><X className="size-4" /></Button><Button size="sm" onClick={save} disabled={!dirty}><Save className="size-4" />Enregistrer</Button></> : <Button variant="outline" size="sm" onClick={() => setEditing(true)}><Pencil className="size-4" />Modifier</Button>}
-            </div>
-          </div>
-        </div>
+        <nav aria-label="Fil d'Ariane" className="border-b px-4 py-3 text-sm">
+          <ol className="flex flex-wrap items-center gap-2">
+            <li>
+              {breadcrumb.length > 0 ? (
+                <button type="button" className="cursor-pointer text-primary hover:underline" onClick={() => openFolder([])}>
+                  Départements
+                </button>
+              ) : <span aria-current="page">Départements</span>}
+            </li>
+            {breadcrumb.map((item, index) => (
+              <li key={item.id} className="flex min-w-0 items-center gap-2">
+                <ChevronRight className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+                {index === breadcrumb.length - 1 ? (
+                  <span aria-current="page" className="break-all font-medium">{item.name}</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="cursor-pointer break-all text-primary hover:underline"
+                    onClick={() => openFolder(breadcrumb.slice(0, index + 1))}
+                  >
+                    {item.name}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ol>
+        </nav>
 
-        {sharingOpen && (
-          <SharingPanel
-            nodeId={selected.id}
-            nodeName={selected.name}
-            client={client}
-            onClose={() => setSharingOpen(false)}
-          />
-        )}
-
-        <ResizablePanelGroup key={desktop ? "desktop" : "mobile"} orientation={desktop ? "horizontal" : "vertical"} className={desktop ? "h-[660px]!" : "h-[1080px]!"}>
-          <ResizablePanel id="explorer" defaultSize={desktop ? "32%" : "45%"} minSize={desktop ? "25%" : "35%"} maxSize={desktop ? "50%" : "55%"}>
+        <WorkspacePanels
+          explorer={
             <FileExplorer
-              entries={listing.items}
-              selectedId={selectedId}
-              folderName={folder?.name ?? "Tous les fichiers"}
-              canGoBack={folderId !== null}
-              query={query}
-              favoritesOnly={favoritesOnly}
-              page={currentPage}
-              pageCount={pageCount}
-              total={listing.page.totalElements}
-              dirtyIds={dirtyIds}
-              onSearch={value => { setQuery(value); setPage(1) }}
-              onToggleFavorites={() => { setFavoritesOnly(!favoritesOnly); setPage(1) }}
-              onPage={setPage}
-              onOpen={open}
-              onBack={() => selectFolder(folder?.parentId ?? null)}
+              entries={currentListing?.data?.items ?? []}
+              selectedId={selection?.id}
+              folderName={folder?.name ?? "Dossiers de département"}
+              pagination={pagination}
+              loading={!currentListing}
+              error={currentListing?.error}
+              emptyMessage={folder ? "Ce dossier est vide." : "Aucun dossier de département accessible."}
+              sizeLabel={node => formatFileSize(node.size)}
+              onOpen={node => {
+                if (node.kind === "folder") openFolder([...folderPath, node])
+                else setSelection(node)
+              }}
+              onPage={page => setBrowse(current => ({ ...current, page }))}
+              onBack={folder ? () => openFolder(folderPath.slice(0, -1)) : undefined}
+              onRetry={() => setBrowse(current => ({ ...current }))}
             />
-          </ResizablePanel>
-          <ResizableHandle withHandle aria-label="Redimensionner les panneaux" />
-          <ResizablePanel id="editor" defaultSize={desktop ? "68%" : "55%"} minSize="40%">
-            <FileEditor file={selected} editing={editing} value={value} dirty={dirty} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} onSave={save} />
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          }
+          details={
+            <section aria-label="Détails du document" className="h-full overflow-y-auto p-5">
+              {detailData ? (
+                <DocumentDetails node={detailData.node} />
+              ) : currentDetail?.error ? (
+                <div className="space-y-2">
+                  <p role="alert" className="text-sm text-destructive">{currentDetail.error}</p>
+                  <Button variant="outline" size="sm" onClick={() => selection && setSelection({ ...selection })}>
+                    Recharger les détails
+                  </Button>
+                </div>
+              ) : (
+                <p role={selection ? "status" : undefined} className="text-sm text-muted-foreground">
+                  {selection ? "Chargement des détails…" : "Sélectionnez un dossier ou un fichier."}
+                </p>
+              )}
+            </section>
+          }
+        />
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><Check className="size-3.5" aria-hidden="true" />{dirtyIds.size ? `${dirtyIds.size} brouillon${dirtyIds.size > 1 ? "s" : ""} conservé${dirtyIds.size > 1 ? "s" : ""} pendant cette session` : "Vos documents sont prêts à être consultés"}</span><span>Glissez la séparation pour ajuster votre espace</span></div>
     </Wrapper>
   )
 }

@@ -52,7 +52,7 @@ frontend/
    ├─ components/directory/                 # DirectoryProfilePanel : profil, avatar, mdp, annuaire paginé (T30)
    ├─ components/ui/*                       # Primitives shadcn/ui
    ├─ lib/api{,-client}.ts, lib/session.ts, types/api.ts # Client HTTP, redirection 401 session expirée, DTO (T03/T13)
-   └─ data/{api-preview,workspace}.ts       # Aperçu Vite et fichiers simulés (T19)
+   └─ data/{api-preview,workspace}.ts       # Données de l'aperçu Vite (DemoFileWorkspace)
 ```
 
 ---
@@ -129,7 +129,7 @@ cd frontend && npm run test:coverage
   - **T10 (F1)** : Terminé — CI frontend active uniquement sur `main` (`.github/workflows/frontend-ci.yml`, `npm run ci`, Node 22 via `.nvmrc`, ESLint TS, `tsc`, Vitest + V8 coverage, `scripts/{check-node,verify-bundle}.mjs`). Voir `docs/T10_FRONTEND_CI.md`.
   - **T11–T13 (B1/F1)** : Terminé sur `dev` (`LoginDTO` email, `RegisterDTO`, `PublicUser` en session, `SessionIdentityService`, CSRF, expiration de session, création d'entreprise React + fragments Thymeleaf).
   - **T17 (F1)** : `CompanyAdminPanel` implémenté sur `feature/T17-T28` (désactivation/réactivation de comptes, création de départements, affectation des membres et niveaux `L`, simulé dans `api-preview.ts` en attendant `T14`/`T15`).
-  - **T28 (F1)** : `SharingPanel` implémenté sur `feature/T17-T28` (propriétaire, seuil `M`, seuil parent, contributeurs, messages de refus de la matrice, ouvert depuis le bouton `Partager` de `FileWorkspace`, simulé dans `api-preview.ts` en attendant `T27`).
-  - **T18/T19 (B2/F2)** doivent définir les routes documents dans OpenAPI, alimenter `departments` et `recentDocuments` dans `PageController#dashboard` et brancher `FileWorkspace`. L'explorateur utilise déjà le format de pagination commun, avec des libellés affichés à partir de 1.
+  - **T28 (F1)** ouvre `SharingPanel` depuis `DemoFileWorkspace` avec les réponses simulées d'`api-preview.ts`. Le dashboard affiche le droit de partage renvoyé par T18. Le bouton sera activé sur le dashboard quand les routes de T27 seront exposées.
+  - **T18/T19 (B2/F2)** alimentent le dashboard Thymeleaf et `FileWorkspace` via les routes Documents d'OpenAPI. `listRootFolders`, `listFolderChildren` et `getNode` chargent l'arborescence, les métadonnées, le fil d'Ariane et les droits. Les indices de l'API partent de 0, les libellés affichés de 1.
   - **T30 (F1)** : Implémenté sur `feature/T30` (`DirectoryProfilePanel` : édition prénom/nom/bio/avatar, changement de mot de passe `POST /api/profiles/me/password`, recherche paginée des collègues `ACTIVE`, fiche publique `GET /api/users/{id}/profile` et ouverture de conversation vers `?tab=chat&peer={id}`) — prêt à valider en réel dès que B1 termine `T29`.
   - **T35 (F2)** : remplacer le placeholder `chat` dans `WorkspaceShell` (qui reçoit déjà `selectedChatPeer` et `?peer=` depuis l'annuaire T30).
