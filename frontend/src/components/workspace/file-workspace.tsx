@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from "react"
-import { AlertCircle, FolderOpen } from "lucide-react"
+import { AlertCircle, FolderOpen, FolderPlus } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Breadcrumb,
@@ -22,10 +22,12 @@ import type {
 } from "@/types/api"
 import { DocumentDetails } from "./document-details"
 import { FileExplorer, PAGE_SIZE } from "./file-explorer"
+import { FileImport } from "./file-import"
+import { FolderActionDialog, type FolderAction } from "./folder-action-dialog"
 import { WorkspacePanels } from "./workspace-panels"
 
 type BrowseRequest = { path: NodeBreadcrumbItem[]; page: number }
-type Listing = { items: DocumentNode[]; page?: PageMeta }
+type Listing = { items: DocumentNode[]; page?: PageMeta; folder?: NodeDetail }
 
 type Result<Q, T> = { request: Q } & (
   | { data: T; error?: never }
@@ -43,23 +45,35 @@ export function FileWorkspace({
   const [selection, setSelection] = useState<NodeBreadcrumbItem | null>(null)
   const [listing, setListing] = useState<Result<BrowseRequest, Listing>>()
   const [detail, setDetail] = useState<Result<NodeBreadcrumbItem, NodeDetail>>()
+  const [action, setAction] = useState<FolderAction>()
 
   const folder = browse.path.at(-1)
   const currentListing = listing?.request === browse ? listing : undefined
-  const pagination = listing?.request.path === browse.path ? listing.data?.page : undefined
+  const folderListing = listing?.request.path === browse.path ? listing.data : undefined
+  const pagination = folderListing?.page
+  const currentFolder = folderListing?.folder
   const currentDetail = detail?.request === selection ? detail : undefined
-  const detailData = currentDetail?.data
+  const detailData = selection ? currentDetail?.data : currentFolder
 
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
-    const request = folder
-      ? client.listFolderChildren(folder.id, { page: browse.page, size: PAGE_SIZE }, signal)
+    const request: Promise<Listing> = folder
+      ? Promise.all([
+          client.listFolderChildren(folder.id, { page: browse.page, size: PAGE_SIZE }, signal),
+          client.getNode(folder.id, signal),
+        ]).then(([page, folder]) => ({ ...page, folder }))
       : client.listRootFolders(signal).then((items) => ({ items }))
 
     void request
       .then((data) => {
-        if (!signal.aborted) setListing({ request: browse, data })
+        if (signal.aborted) return
+        const lastPage = Math.max(0, (data.page?.totalPages ?? 1) - 1)
+        if (browse.page > lastPage) {
+          setBrowse(current => current === browse ? { ...browse, page: lastPage } : current)
+          return
+        }
+        setListing({ request: browse, data })
       })
       .catch((error: Error) => {
         if (!signal.aborted) setListing({ request: browse, error: error.message })
@@ -85,13 +99,27 @@ export function FileWorkspace({
 
   function openFolder(path: NodeBreadcrumbItem[]) {
     setBrowse({ path, page: 0 })
-    setSelection(path.at(-1) ?? null)
+    setSelection(null)
+  }
+
+  function refreshListing() {
+    setBrowse(current => ({ ...current }))
+  }
+
+  function finishAction(updated?: DocumentNode) {
+    setAction(undefined)
+    if (action?.kind === "create") {
+      refreshListing()
+    } else {
+      const parentPath = currentFolder?.path ?? browse.path.slice(0, -1)
+      openFolder(action?.kind === "rename" && updated ? [...parentPath, updated] : parentPath)
+    }
   }
 
   const currentPath = detailData?.path ?? browse.path
   const breadcrumb = detailData ? [...currentPath, detailData.node] : currentPath
   const folderPath =
-    detailData && detailData.node.id === folder?.id ? breadcrumb : browse.path
+    currentFolder ? [...currentFolder.path, currentFolder.node] : browse.path
   const Wrapper = embedded ? "div" : "main"
 
   return (
@@ -148,8 +176,27 @@ export function FileWorkspace({
         explorer={
           <FileExplorer
             entries={currentListing?.data?.items ?? []}
-            selectedId={selection?.id}
+            selectedId={selection?.id ?? folder?.id}
             folderName={folder?.name ?? "Dossiers de département"}
+            tools={currentFolder?.node.permissions.createChild && (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAction({ kind: "create", node: currentFolder.node })}
+                >
+                  <FolderPlus aria-hidden="true" />
+                  Nouveau dossier
+                </Button>
+                <FileImport
+                  key={currentFolder.node.id}
+                  folderId={currentFolder.node.id}
+                  client={client}
+                  onImported={refreshListing}
+                />
+              </>
+            )}
             pagination={pagination}
             loading={!currentListing}
             error={currentListing?.error}
@@ -163,14 +210,17 @@ export function FileWorkspace({
             }}
             onPage={(page) => setBrowse((current) => ({ ...current, page }))}
             onBack={folder ? () => openFolder(folderPath.slice(0, -1)) : undefined}
-            onRetry={() => setBrowse((current) => ({ ...current }))}
+            onRetry={refreshListing}
           />
         }
         details={
           <section aria-label="Détails du document" className="h-full bg-card">
             <ScrollArea className="h-full p-5">
               {detailData ? (
-                <DocumentDetails node={detailData.node} />
+                <DocumentDetails
+                  node={detailData.node}
+                  onFolderAction={kind => setAction({ kind, node: detailData.node })}
+                />
               ) : currentDetail?.error ? (
                 <Stack gap="sm">
                   <Alert variant="destructive">
@@ -187,7 +237,7 @@ export function FileWorkspace({
                     </Button>
                   </div>
                 </Stack>
-              ) : selection ? (
+              ) : selection || (folder && !currentListing) ? (
                 <p role="status" className="text-sm text-muted-foreground">
                   Chargement des détails…
                 </p>
@@ -203,6 +253,17 @@ export function FileWorkspace({
           </section>
         }
       />
+      {action && (
+        <FolderActionDialog
+          action={action}
+          client={client}
+          onClose={(refresh) => {
+            setAction(undefined)
+            if (refresh) refreshListing()
+          }}
+          onDone={finishAction}
+        />
+      )}
     </Wrapper>
   )
 }

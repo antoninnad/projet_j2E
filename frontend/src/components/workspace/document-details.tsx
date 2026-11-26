@@ -1,10 +1,12 @@
 import { FileText, Folder } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Cluster, IconTile, Stack } from "@/components/ui/layout"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { formatFileSize } from "@/lib/utils"
 import type { DocumentNode, NodePermissions } from "@/types/api"
+import type { FolderAction } from "./folder-action-dialog"
 
 const ACTIONS: Record<keyof NodePermissions, string> = {
   view: "Consulter",
@@ -14,7 +16,10 @@ const ACTIONS: Record<keyof NodePermissions, string> = {
   createChild: "Créer dans ce dossier",
 }
 
-export function DocumentDetails({ node }: { node: DocumentNode }) {
+export function DocumentDetails({ node, onFolderAction }: {
+  node: DocumentNode
+  onFolderAction: (kind: FolderAction["kind"]) => void
+}) {
   const { owner, permissions } = node
   const file = node.kind === "file"
   const Icon = file ? FileText : Folder
@@ -54,6 +59,26 @@ export function DocumentDetails({ node }: { node: DocumentNode }) {
             ))}
         </TableBody>
       </Table>
+
+      {!file && node.parentId != null && (
+        <Cluster gap="sm">
+          {permissions.modify && (
+            <Button type="button" size="sm" variant="outline" onClick={() => onFolderAction("rename")}>
+              Renommer le dossier
+            </Button>
+          )}
+          {permissions.delete && (
+            <>
+              <Button type="button" size="sm" variant="outline" onClick={() => onFolderAction("move")}>
+                Déplacer le dossier
+              </Button>
+              <Button type="button" size="sm" variant="destructive" onClick={() => onFolderAction("delete")}>
+                Supprimer le dossier
+              </Button>
+            </>
+          )}
+        </Cluster>
+      )}
 
       <Card className="py-4">
         <CardHeader>

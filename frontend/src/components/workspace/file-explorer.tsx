@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import {
   AlertCircle,
   ChevronLeft,
@@ -33,6 +34,7 @@ type Props<T extends Entry> = {
   entries: T[]
   selectedId?: T["id"]
   folderName: string
+  tools?: ReactNode
   filters?: {
     query: string
     favoritesOnly: boolean
@@ -55,6 +57,7 @@ export function FileExplorer<T extends Entry>({
   entries,
   selectedId,
   folderName,
+  tools,
   filters,
   pagination,
   dirtyIds,
@@ -118,6 +121,7 @@ export function FileExplorer<T extends Entry>({
             onChange={(event) => filters.onSearch(event.target.value)}
           />
         )}
+        {tools}
       </Stack>
 
       <Cluster

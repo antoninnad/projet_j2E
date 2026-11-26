@@ -157,7 +157,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T21 | Stockage et import | Développer upload multipart, limites et stockage privé hors ressources publiques | B2 | P1 | Terminé | T18 | Fichier stocké avec ses métadonnées et sans chemin public |
 | T22 | Lecture des fichiers | Servir contenu, métadonnées et téléchargement avec contrôle des droits | B2 | P1 | Terminé | T21 | Lecture protégée sans exposition des chemins physiques |
 | T23 | Écriture des fichiers | Sauvegarder/remplacer avec contrôle de version ; déplacer/supprimer en synchronisant base et disque | B2 | P1 | Terminé | T20, T22 | Pas d’écrasement silencieux ni de suppression incohérente |
-| T24 | Import et dossiers frontend | Brancher création et actions dossiers ; ajouter upload, progression et confirmations | F2 | P1 | Partiel | T19, T20, T21 | Documents importables et dossiers administrables selon droits |
+| T24 | Import et dossiers frontend | Brancher création et actions dossiers ; ajouter upload, progression et confirmations | F2 | P1 | Terminé | T19, T20, T21 | Documents importables et dossiers administrables selon droits |
 | T25 | Consultation frontend | Afficher détails, aperçus texte/image/PDF et téléchargement des autres formats | F2 | P1 | Partiel | T19, T22 | Consultation réelle des fichiers autorisés |
 | T26 | Édition frontend | Brancher sauvegarde, annulation, remplacement et gestion des conflits ; déplacement/suppression | F2 | P1 | Partiel | T23, T24, T25 | Éditeur persistant et brouillon préservé en cas de conflit |
 | T27 | Partage backend | Gérer seuils et contributeurs en appliquant permissions et intégrité de l’arbre | B1 | P1 | Terminé | T16, T20 | Partage protégé sans contournement des niveaux |
@@ -190,6 +190,8 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 T03 fournit le client HTTP, les types issus du contrat OpenAPI et un aperçu Vite simulant la session, les départements et les demandes d'inscription. Le panneau React utilise les routes `/api/users` du contrat. Le chat suivra les contrats T33–T34.
 
 T19 branche l'explorateur du dashboard sur les routes de T18. Les racines, les enfants paginés, les métadonnées, le fil d'Ariane et les droits viennent du serveur. Les tests frontend couvrent aussi les erreurs et la pagination. Le parcours a été vérifié dans le navigateur avec un compte membre Spring et une base H2 de test. L'aperçu Vite conserve l'éditeur et les favoris de démonstration. Les API de fichiers et de favoris seront intégrées en T24–T26 et T32.
+
+T24 relie l'explorateur aux API T20 et T21. Les actions sur les dossiers suivent les droits du serveur et utilisent la version chargée pour le renommage, le déplacement et la suppression. La suppression demande confirmation pour tout le contenu. L'import d'un fichier par sélection ou glisser-déposer affiche la progression réelle de l'envoi. Les tests frontend couvrent les actions, les droits, la progression et le refus d'un doublon. Le parcours a aussi été vérifié dans Chrome avec Spring Boot et H2.
 
 ### Avancement MVC des comptes
 

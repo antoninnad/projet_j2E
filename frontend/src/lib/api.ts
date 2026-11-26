@@ -1,4 +1,5 @@
 import { createApiClient, type ApiClientOptions } from "@/lib/api-client"
+import type { UploadProgress } from "@/lib/upload-request"
 import type {
   ChangePasswordRequest,
   Company,
@@ -72,6 +73,21 @@ export function createApi(options?: ApiClientOptions) {
     listFolderChildren: (id: number, query?: Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
       json<Page<DocumentNode>>(`/folders/${id}/children`, { query, signal }),
     getNode: (id: number, signal?: AbortSignal) => json<NodeDetail>(`/nodes/${id}`, { signal }),
+    createFolder: (parentId: number, name: string) =>
+      json<DocumentNode>("/folders", { method: "POST", json: { parentId, name } }),
+    renameFolder: (id: number, name: string, version: number) =>
+      json<DocumentNode>(`/folders/${id}`, { method: "PATCH", json: { name, version } }),
+    moveNode: (id: number, targetFolderId: number, version: number) =>
+      json<DocumentNode>(`/nodes/${id}/move`, { method: "POST", json: { targetFolderId, version } }),
+    deleteFolder: (id: number, version: number) =>
+      noContent(`/folders/${id}`, { method: "DELETE", query: { version } }),
+    uploadFile: (folderId: number, file: File, onProgress: UploadProgress, signal?: AbortSignal) => {
+      const body = new FormData()
+      body.set("file", file)
+      return json<DocumentNode>(`/folders/${folderId}/files`, {
+        method: "POST", body, onProgress, signal,
+      })
+    },
     getNodeSharing: (nodeId: string, signal?: AbortSignal) =>
       json<NodeSharingInfo>(`/nodes/${encodeURIComponent(nodeId)}/sharing`, { signal }),
     updateNodeThreshold: (nodeId: string, minAccessLevel: number, signal?: AbortSignal) =>
