@@ -39,6 +39,11 @@ export default defineConfig(({ command }) => ({
       '/api': {
         target: 'http://localhost:8080',
       },
+      // Chat temps réel (T34) : WebSocket relayée vers Spring Boot
+      '/ws': {
+        target: 'http://localhost:8080',
+        ws: true,
+      },
     },
   },
 }))

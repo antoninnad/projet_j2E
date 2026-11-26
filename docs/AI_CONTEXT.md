@@ -67,6 +67,7 @@ frontend/
 | MVC (`@Controller`) | `GET /dashboard` | `PageController` → `dashboard.html` | Redirige `302 -> /login?required=true` si non authentifié ; sinon rend synthèse serveur + îlot React |
 | Onglet React | `/dashboard?tab={files\|directory\|chat\|admin}` | `WorkspaceShell` (`routes.ts`) | Synchronisé via `History API` ; un reload HTTP repasse toujours par Spring MVC |
 | JSON (`@RestController`) | `/api/**` | Contrat `openapi.yaml` | API consommée par React (proxyfiée par Vite en dev) |
+| WebSocket | `/ws/chat` | `ChatWebSocketHandler` (T34) | Événements du chat poussés au compte connecté ; protocole dans `docs/T34_CHAT_TEMPS_REEL.md` (proxyfiée par Vite en dev) |
 
 ---
 

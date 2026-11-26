@@ -172,7 +172,9 @@ public class ChatService {
                 ? messages.findFirstByConversationOrderByIdDesc(conversation)
                 : Optional.of(messages.findByIdAndConversation(lastMessageId, conversation)
                         .orElseThrow(() -> new ResourceNotFoundException("Message introuvable dans cette conversation.")));
-        upTo.ifPresent(message -> conversation.markReadUpTo(actor, message.getId()));
+        upTo.filter(message -> conversation.markReadUpTo(actor, message.getId()))
+                .ifPresent(message -> events.publishEvent(new ChatReadEvent(conversation.getId(), actor.getId(),
+                        conversation.peerOf(actor).getId(), message.getId())));
         return toResponse(actor, conversation, unreadCounts(actor, List.of(conversation)));
     }
 
@@ -250,8 +252,13 @@ public class ChatService {
     }
 
     private static ChatMessageResponse toResponse(User actor, ChatMessage message) {
+        return toResponse(actor.getId(), message);
+    }
+
+    /** Message vu par le compte viewerId (mine calculé pour lui) ; réutilisé par le temps réel (T34). */
+    public static ChatMessageResponse toResponse(Long viewerId, ChatMessage message) {
         return new ChatMessageResponse(message.getId(), message.getConversation().getId(), message.getSender().getId(),
                 message.getContent(), message.getSentAt(), message.getClientMessageId(),
-                message.getSender().getId().equals(actor.getId()));
+                message.getSender().getId().equals(viewerId));
     }
 }

@@ -93,17 +93,18 @@ public class Conversation {
         return isA(user) ? participantALastReadId : participantBLastReadId;
     }
 
-    /** Avance le « dernier lu » d'un participant ; ne recule jamais. */
-    public void markReadUpTo(User user, Long messageId) {
+    /** Avance le « dernier lu » d'un participant ; ne recule jamais. Vrai si le marqueur a avancé. */
+    public boolean markReadUpTo(User user, Long messageId) {
         Long current = lastReadIdOf(user);
         if (messageId == null || (current != null && current >= messageId)) {
-            return;
+            return false;
         }
         if (isA(user)) {
             participantALastReadId = messageId;
         } else {
             participantBLastReadId = messageId;
         }
+        return true;
     }
 
     public void touch(Instant when) {
