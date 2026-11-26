@@ -15,6 +15,10 @@ tags:
   - name: Profiles
   - name: Departments
   - name: Documents
+  - name: Chat
+    description: |
+      Conversations privées entre deux membres actifs d'une même entreprise (T33).
+      Une conversation dont le compte n'est pas participant renvoie 404, y compris pour l'administrateur.
 paths:
   /auth/register:
     post:
@@ -842,6 +846,195 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /conversations:
+    post:
+      tags: [Chat]
+      summary: Ouvrir ou retrouver la conversation avec un collègue
+      description: |
+        Une seule conversation par paire, quel que soit celui qui l'ouvre. Le collègue doit être actif
+        et de la même entreprise (404 sinon) ; on ne peut pas s'écrire à soi-même (400).
+      operationId: openConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [peerId]
+              properties:
+                peerId: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Conversation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Conversation'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    get:
+      tags: [Chat]
+      summary: Lister mes conversations
+      description: La plus récemment active d'abord, avec le dernier message et le nombre de non-lus.
+      operationId: listConversations
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Page de conversations
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ConversationPage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /conversations/unread:
+    get:
+      tags: [Chat]
+      summary: Total de mes messages non lus
+      operationId: countUnreadMessages
+      responses:
+        '200':
+          description: Total des non-lus, toutes conversations confondues
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total]
+                properties:
+                  total: {type: integer, format: int64}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /conversations/{conversationId}:
+    get:
+      tags: [Chat]
+      summary: Lire une conversation
+      operationId: getConversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Conversation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Conversation'}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /conversations/{conversationId}/messages:
+    get:
+      tags: [Chat]
+      summary: Historique paginé par curseur
+      description: |
+        Messages en ordre chronologique. Sans curseur : les derniers messages ; before : les messages
+        plus anciens que cet identifiant (remonter l'historique) ; after : les messages qui suivent
+        (rattrapage après coupure, à rappeler tant que hasMore est vrai). before et after s'excluent.
+      operationId: listMessages
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: before
+          in: query
+          required: false
+          schema: {type: integer, format: int64}
+        - name: after
+          in: query
+          required: false
+          schema: {type: integer, format: int64}
+        - name: size
+          in: query
+          required: false
+          schema: {type: integer, minimum: 1, maximum: 100, default: 30}
+      responses:
+        '200':
+          description: Page de messages
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MessagePage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Chat]
+      summary: Envoyer un message
+      description: |
+        Texte non vide de 4000 caractères au plus. clientMessageId (facultatif, 64 caractères au plus),
+        choisi par le client, rend l'envoi idempotent : un renvoi après coupure renvoie le message déjà
+        enregistré (200) au lieu d'en créer un second. Si le correspondant n'est plus actif, la conversation
+        est en lecture seule (403).
+      operationId: sendMessage
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SendMessageRequest'}
+      responses:
+        '201':
+          description: Message enregistré
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ChatMessage'}
+        '200':
+          description: Renvoi d'un message déjà enregistré (même clientMessageId)
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ChatMessage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /conversations/{conversationId}/read:
+    post:
+      tags: [Chat]
+      summary: Marquer des messages comme lus
+      description: |
+        Marque lus les messages jusqu'à lastMessageId inclus, ou tous si le corps est absent.
+        Le marqueur ne recule jamais. Ses propres messages comptent comme lus.
+      operationId: markConversationRead
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lastMessageId: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Conversation avec ses non-lus à jour
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Conversation'}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     CompanyId:
@@ -1053,6 +1246,63 @@ components:
       properties:
         name: {type: string, maxLength: 255}
         version: {type: integer, format: int64, description: Version chargée (facultative) ; 409 si elle a changé}
+    ChatParticipant:
+      type: object
+      required: [id, firstName, lastName, username, active]
+      properties:
+        id: {type: integer, format: int64}
+        firstName: {type: string}
+        lastName: {type: string}
+        username: {type: string}
+        active: {type: boolean, description: Faux si le compte a été désactivé}
+    ChatMessage:
+      type: object
+      required: [id, conversationId, senderId, content, sentAt, mine]
+      properties:
+        id: {type: integer, format: int64, description: Croissant avec l'ordre d'envoi ; sert de curseur}
+        conversationId: {type: integer, format: int64}
+        senderId: {type: integer, format: int64}
+        content: {type: string, maxLength: 4000}
+        sentAt: {type: string, format: date-time}
+        clientMessageId: {type: [string, 'null'], maxLength: 64}
+        mine: {type: boolean, description: Message envoyé par le compte connecté}
+    Conversation:
+      type: object
+      required: [id, peer, unreadCount, canSend, createdAt, lastActivityAt]
+      properties:
+        id: {type: integer, format: int64}
+        peer: {$ref: '#/components/schemas/ChatParticipant'}
+        lastMessage:
+          oneOf:
+            - $ref: '#/components/schemas/ChatMessage'
+            - type: 'null'
+        unreadCount: {type: integer, format: int64}
+        lastReadMessageId: {type: [integer, 'null'], format: int64}
+        canSend: {type: boolean, description: Faux si le correspondant n'est plus actif (lecture seule)}
+        createdAt: {type: string, format: date-time}
+        lastActivityAt: {type: string, format: date-time}
+    ConversationPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Conversation'}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    MessagePage:
+      type: object
+      required: [items, hasMore]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ChatMessage'}
+        hasMore: {type: boolean, description: D'autres messages existent au-delà de la page}
+    SendMessageRequest:
+      type: object
+      required: [content]
+      properties:
+        content: {type: string, maxLength: 4000}
+        clientMessageId: {type: string, maxLength: 64}
     MoveNodeRequest:
       type: object
       required: [targetFolderId]
