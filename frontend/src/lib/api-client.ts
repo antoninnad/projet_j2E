@@ -1,4 +1,5 @@
 import { resolveAppPath } from "@/app/routes"
+import { fetchWithUpload, type Fetcher, type UploadProgress } from "@/lib/upload-request"
 import type { ErrorResponse } from "@/types/api"
 
 const STATUS_ERRORS: Partial<Record<number, ErrorResponse>> = {
@@ -38,8 +39,6 @@ function isErrorResponse(body: unknown): body is ErrorResponse {
     Object.values(errors).every(value => typeof value === "string")
 }
 
-type Fetcher = (url: string, init: RequestInit) => Promise<Response>
-
 export interface ApiClientOptions {
   baseUrl?: string
   fetcher?: Fetcher
@@ -49,11 +48,12 @@ type RequestOptions = Omit<RequestInit, "body" | "credentials"> & {
   query?: Readonly<Record<string, string | number | boolean | undefined>>
   body?: BodyInit
   json?: object
+  onProgress?: UploadProgress
 }
 
-export function createApiClient({ baseUrl = "/", fetcher = (url, init) => fetch(url, init) }: ApiClientOptions = {}) {
+export function createApiClient({ baseUrl = "/", fetcher = fetchWithUpload }: ApiClientOptions = {}) {
   async function request(path: `/${string}`, options: RequestOptions = {}): Promise<Response> {
-    const { query, json, body, headers: initialHeaders, method = "GET", ...init } = options
+    const { query, json, body, headers: initialHeaders, method = "GET", onProgress, ...init } = options
     const url = resolveAppPath(baseUrl, `/api${path}`)
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(query ?? {})) {
@@ -71,13 +71,17 @@ export function createApiClient({ baseUrl = "/", fetcher = (url, init) => fetch(
 
     let response: Response
     try {
-      response = await fetcher(params.size ? `${url}?${params}` : url, {
+      const requestUrl = params.size ? `${url}?${params}` : url
+      const requestInit: RequestInit = {
         ...init,
         method,
         headers,
         credentials: "same-origin",
         body: json === undefined ? body : JSON.stringify(json),
-      })
+      }
+      response = onProgress
+        ? await fetcher(requestUrl, requestInit, onProgress)
+        : await fetcher(requestUrl, requestInit)
     } catch {
       init.signal?.throwIfAborted()
       throw new ApiError(null, { code: "NETWORK_ERROR", message: "Impossible de joindre le serveur." })

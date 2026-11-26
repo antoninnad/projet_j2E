@@ -1,6 +1,5 @@
 import { MVC_ROUTES, resolveAppPath } from "@/app/routes"
-
-type Fetcher = (url: string, init: RequestInit) => Promise<Response>
+import { fetchWithUpload, type Fetcher } from "@/lib/upload-request"
 
 export interface SessionAwareFetcherOptions {
   /** URL de redirection en cas de session expirée (par défaut : /login?expired=true). */
@@ -25,14 +24,14 @@ export function expiredLoginUrl(baseUrl = "/"): string {
 export function createSessionAwareFetcher({
   loginUrl,
   baseUrl = "/",
-  fetcher = (url, init) => fetch(url, init),
+  fetcher = fetchWithUpload,
   navigate = (url) => window.location.assign(url),
 }: SessionAwareFetcherOptions = {}): Fetcher {
   const target = loginUrl || expiredLoginUrl(baseUrl)
   let redirected = false
 
-  return async (url, init) => {
-    const response = await fetcher(url, init)
+  return async (url, init, onProgress) => {
+    const response = onProgress ? await fetcher(url, init, onProgress) : await fetcher(url, init)
     const path = url.split("?")[0]
     const isAuthEndpoint = AUTH_ENDPOINTS.some((endpoint) => path.endsWith(endpoint))
     if (response.status === 401 && !isAuthEndpoint && !redirected) {

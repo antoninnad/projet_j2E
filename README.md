@@ -205,7 +205,7 @@ Cette entité est décrite dans le README, mais n'apparaît pas dans le diagramm
 
 L’interface principale est composée dans `frontend/src/App.tsx` et `frontend/src/components/workspace/`. Elle utilise les composants shadcn/ui `Resizable`, `Pagination`, `Avatar`, `Button`, `Input`, `Textarea`, `Badge` et `Sonner`. Le header réutilise `SiteMenu`, construit avec `NavigationMenu`.
 
-Sur le dashboard, l'explorateur charge les racines, les enfants par pages de six et les métadonnées avec le fil d'Ariane. Les droits affichés viennent du serveur. Le contenu des fichiers, la modification et les favoris seront branchés dans les tâches suivantes.
+Sur le dashboard, l'explorateur charge les racines, les enfants par pages de six et les métadonnées avec le fil d'Ariane. Selon les droits renvoyés par le serveur, il permet de créer, renommer, déplacer ou supprimer un dossier. Ouvrir un dossier accessible en écriture pour importer un fichier par sélection ou glisser-déposer. La progression s'affiche pendant l'envoi.
 
 L'aperçu Vite utilise les fichiers d'exemple de `frontend/src/data/workspace.ts` pour la recherche, les favoris et l'édition de texte. Les brouillons survivent au changement de fichier tant que l'explorateur reste ouvert. `Ctrl+S` ou `Cmd+S` enregistre le brouillon en mémoire. Sur mobile, les deux panneaux sont empilés.
 
