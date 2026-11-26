@@ -41,6 +41,23 @@ POSTGRES_USER=projetj2e POSTGRES_PASSWORD=projetj2e \
 ./mvnw test -Dspring.profiles.active=postgres
 ```
 
+Déploiement backend conteneurisé :
+
+Copier `.env.example` vers `.env`, choisir un mot de passe PostgreSQL et démarrer :
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.postgres.yml up -d --build
+```
+
+L'application écoute sur `http://localhost:8080`. PostgreSQL est accessible uniquement
+dans le réseau Compose sur le port interne 5432. Les données PostgreSQL et les fichiers
+importés sont conservés dans les volumes `projetj2e_postgres` et `projetj2e_storage`.
+
+Pour l'hébergement public, placer un reverse proxy HTTPS devant le port 8080 et activer
+le passage des en-têtes `Forwarded`. La terminaison HTTPS et le passage WebSocket doivent
+être configurés avec le domaine réel; ils ne sont pas disponibles avant T34/T41.
+
 Dans un second terminal, lancer le frontend :
 
 ```bash
