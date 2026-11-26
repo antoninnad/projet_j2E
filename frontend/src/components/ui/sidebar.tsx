@@ -257,7 +257,7 @@ function SidebarGroupLabel({ className, ...props }: React.ComponentProps<"div">)
     <div
       data-slot="sidebar-group-label"
       className={cn(
-        "px-2.5 py-1 text-[11px] font-semibold tracking-wider text-sidebar-foreground/60 uppercase",
+        "px-3 pt-2 pb-1 text-xs font-normal text-sidebar-foreground/70",
         className,
       )}
       {...props}
@@ -315,9 +315,8 @@ function SidebarMenuButton({
       data-slot="sidebar-menu-button"
       data-active={isActive}
       className={cn(
-        "relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-lg px-2.5 py-2 text-left text-sm font-medium text-sidebar-foreground/80 transition-colors outline-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring [&_svg]:size-4.5 [&_svg]:shrink-0",
-        isActive &&
-          "bg-sidebar-accent font-semibold text-sidebar-accent-foreground before:absolute before:top-1.5 before:bottom-1.5 before:left-0 before:w-1 before:rounded-r-full before:bg-sidebar-primary",
+        "relative flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-sidebar-foreground transition-colors outline-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring [&_svg]:size-4 [&_svg]:shrink-0",
+        isActive && "active-sidebar-item text-sidebar-accent-foreground hover:bg-background",
         state === "collapsed" && !isMobile && "justify-center px-0 py-2.5",
         className,
       )}

@@ -24,17 +24,17 @@ export const WORKSPACE_TABS: readonly WorkspaceTabMeta[] = [
   {
     id: "directory",
     label: "Annuaire",
-    description: "Profils publics internes et recherche de collègues (T30)",
+    description: "Profils publics internes et recherche de collègues",
   },
   {
     id: "chat",
     label: "Chat privé",
-    description: "Conversations privées en temps réel entre membres (T35)",
+    description: "Conversations privées en temps réel entre membres",
   },
   {
     id: "admin",
     label: "Administration",
-    description: "Validation des inscriptions et gestion des comptes (T17)",
+    description: "Validation des inscriptions et gestion des comptes",
     adminOnly: true,
   },
 ] as const

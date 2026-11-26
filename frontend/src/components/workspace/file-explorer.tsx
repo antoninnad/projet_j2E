@@ -12,7 +12,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty"
-import { SearchInput } from "@/components/ui/input"
+import { SearchInput } from "@/components/ui/input-group"
 import { Cluster, IconTile, Stack } from "@/components/ui/layout"
 import { Pagination } from "@/components/ui/pagination"
 import { ScrollArea } from "@/components/ui/scroll-area"

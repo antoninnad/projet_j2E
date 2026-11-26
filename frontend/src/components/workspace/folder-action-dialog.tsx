@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import type { Api } from "@/lib/api"
 import { ApiError } from "@/lib/api-client"
 import type { DocumentNode } from "@/types/api"
@@ -130,7 +131,7 @@ export function FolderActionDialog({
               variant={kind === "delete" ? "destructive" : "default"}
               disabled={busy || !canSubmit}
             >
-              {busy ? "En cours…" : submitLabel}
+              {busy ? <><Spinner aria-hidden="true" /> En cours…</> : submitLabel}
             </Button>
           </DialogFooter>
         </form>

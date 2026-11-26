@@ -32,17 +32,20 @@ import {
 
 export function DropdownMenuUser({
   baseUrl = "/",
-  isAdmin = true,
+  isAdmin = false,
+  authenticated = false,
 }: {
   baseUrl?: string
   isAdmin?: boolean
+  /** Masque Connexion / Inscription quand la session est ouverte. */
+  authenticated?: boolean
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="group">
+        <Button variant="ghost" className="group" aria-label="Mon compte">
           <UserRound className="size-4" aria-hidden="true" />
-          Mon compte
+          <span className="hidden sm:inline">Mon compte</span>
           <ChevronDown
             className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
             aria-hidden="true"
@@ -67,21 +70,25 @@ export function DropdownMenuUser({
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <a href={resolveAppPath(baseUrl, MVC_ROUTES.login)}>
-              <LogIn className="size-4" aria-hidden="true" />
-              Connexion
-            </a>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <a href={resolveAppPath(baseUrl, MVC_ROUTES.register)}>
-              <UserPlus className="size-4" aria-hidden="true" />
-              Inscription
-            </a>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+        {!authenticated && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <a href={resolveAppPath(baseUrl, MVC_ROUTES.login)}>
+                  <LogIn className="size-4" aria-hidden="true" />
+                  Connexion
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={resolveAppPath(baseUrl, MVC_ROUTES.register)}>
+                  <UserPlus className="size-4" aria-hidden="true" />
+                  Inscription
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -100,17 +107,17 @@ export function DropdownMenuFile() {
         <DropdownMenuGroup>
           <DropdownMenuItem disabled>
             <FilePlus2 aria-hidden="true" />
-            Nouveau fichier (T24)
+            Nouveau fichier
           </DropdownMenuItem>
           <DropdownMenuItem disabled>
             <FolderPlus aria-hidden="true" />
-            Nouveau dossier (T24)
+            Nouveau dossier
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled>
           <Upload aria-hidden="true" />
-          Importer un fichier (T24)
+          Importer un fichier
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

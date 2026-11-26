@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<!--/*
+  Page d'erreur commune, rendue par Spring Boot (BasicErrorController) pour tous les codes HTTP.
+  Variables fournies par Spring : status, error, path. Aucun détail technique n'est affiché.
+*/-->
+<head th:replace="~{fragments/head :: head('Erreur ' + ${status}, 'Une erreur est survenue sur Lagui.')}"></head>
+<body class="flex min-h-svh flex-col bg-canvas text-foreground"
+      th:with="code=${status != null ? status : 500},
+               titre=${code == 404 ? 'Page introuvable'
+                     : (code == 403 ? 'Accès refusé'
+                     : (code == 401 ? 'Connexion requise'
+                     : (code >= 500 ? 'Une erreur est survenue' : 'Requête impossible')))},
+               explication=${code == 404 ? 'Cette page n''existe pas ou a été déplacée. Vérifiez l''adresse ou revenez à l''accueil.'
+                           : (code == 403 ? 'Vous n''avez pas les droits nécessaires pour afficher cette page.'
+                           : (code == 401 ? 'Votre session a peut-être expiré. Reconnectez-vous pour continuer.'
+                           : (code >= 500 ? 'Le serveur n''a pas pu traiter la demande. Réessayez dans un instant.' : 'La demande envoyée n''a pas pu être traitée.')))}">
+<header th:replace="~{fragments/header :: header('erreur')}"></header>
+
+<main id="contenu" tabindex="-1" class="flex flex-1 items-center justify-center px-4 py-16 sm:px-6">
+    <section class="flex w-full max-w-md flex-col items-center gap-6 text-center" aria-labelledby="titre-erreur">
+        <div th:replace="~{fragments/messages :: messages}"></div>
+
+        <span class="flex size-12 items-center justify-center rounded-xl bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15" aria-hidden="true">
+            <svg th:if="${code == 404}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-6"><path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <svg th:if="${code == 403 or code == 401}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-6"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <svg th:if="${code != 404 and code != 403 and code != 401}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </span>
+
+        <div class="grid gap-2">
+            <p class="text-sm font-medium text-muted-foreground tabular-nums" th:text="'Erreur ' + ${code}">Erreur 404</p>
+            <h1 id="titre-erreur" class="text-2xl font-semibold tracking-tight" th:text="${titre}">Page introuvable</h1>
+            <p class="text-sm text-balance text-muted-foreground" th:text="${explication}">Explication.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-2">
+            <a th:if="${isAuthenticated}" th:href="@{/dashboard}" class="btn btn-primary">Retour au tableau de bord</a>
+            <a th:unless="${isAuthenticated}" th:href="@{/login}" class="btn btn-primary">Se connecter</a>
+            <a th:href="@{/}" class="btn btn-outline">Accueil</a>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

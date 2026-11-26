@@ -9,6 +9,23 @@
           th:content="${pageDescription != null ? pageDescription : 'Lagui — Espace collaboratif sécurisé pour entreprises : documents, permissions, profils et chat privé.'}" />
     <title th:text="${pageTitle != null ? pageTitle + ' — Lagui' : 'Lagui — Espace collaboratif'}">Lagui</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/ui/favicon.svg}" />
+    <meta name="theme-color" content="#1E40AF" />
+
+    <!-- Bouton afficher/masquer des champs mot de passe (fragments/ui :: passwordField) -->
+    <script>
+        document.addEventListener("click", function (event) {
+            var button = event.target.closest && event.target.closest("[data-password-toggle]");
+            if (!button) return;
+            var input = document.getElementById(button.getAttribute("aria-controls"));
+            if (!input) return;
+            var show = input.type === "password";
+            input.type = show ? "text" : "password";
+            button.setAttribute("aria-pressed", String(show));
+            button.setAttribute("aria-label", show ? "Masquer le mot de passe" : "Afficher le mot de passe");
+            button.querySelector("[data-icon=show]").hidden = show;
+            button.querySelector("[data-icon=hide]").hidden = !show;
+        });
+    </script>
 
     <!-- Mode production / Spring Boot seul : bundle Vite + Tailwind v4 compilé dans /static/ui/ -->
     <th:block th:unless="${useViteDevServer}">
@@ -18,8 +35,18 @@
 
     <!-- Mode développement optionnel avec serveur Vite HMR (app.frontend.dev-server-url=http://localhost:5173) -->
     <th:block th:if="${useViteDevServer}">
-        <script type="module" th:src="${frontendDevServerUrl + '/@vite/client'}"></script>
-        <script type="module" th:src="${frontendDevServerUrl + '/src/main.tsx'}"></script>
+        <!-- Feuille de styles chargée avant l'affichage (sinon Vite l'injecte en JS après coup : flash sans CSS) -->
+        <link rel="stylesheet" th:href="|${frontendDevServerUrl}/src/styles.css?direct|" />
+        <!-- Préambule React Refresh exigé par @vitejs/plugin-react quand la page est servie par le backend -->
+        <script type="module" th:inline="javascript">
+            import RefreshRuntime from /*[[${frontendDevServerUrl + '/@react-refresh'}]]*/ "/@react-refresh";
+            RefreshRuntime.injectIntoGlobalHook(window);
+            window.$RefreshReg$ = () => {};
+            window.$RefreshSig$ = () => (type) => type;
+            window.__vite_plugin_react_preamble_installed__ = true;
+        </script>
+        <script type="module" th:src="|${frontendDevServerUrl}/@vite/client|"></script>
+        <script type="module" th:src="|${frontendDevServerUrl}/src/main.tsx|"></script>
     </th:block>
 </head>
 </html>

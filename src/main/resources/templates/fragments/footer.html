@@ -2,16 +2,18 @@
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <body>
 <footer th:fragment="footer" class="mt-auto border-t border-border bg-card">
-    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>
-            <span class="font-medium text-foreground">Lagui</span> — Espace collaboratif cloisonné par entreprise.
+    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p class="flex items-center gap-2">
+            <span th:replace="~{fragments/ui :: logo('sm')}"></span>
+            <span><span class="font-medium text-foreground">Lagui</span> — Espace collaboratif cloisonné par entreprise.</span>
         </p>
-        <div class="flex flex-wrap items-center gap-4">
+        <nav aria-label="Liens de pied de page" class="flex flex-wrap items-center gap-x-5 gap-y-2">
             <a th:href="@{/}" class="transition-colors hover:text-foreground">Accueil</a>
-            <a th:href="@{/dashboard}" class="transition-colors hover:text-foreground">Tableau de bord</a>
-            <a th:href="@{/login}" th:unless="${isAuthenticated}" class="transition-colors hover:text-foreground">Connexion</a>
-            <a th:href="@{/register}" th:unless="${isAuthenticated}" class="transition-colors hover:text-foreground">Inscription</a>
-        </div>
+            <a th:if="${isAuthenticated}" th:href="@{/dashboard}" class="transition-colors hover:text-foreground">Tableau de bord</a>
+            <a th:unless="${isAuthenticated}" th:href="@{/login}" class="transition-colors hover:text-foreground">Connexion</a>
+            <a th:unless="${isAuthenticated}" th:href="@{/register}" class="transition-colors hover:text-foreground">Inscription</a>
+            <a th:unless="${isAuthenticated}" th:href="@{/adminLogin}" class="transition-colors hover:text-foreground">Espace administrateur</a>
+        </nav>
     </div>
 </footer>
 </body>

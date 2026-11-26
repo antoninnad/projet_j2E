@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*
+  Composants shadcn/ui pour Thymeleaf. Les classes viennent des utilitaires de frontend/src/styles.css
+  (btn, input-base, label-base, alert-base…), recopiés des primitives React de components/ui/.
+  Les fragments « field » et « passwordField » s'utilisent à l'intérieur d'un <form th:object="…">.
+*/-->
+
+<!--/*
+  Champ « plein » porté du bloc Watermelon UI auth-02 (MIT) : libellé, icône à gauche, fond bg-muted.
+  icon = mail | lock | user | at | building. Erreur serveur reliée par aria-describedby.
+*/-->
+<div th:fragment="field(name, label, type, autocomplete, placeholder, hint, icon)"
+     th:with="invalid=${#fields.hasErrors(name)}"
+     th:attr="data-invalid=${invalid ? 'true' : null}"
+     class="grid content-start gap-1.5">
+    <label th:for="${name}" class="text-sm font-medium" th:text="${label}">Libellé</label>
+    <div class="relative">
+        <svg th:replace="~{fragments/ui :: fieldIcon(${icon})}"></svg>
+        <input th:type="${type}"
+               th:field="*{__${name}__}"
+               th:attr="autocomplete=${autocomplete},
+                        placeholder=${placeholder},
+                        aria-invalid=${invalid ? 'true' : null},
+                        aria-describedby=${invalid ? name + '-error' : (hint != null ? name + '-hint' : null)}"
+               required
+               class="input-filled" />
+    </div>
+    <p th:if="${hint != null and !invalid}" th:id="${name + '-hint'}"
+       class="text-xs text-muted-foreground" th:text="${hint}">Aide</p>
+    <p th:if="${invalid}" th:id="${name + '-error'}" th:errors="*{__${name}__}"
+       class="text-xs font-medium text-destructive"></p>
+</div>
+
+<!--/* Mot de passe : même champ avec bouton afficher/masquer (script dans fragments/head), comme auth-01. */-->
+<div th:fragment="passwordField(name, label, autocomplete, placeholder, hint)"
+     th:with="invalid=${#fields.hasErrors(name)}"
+     th:attr="data-invalid=${invalid ? 'true' : null}"
+     class="grid content-start gap-1.5">
+    <label th:for="${name}" class="text-sm font-medium" th:text="${label}">Mot de passe</label>
+    <div class="relative">
+        <svg th:replace="~{fragments/ui :: fieldIcon('lock')}"></svg>
+        <input type="password"
+               th:field="*{__${name}__}"
+               th:attr="autocomplete=${autocomplete},
+                        placeholder=${placeholder},
+                        aria-invalid=${invalid ? 'true' : null},
+                        aria-describedby=${invalid ? name + '-error' : (hint != null ? name + '-hint' : null)}"
+               required
+               class="input-filled pr-10" />
+        <button th:replace="~{fragments/ui :: passwordToggle(${name})}"></button>
+    </div>
+    <p th:if="${hint != null and !invalid}" th:id="${name + '-hint'}"
+       class="text-xs text-muted-foreground" th:text="${hint}">Aide</p>
+    <p th:if="${invalid}" th:id="${name + '-error'}" th:errors="*{__${name}__}"
+       class="text-xs font-medium text-destructive"></p>
+</div>
+
+<!--/* Bouton afficher/masquer, réutilisé aussi hors formulaire lié (connexion administrateur). */-->
+<button th:fragment="passwordToggle(target)" type="button" data-password-toggle
+        th:attr="aria-controls=${target}"
+        aria-label="Afficher le mot de passe" aria-pressed="false"
+        class="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+    <svg data-icon="show" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+    <svg data-icon="hide" hidden xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+</button>
+
+<!--/* Icône à gauche des champs (lucide). */-->
+<svg th:fragment="fieldIcon(icon)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     class="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true"><th:block th:switch="${icon}"><th:block th:case="'mail'"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></th:block><th:block th:case="'lock'"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></th:block><th:block th:case="'user'"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></th:block><th:block th:case="'at'"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/></th:block><th:block th:case="'building'"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></th:block></th:block></svg>
+
+<!--/* Alerte shadcn : variant = success | info | warning | error. */-->
+<div th:fragment="alert(variant, message)"
+     th:attr="role=${variant == 'warning' or variant == 'error' ? 'alert' : 'status'}"
+     th:classappend="${variant == 'success'} ? 'border-success-border bg-success-subtle text-success-foreground'
+                    : (${variant == 'info'} ? 'border-info-border bg-info-subtle text-info-foreground'
+                    : (${variant == 'warning'} ? 'border-warning-border bg-warning-subtle text-warning-foreground'
+                    : 'border-destructive-border bg-destructive-subtle text-destructive-foreground'))"
+     class="alert-base">
+    <svg th:if="${variant == 'success'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+    <svg th:if="${variant == 'info'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    <svg th:if="${variant == 'warning'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <svg th:if="${variant == 'error'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+    <p class="col-start-2 leading-relaxed" th:text="${message}">Message</p>
+</div>
+
+<!--/* Icône d'alerte seule, pour les alertes écrites directement en HTML (texte statique). */-->
+<svg th:fragment="alertIcon(variant)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><th:block th:if="${variant == 'success'}"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></th:block><th:block th:if="${variant == 'info'}"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></th:block><th:block th:if="${variant == 'warning'}"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></th:block><th:block th:if="${variant == 'error'}"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></th:block></svg>
+
+<!--/* Monogramme de la marque. */-->
+<span th:fragment="logo(size)"
+      th:classappend="${size == 'lg'} ? 'size-10 text-sm' : 'size-8 text-xs'"
+      class="brand-mark-surface flex shrink-0 items-center justify-center rounded-lg font-bold tracking-tight text-primary-foreground shadow-xs ring-1 ring-white/15"
+      aria-hidden="true">L</span>
+</body>
+</html>

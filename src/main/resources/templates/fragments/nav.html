@@ -1,60 +1,68 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <body>
-<nav th:fragment="nav(activePage)" aria-label="Navigation principale" class="flex flex-wrap items-center gap-1 sm:gap-2">
-    <a th:href="@{/}"
-       th:attr="aria-current=${activePage == 'accueil' ? 'page' : null}"
-       th:classappend="${activePage == 'accueil'} ? 'bg-primary-subtle text-primary-subtle-foreground font-medium' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
-       class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
-        Accueil
-    </a>
+<nav th:fragment="nav(activePage)" aria-label="Navigation principale" class="flex items-center gap-1">
 
-    <a th:href="@{/dashboard}"
-       th:attr="aria-current=${activePage == 'dashboard' ? 'page' : null}"
-       th:classappend="${activePage == 'dashboard'} ? 'bg-primary-subtle text-primary-subtle-foreground font-medium' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
-       class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
-        Tableau de bord
-    </a>
+    <!-- Liens de pages : en ligne à partir de md, dans un menu déroulant en dessous -->
+    <div class="hidden items-center gap-1 md:flex">
+        <a th:replace="~{fragments/nav :: navLink('/', 'Accueil', ${activePage == 'accueil'}, false)}"></a>
+        <th:block th:if="${isAuthenticated}"><a th:replace="~{fragments/nav :: navLink('/dashboard', 'Tableau de bord', ${activePage == 'dashboard'}, false)}"></a></th:block>
+        <th:block th:if="${isPlatformAdmin}"><a th:replace="~{fragments/nav :: navLink('/admin/dashboard', 'Administration', ${activePage == 'admin'}, false)}"></a></th:block>
+    </div>
 
-    <a th:if="${isPlatformAdmin}"
-       th:href="@{/admin/dashboard}"
-       th:attr="aria-current=${activePage == 'admin' ? 'page' : null}"
-       th:classappend="${activePage == 'admin'} ? 'bg-primary-subtle text-primary-subtle-foreground font-medium' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
-       class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
-        Administration
-    </a>
+    <details class="group relative md:hidden">
+        <summary class="btn btn-ghost btn-icon list-none text-muted-foreground [&::-webkit-details-marker]:hidden" aria-label="Ouvrir le menu">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16"/><path d="M4 18h16"/><path d="M4 6h16"/></svg>
+        </summary>
+        <div class="absolute right-0 z-40 mt-2 grid w-52 gap-0.5 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+            <a th:replace="~{fragments/nav :: navLink('/', 'Accueil', ${activePage == 'accueil'}, true)}"></a>
+            <th:block th:if="${isAuthenticated}"><a th:replace="~{fragments/nav :: navLink('/dashboard', 'Tableau de bord', ${activePage == 'dashboard'}, true)}"></a></th:block>
+            <th:block th:if="${isPlatformAdmin}"><a th:replace="~{fragments/nav :: navLink('/admin/dashboard', 'Administration', ${activePage == 'admin'}, true)}"></a></th:block>
+            <th:block th:unless="${isAuthenticated}"><a th:replace="~{fragments/nav :: navLink('/adminLogin', 'Espace administrateur', ${activePage == 'admin-login'}, true)}"></a></th:block>
+        </div>
+    </details>
+
+    <span class="mx-1 hidden h-5 w-px bg-border md:block" aria-hidden="true"></span>
 
     <th:block th:unless="${isAuthenticated}">
         <a th:href="@{/login}"
            th:attr="aria-current=${activePage == 'login' ? 'page' : null}"
-           th:classappend="${activePage == 'login'} ? 'bg-primary-subtle text-primary-subtle-foreground font-medium' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
-           class="inline-flex items-center rounded-md px-3 py-2 text-sm transition-colors">
+           th:classappend="${activePage == 'login'} ? 'bg-accent text-accent-foreground' : ''"
+           class="btn btn-ghost btn-sm">
             Connexion
         </a>
-
         <a th:href="@{/register}"
            th:attr="aria-current=${activePage == 'register' ? 'page' : null}"
-           th:classappend="${activePage == 'register'} ? 'ring-2 ring-ring ring-offset-2' : ''"
-           class="inline-flex items-center rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
+           class="btn btn-primary btn-sm">
             Inscription
         </a>
     </th:block>
 
     <th:block th:if="${isAuthenticated}">
         <span th:if="${sessionDisplayName != null and !sessionDisplayName.isEmpty()}"
-              class="hidden items-center rounded-full border border-primary/20 bg-primary-subtle px-3 py-1 text-xs font-medium text-primary-subtle-foreground sm:inline-flex"
-              th:text="${sessionDisplayName}">
-            Utilisateur
+              class="hidden max-w-48 items-center gap-2 truncate px-2 text-sm font-medium text-foreground lg:flex">
+            <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-[10px] font-semibold text-primary-subtle-foreground"
+                  aria-hidden="true"
+                  th:text="${#strings.toUpperCase(#strings.substring(sessionDisplayName, 0, 1))}">U</span>
+            <span class="truncate" th:text="${sessionDisplayName}">Utilisateur</span>
         </span>
 
-        <form th:action="@{/logout}" method="post" class="inline">
+        <form th:action="@{/logout}" method="post" class="inline-flex">
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-            <button type="submit"
-                    class="inline-flex cursor-pointer items-center rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">
-                Déconnexion
+            <button type="submit" class="btn btn-outline btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+                <span>Déconnexion</span>
             </button>
         </form>
     </th:block>
 </nav>
+
+<!--/* Lien de navigation : en barre (block = false) ou dans le menu mobile (block = true). */-->
+<a th:fragment="navLink(path, label, active, block)"
+   th:href="@{${path}}"
+   th:attr="aria-current=${active ? 'page' : null}"
+   th:classappend="${block} ? (${active} ? 'flex w-full items-center rounded-sm px-2 py-1.5 text-sm bg-accent text-accent-foreground font-medium' : 'flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground')
+                  : (${active} ? 'btn btn-ghost btn-sm bg-accent text-accent-foreground' : 'btn btn-ghost btn-sm text-muted-foreground')"
+   th:text="${label}">Lien</a>
 </body>
 </html>
