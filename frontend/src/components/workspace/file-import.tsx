@@ -3,6 +3,7 @@ import { Upload } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import type { Api } from "@/lib/api"
 
@@ -96,7 +97,7 @@ export function FileImport({ folderId, client, onImported }: Props) {
           <p role="status" className="break-all text-xs text-muted-foreground">
             {progress === 100 ? "Traitement sur le serveur" : "Import en cours"} · {fileName}
           </p>
-          <progress aria-label="Progression de l'import" max={100} value={progress ?? undefined} className="w-full" />
+          <Progress aria-label="Progression de l'import" value={progress} />
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">Ou glissez un fichier ici.</p>

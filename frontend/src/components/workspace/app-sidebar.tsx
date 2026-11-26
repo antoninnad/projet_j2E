@@ -1,14 +1,10 @@
 import {
   Building2,
   ChevronsUpDown,
-  FilePlus2,
   FolderOpen,
   Home,
-  LogIn,
   MessageSquare,
-  Plus,
   ShieldCheck,
-  UserPlus,
   UserRound,
   Users,
 } from "lucide-react"
@@ -29,7 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { IconTile } from "@/components/ui/layout"
 import {
   Sidebar,
   SidebarContent,
@@ -41,7 +36,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
 
@@ -91,20 +85,24 @@ export function AppSidebar({
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="h-14 shrink-0 justify-center gap-0 py-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton tooltip="Lagui — Espace d'entreprise">
-              <IconTile tone="logo" size="sm" aria-hidden="true">
+              {/* Marque d'après le dashboard Watermelon UI « Capitalio » (MIT) */}
+              <span
+                aria-hidden="true"
+                className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-primary bg-linear-to-t from-[color-mix(in_oklab,var(--primary)_80%,black)] to-primary text-xs font-bold text-primary-foreground"
+              >
                 L
-              </IconTile>
+              </span>
               {!collapsed && (
                 <>
-                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                    <span className="truncate text-sm font-semibold text-sidebar-accent-foreground">
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+                    <span className="truncate text-base font-medium text-sidebar-accent-foreground">
                       Lagui
                     </span>
-                    <span className="truncate text-[11px] text-sidebar-foreground/65">
+                    <span className="truncate text-xs text-sidebar-foreground/70">
                       Espace collaboratif
                     </span>
                   </span>
@@ -148,7 +146,7 @@ export function AppSidebar({
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Applications</SidebarGroupLabel>
+          <SidebarGroupLabel>Espace de travail</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu role="tablist" aria-label="Modules de l'espace de travail">
               {tabs.map((tab) => {
@@ -176,64 +174,26 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Accès rapides</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton type="button" tooltip="Nouveau & raccourcis">
-                      <Plus aria-hidden="true" />
-                      {!collapsed && <span className="truncate">Nouveau &amp; raccourcis</span>}
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent side="right" align="start" className="w-56">
-                    <DropdownMenuLabel>Actions rapides</DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => selectModule("files")}>
-                        <FilePlus2 aria-hidden="true" />
-                        Ouvrir l&apos;explorateur
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => selectModule("directory")}>
-                        <Users aria-hidden="true" />
-                        Rechercher un collègue
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => selectModule("chat")}>
-                        <MessageSquare aria-hidden="true" />
-                        Conversations privées
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton tooltip={userName || "Compte connecté"}>
-              <span className="relative inline-flex shrink-0">
-                <Avatar className="size-8 border border-sidebar-border">
-                  <AvatarFallback className="bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
-                    {initialsFromName(userName)}
-                  </AvatarFallback>
-                </Avatar>
-                <span
-                  aria-hidden="true"
-                  className="absolute right-0 bottom-0 size-2.5 rounded-full bg-success ring-2 ring-sidebar"
-                />
-              </span>
-              <span className={collapsed ? "sr-only" : "flex min-w-0 flex-1 items-center justify-between gap-2"}>
-                <span className="truncate text-xs font-medium text-sidebar-accent-foreground">
+              <Avatar className="size-9 shrink-0 rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary-subtle text-xs font-semibold text-primary-subtle-foreground">
+                  {initialsFromName(userName)}
+                </AvatarFallback>
+              </Avatar>
+              <span className={collapsed ? "sr-only" : "flex min-w-0 flex-1 flex-col items-start gap-1 leading-none"}>
+                <span className="w-full truncate text-sm font-medium text-sidebar-accent-foreground">
                   {userName ?? "Session active"}
                 </span>
-                {isAdmin && <Badge variant="brand">Admin</Badge>}
+                {isAdmin ? (
+                  <Badge variant="brand" className="h-4 px-1.5 text-[10px]">Admin</Badge>
+                ) : (
+                  <span className="text-xs text-sidebar-foreground/65">Membre</span>
+                )}
               </span>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -255,15 +215,9 @@ export function AppSidebar({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <a href={resolveAppPath(baseUrl, MVC_ROUTES.login)}>
-                  <LogIn aria-hidden="true" />
-                  Connexion
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href={resolveAppPath(baseUrl, MVC_ROUTES.register)}>
-                  <UserPlus aria-hidden="true" />
-                  Inscription
+                <a href={resolveAppPath(baseUrl, MVC_ROUTES.home)}>
+                  <Home aria-hidden="true" />
+                  Accueil public
                 </a>
               </DropdownMenuItem>
             </DropdownMenuGroup>

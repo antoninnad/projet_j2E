@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { AlertCircle, Check, MoreHorizontal, RefreshCw, ShieldCheck, UserX } from "lucide-react"
+import { AlertCircle, Check, RefreshCw, ShieldCheck, UserX } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -13,14 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
-import { Cluster, IconTile, Stack } from "@/components/ui/layout"
+import { Cluster, Stack } from "@/components/ui/layout"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -109,19 +103,12 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
   return (
     <Card>
       <CardHeader className="border-b">
-        <Cluster gap="md" wrap={false}>
-          <IconTile tone="brand">
-            <ShieldCheck aria-hidden="true" />
-          </IconTile>
-          <Stack gap="xs">
-            <CardTitle>
-              <h2>Demandes d&apos;inscription en attente</h2>
-            </CardTitle>
-            <CardDescription>
-              Approuvez les nouveaux salariés de votre entreprise ou refusez les demandes non reconnues.
-            </CardDescription>
-          </Stack>
-        </Cluster>
+        <CardTitle>
+          <h2>Demandes d&apos;inscription en attente</h2>
+        </CardTitle>
+        <CardDescription>
+          Approuvez les nouveaux salariés de votre entreprise ou refusez les demandes non reconnues.
+        </CardDescription>
 
         <CardAction>
           <Cluster gap="sm">
@@ -211,32 +198,6 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
                             <UserX aria-hidden="true" />
                             Refuser
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                disabled={busy}
-                                aria-label={`Plus d'actions pour ${formatDisplayName(user)}`}
-                              >
-                                <MoreHorizontal aria-hidden="true" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => void handleAction(user, "approve")}>
-                                <Check aria-hidden="true" />
-                                Approuver le compte
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => void handleAction(user, "decline")}
-                              >
-                                <UserX aria-hidden="true" />
-                                Refuser et supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </Cluster>
                       </TableCell>
                     </TableRow>

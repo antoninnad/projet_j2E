@@ -1,4 +1,5 @@
-import * as React from "react"
+// Adapté du registre shadcn/ui (new-york-v4, licence MIT).
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 function Empty({ className, ...props }: React.ComponentProps<"div">) {
@@ -6,32 +7,62 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="empty"
       className={cn(
-        "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/20 px-6 py-9 text-center",
-        className,
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed p-6 text-center text-balance md:p-12",
+        className
       )}
       {...props}
     />
   )
 }
 
-function EmptyIcon({ className, ...props }: React.ComponentProps<"div">) {
+function EmptyHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="empty-header"
+      className={cn(
+        "flex max-w-sm flex-col items-center gap-2 text-center",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const emptyMediaVariants = cva(
+  "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        icon: "flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-6",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function EmptyMedia({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof emptyMediaVariants>) {
   return (
     <div
       data-slot="empty-icon"
-      className={cn(
-        "mb-1 flex size-10 items-center justify-center rounded-lg bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/15 [&_svg]:size-5",
-        className,
-      )}
+      data-variant={variant}
+      className={cn(emptyMediaVariants({ variant, className }))}
       {...props}
     />
   )
 }
 
-function EmptyTitle({ className, ...props }: React.ComponentProps<"p">) {
+function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <p
+    <div
       data-slot="empty-title"
-      className={cn("text-sm font-semibold text-foreground", className)}
+      className={cn("text-lg font-medium tracking-tight", className)}
       {...props}
     />
   )
@@ -39,22 +70,45 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"p">) {
 
 function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p
+    <div
       data-slot="empty-description"
-      className={cn("max-w-md text-xs leading-relaxed text-muted-foreground", className)}
+      className={cn(
+        "text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        className
+      )}
       {...props}
     />
   )
 }
 
-function EmptyActions({ className, ...props }: React.ComponentProps<"div">) {
+function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      data-slot="empty-actions"
-      className={cn("mt-2 flex flex-wrap items-center justify-center gap-2", className)}
+      data-slot="empty-content"
+      className={cn(
+        "flex w-full max-w-sm min-w-0 flex-col items-center gap-4 text-sm text-balance",
+        className
+      )}
       {...props}
     />
   )
 }
 
-export { Empty, EmptyIcon, EmptyTitle, EmptyDescription, EmptyActions }
+export {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+}
+
+/** Alias de compatibilité : média icône de l'état vide. */
+function EmptyIcon({ className, ...props }: React.ComponentProps<"div">) {
+  return <EmptyMedia variant="icon" className={cn("bg-primary-subtle text-primary-subtle-foreground", className)} {...props} />
+}
+
+/** Alias de compatibilité : zone d'actions de l'état vide. */
+const EmptyActions = EmptyContent
+
+export { EmptyIcon, EmptyActions }

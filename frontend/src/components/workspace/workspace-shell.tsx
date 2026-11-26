@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { MessageSquare } from "lucide-react"
+import { Building2, LayoutDashboard, MessageSquare, UserCheck, Users } from "lucide-react"
 import {
   WORKSPACE_TABS,
   parseWorkspaceTab,
@@ -12,15 +12,8 @@ import { CompanyAdminPanel } from "@/components/admin/company-admin-panel"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
 import { DirectoryProfilePanel } from "@/components/directory/directory-profile-panel"
-import { DropdownMenuFile, DropdownMenuUser } from "@/components/site-menu"
+import { DropdownMenuUser } from "@/components/site-menu"
 import { Badge } from "@/components/ui/badge"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Card, CardContent } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
 import { Cluster, Stack, TopCommandBar, WorkspaceBody } from "@/components/ui/layout"
@@ -102,25 +95,19 @@ export function WorkspaceShell({
 
       <SidebarInset>
         <TopCommandBar>
-          <Cluster gap="sm" wrap={false}>
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-5" />
-            <Breadcrumb aria-label="Navigation du module">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <span>Lagui</span>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{currentTabMeta.label}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </Cluster>
+          <div className="flex min-w-0 items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
+            <div className="min-w-0">
+              <h1 className="truncate text-sm leading-tight font-semibold">{currentTabMeta.label}</h1>
+              <p className="hidden truncate text-xs leading-tight text-muted-foreground md:block">
+                {currentTabMeta.description}
+              </p>
+            </div>
+          </div>
 
           <Cluster gap="xs">
-            <DropdownMenuFile />
-            <DropdownMenuUser baseUrl={baseUrl} isAdmin={isAdmin} />
+            <DropdownMenuUser baseUrl={baseUrl} isAdmin={isAdmin} authenticated />
           </Cluster>
         </TopCommandBar>
 
@@ -134,16 +121,31 @@ export function WorkspaceShell({
             (documents ?? <FileWorkspace embedded={embedded} client={client} />)}
 
           {activeTab === "admin" && isAdmin && (
-            <Tabs defaultValue="overview">
-              <Cluster justify="between" gap="md">
-                <TabsList aria-label="Sous-sections d'administration">
-                  <TabsTrigger value="overview">Vue complète</TabsTrigger>
-                  <TabsTrigger value="registrations">Demandes d&apos;accès</TabsTrigger>
-                  <TabsTrigger value="departments">Comptes &amp; Départements</TabsTrigger>
-                  <TabsTrigger value="companies">Créer une entreprise</TabsTrigger>
+            <Tabs defaultValue="overview" className="gap-6">
+              <div className="border-b">
+                <TabsList
+                  variant="line"
+                  aria-label="Sous-sections d'administration"
+                  className="h-auto w-full flex-wrap justify-start gap-x-4 gap-y-1 p-0 pb-1 [&>[data-slot=tabs-trigger]]:flex-none [&>[data-slot=tabs-trigger]]:px-1"
+                >
+                  <TabsTrigger value="overview">
+                    <LayoutDashboard aria-hidden="true" />
+                    Vue complète
+                  </TabsTrigger>
+                  <TabsTrigger value="registrations">
+                    <UserCheck aria-hidden="true" />
+                    Demandes d&apos;accès
+                  </TabsTrigger>
+                  <TabsTrigger value="departments">
+                    <Users aria-hidden="true" />
+                    Comptes &amp; Départements
+                  </TabsTrigger>
+                  <TabsTrigger value="companies">
+                    <Building2 aria-hidden="true" />
+                    Créer une entreprise
+                  </TabsTrigger>
                 </TabsList>
-                <Badge variant="brand">Console d&apos;administration</Badge>
-              </Cluster>
+              </div>
 
               <TabsContent value="overview">
                 <Stack gap="lg">
@@ -192,11 +194,11 @@ function ChatModulePlaceholder({ peer }: { peer: User | null }) {
           <EmptyIcon>
             <MessageSquare aria-hidden="true" />
           </EmptyIcon>
-          <Badge variant="outline">Prévu en T35</Badge>
+          <Badge variant="outline">Bientôt disponible</Badge>
           <EmptyTitle>{title}</EmptyTitle>
           <EmptyDescription>
-            La liste des conversations à deux, l&apos;historique paginé et la livraison WebSocket
-            seront intégrés en tâche T35.
+            Vos conversations à deux, leur historique et les nouveaux messages en temps réel
+            apparaîtront ici.
           </EmptyDescription>
         </Empty>
       </CardContent>

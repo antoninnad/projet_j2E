@@ -17,22 +17,18 @@ export function WorkspacePanels({ explorer, details }: { explorer: ReactNode; de
     <ResizablePanelGroup
       key={desktop ? "desktop" : "mobile"}
       orientation={desktop ? "horizontal" : "vertical"}
-      className={
-        desktop
-          ? "min-h-0 flex-1 h-[calc(100svh-7.25rem)]!"
-          : "min-h-0 flex-1 h-[980px]!"
-      }
+      className="h-auto! min-h-0 flex-1"
     >
       <ResizablePanel
         id="explorer"
-        defaultSize={desktop ? "28%" : "45%"}
+        defaultSize={desktop ? "28%" : "58%"}
         minSize={desktop ? "20%" : "35%"}
-        maxSize={desktop ? "45%" : "55%"}
+        maxSize={desktop ? "45%" : "75%"}
       >
         {explorer}
       </ResizablePanel>
       <ResizableHandle withHandle aria-label="Redimensionner les panneaux" />
-      <ResizablePanel id="editor" defaultSize={desktop ? "72%" : "55%"} minSize="45%">
+      <ResizablePanel id="editor" defaultSize={desktop ? "72%" : "42%"} minSize={desktop ? "45%" : "25%"}>
         {details}
       </ResizablePanel>
     </ResizablePanelGroup>

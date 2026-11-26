@@ -75,7 +75,7 @@ function SplitGrid({
     <div
       data-slot="split-grid"
       className={cn(
-        "grid gap-6",
+        "grid grid-cols-1 gap-6",
         variant === "equal" ? "md:grid-cols-2" : "lg:grid-cols-12",
         className,
       )}
@@ -88,7 +88,7 @@ function SplitAside({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="split-aside"
-      className={cn("flex flex-col gap-6 lg:col-span-5", className)}
+      className={cn("flex min-w-0 flex-col gap-6 lg:col-span-5", className)}
       {...props}
     />
   )
@@ -98,7 +98,7 @@ function SplitMain({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="split-main"
-      className={cn("flex flex-col gap-6 lg:col-span-7", className)}
+      className={cn("flex min-w-0 flex-col gap-6 lg:col-span-7", className)}
       {...props}
     />
   )
@@ -178,7 +178,7 @@ function PresenceAvatar({
   src,
   alt,
   initials,
-  online = true,
+  online = false,
   size = "md",
 }: {
   src?: string | null

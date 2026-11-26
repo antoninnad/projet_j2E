@@ -1,73 +1,41 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Connexion', 'Connectez-vous à votre espace collaboratif Lagui.')}"></head>
-<body class="flex min-h-screen flex-col bg-canvas text-foreground">
+<body class="flex min-h-svh flex-col bg-canvas text-foreground">
 <header th:replace="~{fragments/header :: header('login')}"></header>
 
-<main id="contenu" tabindex="-1" class="mx-auto flex w-full max-w-7xl flex-1 items-center justify-center px-4 py-10 sm:px-6">
-    <section class="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div class="brand-top-accent h-1.5 w-full" aria-hidden="true"></div>
-        <div class="space-y-6 p-6 sm:p-8">
-        <div class="space-y-1.5">
-            <h1 class="text-2xl font-semibold tracking-tight">Connexion</h1>
-            <p class="text-sm text-muted-foreground">
-                Accédez aux documents, départements et échanges de votre entreprise.
+<!--/* Bloc Watermelon UI auth-01 (MIT), porté en Thymeleaf : cadre bg-muted + carte intérieure. */-->
+<main id="contenu" tabindex="-1" class="flex flex-1 items-center justify-center px-4 py-12">
+    <div class="w-full max-w-sm">
+        <div class="auth-frame">
+            <div class="auth-card px-6 py-7">
+                <div class="mb-6 grid gap-1 text-center">
+                    <h1 class="text-xl font-extrabold tracking-tight sm:text-2xl">Accéder à votre espace</h1>
+                    <p class="text-sm leading-relaxed text-muted-foreground">Documents, départements et échanges de votre entreprise.</p>
+                </div>
+
+                <div class="[&:has([role])]:mb-5"><div th:replace="~{fragments/messages :: messages}"></div></div>
+
+                <form th:action="@{/login}" th:object="${loginDto}" method="post" class="grid gap-4">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div th:replace="~{fragments/ui :: field('email', 'Adresse e-mail', 'email', 'email', 'prenom.nom@entreprise.fr', null, 'mail')}"></div>
+                    <div th:replace="~{fragments/ui :: passwordField('password', 'Mot de passe', 'current-password', 'Votre mot de passe', null)}"></div>
+
+                    <button type="submit" class="btn btn-cta mt-1 w-full">Se connecter</button>
+                </form>
+            </div>
+
+            <p class="px-4 pt-4 pb-2 text-center text-sm text-muted-foreground">
+                Première visite ?
+                <a th:href="@{/register}" class="font-semibold text-primary underline-offset-4 hover:underline">Demander un accès</a>
             </p>
         </div>
 
-        <div th:replace="~{fragments/messages :: messages}"></div>
-
-        <form th:action="@{/login}" th:object="${loginDto}" method="post" class="space-y-4">
-            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-            <div class="space-y-1.5">
-                <label for="email" class="block text-sm font-medium text-foreground">
-                    Adresse e-mail
-                </label>
-                <input id="email"
-                       type="email"
-                       th:field="*{email}"
-                       autocomplete="email"
-                       placeholder="prenom.nom@entreprise.fr"
-                       required
-                       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-sm text-destructive"></p>
-            </div>
-
-            <div class="space-y-1.5">
-                <label for="password" class="block text-sm font-medium text-foreground">
-                    Mot de passe
-                </label>
-                <input id="password"
-                       type="password"
-                th:field="*{password}"
-                       autocomplete="current-password"
-                       required
-                       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-sm text-destructive"></p>
-            </div>
-
-            <button type="submit"
-                    class="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
-                Se connecter
-            </button>
-        </form>
-
-        <div class="space-y-2 border-t border-border pt-4 text-center text-sm text-muted-foreground">
-                <p>
-                    Pas encore de compte ?
-                    <a th:href="@{/register}" class="font-medium text-primary underline underline-offset-4 hover:opacity-80">
-                        Créer une demande d'inscription
-                    </a>
-                </p>
-                <p class="text-xs">
-                    <a th:href="@{/adminLogin}" class="text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                        Accès administrateur
-                    </a>
-                </p>
-            </div>
-        </div>
-    </section>
+        <p class="mt-5 text-center text-xs text-muted-foreground">
+            <a th:href="@{/adminLogin}" class="underline-offset-4 hover:text-foreground hover:underline">Espace administrateur de la plateforme</a>
+        </p>
+    </div>
 </main>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>

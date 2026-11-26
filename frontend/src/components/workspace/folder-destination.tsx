@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Folder } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Api } from "@/lib/api"
 import type { DocumentNode, PageMeta } from "@/types/api"
 
@@ -65,7 +66,12 @@ export function FolderDestination({
       </div>
 
       {!current ? (
-        <p role="status" className="text-sm text-muted-foreground">Chargement des dossiers…</p>
+        <div className="space-y-1">
+          <p role="status" className="sr-only">Chargement des dossiers…</p>
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+        </div>
       ) : current.error ? (
         <>
           <Alert variant="destructive"><AlertDescription>{current.error}</AlertDescription></Alert>

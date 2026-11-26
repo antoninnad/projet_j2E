@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldError, FieldGroup, FieldRow } from "@/components/ui/field"
-import { Input, SearchInput } from "@/components/ui/input"
+import { Input } from "@/components/ui/input"
+import { SearchInput } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import {
   Cluster,
@@ -735,7 +736,7 @@ export function DirectoryProfilePanel({
                         ? "Administrateur d'entreprise"
                         : "Membre"}
                     </Badge>
-                    <Badge variant="success">En ligne · Actif</Badge>
+                    <Badge variant="success">Compte actif</Badge>
                   </Cluster>
 
                   <Card className="py-3">

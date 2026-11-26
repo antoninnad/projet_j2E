@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty"
 import { Stack } from "@/components/ui/layout"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import { api, type Api } from "@/lib/api"
 import { cn, formatFileSize } from "@/lib/utils"
 import type {
@@ -238,9 +239,14 @@ export function FileWorkspace({
                   </div>
                 </Stack>
               ) : selection || (folder && !currentListing) ? (
-                <p role="status" className="text-sm text-muted-foreground">
-                  Chargement des détails…
-                </p>
+                <Stack gap="sm">
+                  <p role="status" className="sr-only">
+                    Chargement des détails…
+                  </p>
+                  <Skeleton className="h-8 w-2/3" />
+                  <Skeleton className="h-36 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </Stack>
               ) : (
                 <Empty className="my-8">
                   <EmptyIcon>

@@ -1,144 +1,66 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Inscription', 'Créez votre demande de compte salarié rattaché à votre entreprise sur Lagui.')}"></head>
-<body class="flex min-h-screen flex-col bg-canvas text-foreground">
+<body class="flex min-h-svh flex-col bg-canvas text-foreground">
 <header th:replace="~{fragments/header :: header('register')}"></header>
 
-<main id="contenu" tabindex="-1" class="mx-auto flex w-full max-w-7xl flex-1 items-center justify-center px-4 py-10 sm:px-6">
-    <section class="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div class="brand-top-accent h-1.5 w-full" aria-hidden="true"></div>
-        <div class="space-y-6 p-6 sm:p-8">
-        <div class="space-y-1.5">
-            <h1 class="text-2xl font-semibold tracking-tight">Demande d'inscription</h1>
-            <p class="text-sm text-muted-foreground">
-                Renseignez vos informations et le code de votre entreprise. Un administrateur validera votre accès.
-            </p>
+<!--/* Bloc Watermelon UI auth-02 (MIT), porté en Thymeleaf. */-->
+<main id="contenu" tabindex="-1" class="flex flex-1 items-center justify-center px-2 py-10 sm:px-4">
+    <div class="auth-frame max-w-xl space-y-3">
+        <div class="auth-card p-5 sm:p-8">
+            <div class="mb-6 grid gap-1">
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">Demander un accès</h1>
+                <p class="text-sm leading-relaxed text-muted-foreground">
+                    Rejoignez l'espace de votre entreprise avec le code fourni par votre administrateur.
+                </p>
+            </div>
+
+            <div class="[&:has([role])]:mb-5"><div th:replace="~{fragments/messages :: messages}"></div></div>
+
+            <form th:action="@{/register}" th:object="${userDto}" method="post" class="grid gap-5" novalidate>
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div th:if="${#fields.hasGlobalErrors()}" role="alert"
+                     class="alert-base border-destructive-border bg-destructive-subtle text-destructive-foreground">
+                    <svg th:replace="~{fragments/ui :: alertIcon('error')}"></svg>
+                    <div class="col-start-2 grid gap-1">
+                        <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erreur d'inscription</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div th:replace="~{fragments/ui :: field('firstName', 'Prénom', 'text', 'given-name', 'Camille', null, 'user')}"></div>
+                    <div th:replace="~{fragments/ui :: field('lastName', 'Nom', 'text', 'family-name', 'Martin', null, 'user')}"></div>
+                </div>
+
+                <div th:replace="~{fragments/ui :: field('email', 'Adresse e-mail professionnelle', 'email', 'email', 'camille.martin@entreprise.fr', null, 'mail')}"></div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div th:replace="~{fragments/ui :: field('username', 'Identifiant', 'text', 'username', 'camille.martin', null, 'at')}"></div>
+                    <div th:replace="~{fragments/ui :: field('companyCode', 'Code entreprise', 'text', 'off', 'ACME-2026', null, 'building')}"></div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div th:replace="~{fragments/ui :: passwordField('password', 'Mot de passe', 'new-password', '8 caractères minimum', null)}"></div>
+                    <div th:replace="~{fragments/ui :: passwordField('confirmPassword', 'Confirmation', 'new-password', 'Retapez le mot de passe', null)}"></div>
+                </div>
+
+                <button type="submit" class="btn btn-cta mt-1 w-full gap-2">
+                    Envoyer ma demande
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+
+                <p class="text-center text-xs leading-relaxed text-muted-foreground">
+                    Votre compte reste en attente jusqu'à sa validation par l'administrateur de votre entreprise.
+                </p>
+            </form>
         </div>
 
-        <div th:replace="~{fragments/messages :: messages}"></div>
-
-        <form th:action="@{/register}" th:object="${userDto}" method="post" class="space-y-4" novalidate>
-            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-            <div th:if="${#fields.hasGlobalErrors()}" role="alert"
-                 class="rounded-lg border border-destructive-border bg-destructive-subtle px-4 py-3 text-sm text-destructive-foreground space-y-1">
-                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erreur d'inscription</p>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="space-y-1.5">
-                    <label for="firstName" class="block text-sm font-medium text-foreground">Prénom</label>
-                    <input id="firstName"
-                           type="text"
-                           th:field="*{firstName}"
-                           autocomplete="given-name"
-                           required
-                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                    <p th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"
-                       class="text-xs text-destructive" role="alert"></p>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label for="lastName" class="block text-sm font-medium text-foreground">Nom</label>
-                    <input id="lastName"
-                           type="text"
-                           th:field="*{lastName}"
-                           autocomplete="family-name"
-                           required
-                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                    <p th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"
-                       class="text-xs text-destructive" role="alert"></p>
-                </div>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="space-y-1.5">
-                    <label for="username" class="block text-sm font-medium text-foreground">Identifiant</label>
-                    <input id="username"
-                           type="text"
-                           th:field="*{username}"
-                           autocomplete="username"
-                           placeholder="prenom.nom"
-                           required
-                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                    <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}"
-                       class="text-xs text-destructive" role="alert"></p>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label for="companyCode" class="block text-sm font-medium text-foreground">Code d'entreprise</label>
-                    <input id="companyCode"
-                           type="text"
-                           th:field="*{companyCode}"
-                           placeholder="EX : ACME-2026"
-                           required
-                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm uppercase text-foreground shadow-xs placeholder:normal-case placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                    <p th:if="${#fields.hasErrors('companyCode')}" th:errors="*{companyCode}"
-                       class="text-xs text-destructive" role="alert"></p>
-                </div>
-            </div>
-
-            <div class="space-y-1.5">
-                <label for="email" class="block text-sm font-medium text-foreground">Adresse email</label>
-                <input id="email"
-                       type="email"
-                       th:field="*{email}"
-                       autocomplete="email"
-                       placeholder="prenom.nom@entreprise.fr"
-                       required
-                       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
-                   class="text-xs text-destructive" role="alert"></p>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="space-y-1.5">
-                    <label for="password" class="block text-sm font-medium text-foreground">Mot de passe</label>
-                    <input id="password"
-                           type="password"
-                           th:field="*{password}"
-                           autocomplete="new-password"
-                           minlength="8"
-                           required
-                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                    <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
-                       class="text-xs text-destructive" role="alert"></p>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label for="confirmPassword" class="block text-sm font-medium text-foreground">Confirmation</label>
-                    <input id="confirmPassword"
-                           type="password"
-                           th:field="*{confirmPassword}"
-                           autocomplete="new-password"
-                           minlength="8"
-                           required
-                           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
-                    <p th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"
-                       class="text-xs text-destructive" role="alert"></p>
-                </div>
-            </div>
-
-            <p class="rounded-lg border border-border bg-secondary/50 px-3.5 py-2.5 text-xs text-muted-foreground">
-                Votre compte restera en attente jusqu'à l'approbation par l'administrateur de votre entreprise.
-            </p>
-
-            <button type="submit"
-                    class="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs transition-opacity hover:opacity-90">
-                Envoyer ma demande
-            </button>
-        </form>
-
-        <div class="border-t border-border pt-4 text-center text-sm text-muted-foreground">
-            <p>
-                Vous disposez déjà d'un compte ?
-                <a th:href="@{/login}" class="font-medium text-primary underline underline-offset-4 hover:opacity-80">
-                    Se connecter
-                </a>
-            </p>
-        </div>
-        </div>
-    </section>
+        <p class="px-4 pb-1 text-center text-sm text-muted-foreground">
+            Vous avez déjà un compte ?
+            <a th:href="@{/login}" class="font-semibold text-primary underline-offset-4 hover:underline">Se connecter</a>
+        </p>
+    </div>
 </main>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>

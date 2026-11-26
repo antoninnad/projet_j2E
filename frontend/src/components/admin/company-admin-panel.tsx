@@ -2,12 +2,10 @@ import { useEffect, useState, type FormEvent } from "react"
 import {
   AlertCircle,
   Building,
-  FolderTree,
   Plus,
   Trash2,
   UserCheck,
   UserMinus,
-  Users,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -34,9 +32,10 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
 import { Field } from "@/components/ui/field"
-import { Input, SearchInput } from "@/components/ui/input"
+import { Input } from "@/components/ui/input"
+import { SearchInput } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
-import { Cluster, IconTile, SplitAside, SplitGrid, SplitMain, Stack } from "@/components/ui/layout"
+import { Cluster, SplitAside, SplitGrid, SplitMain, Stack } from "@/components/ui/layout"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -316,19 +315,12 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
       <SplitAside>
         <Card aria-labelledby="gestion-comptes-titre">
           <CardHeader className="border-b">
-            <Cluster gap="md" wrap={false}>
-              <IconTile tone="brand">
-                <Users aria-hidden="true" />
-              </IconTile>
-              <Stack gap="xs">
-                <CardTitle>
-                  <h2 id="gestion-comptes-titre">Comptes de l&apos;entreprise</h2>
-                </CardTitle>
-                <CardDescription>
-                  Désactivez un compte pour révoquer immédiatement son accès.
-                </CardDescription>
-              </Stack>
-            </Cluster>
+            <CardTitle>
+              <h2 id="gestion-comptes-titre">Comptes de l&apos;entreprise</h2>
+            </CardTitle>
+            <CardDescription>
+              Désactivez un compte pour révoquer immédiatement son accès.
+            </CardDescription>
             <CardAction>
               <Badge variant="outline">{accounts.length}</Badge>
             </CardAction>
@@ -413,8 +405,9 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                                 <AlertDialogTrigger asChild>
                                   <Button
                                     type="button"
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
+                                    className="text-muted-foreground hover:bg-destructive-subtle hover:text-destructive-foreground"
                                     disabled={isMe || isBusy}
                                     aria-label={`Désactiver le compte de ${fullNameOf(account)}`}
                                   >
@@ -460,22 +453,15 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
       <SplitMain>
         <Card aria-labelledby="gestion-departements-titre">
           <CardHeader className="border-b">
-            <Cluster gap="md" wrap={false}>
-              <IconTile tone="brand">
-                <FolderTree aria-hidden="true" />
-              </IconTile>
-              <Stack gap="xs">
-                <CardTitle>
-                  <h2 id="gestion-departements-titre">
-                    Départements, membres et niveaux d&apos;accès
-                  </h2>
-                </CardTitle>
-                <CardDescription>
-                  Chaque département crée automatiquement son dossier racine. Le niveau numérique L
-                  détermine les permissions.
-                </CardDescription>
-              </Stack>
-            </Cluster>
+            <CardTitle>
+              <h2 id="gestion-departements-titre">
+                Départements, membres et niveaux d&apos;accès
+              </h2>
+            </CardTitle>
+            <CardDescription>
+              Chaque département crée automatiquement son dossier racine. Le niveau numérique L
+              détermine les permissions.
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -532,7 +518,8 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                           key={dept.id}
                           type="button"
                           size="sm"
-                          variant={selected ? "default" : "outline"}
+                          variant={selected ? "secondary" : "ghost"}
+                          className={selected ? "ring-1 ring-primary/25 bg-primary-subtle text-primary-subtle-foreground hover:bg-primary-subtle" : "text-muted-foreground"}
                           aria-pressed={selected}
                           onClick={() => {
                             setMembersLoading(true)
@@ -547,19 +534,17 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                   </Cluster>
 
                   {selectedDept && (
-                    <Card className="bg-muted/20 py-4">
-                      <CardHeader>
-                        <CardTitle className="text-sm">
-                          <h3>Membres du département « {selectedDept.name} »</h3>
-                        </CardTitle>
-                        <CardAction>
-                          <Badge variant="outline">
-                            {members.length} membre{members.length > 1 ? "s" : ""}
-                          </Badge>
-                        </CardAction>
-                      </CardHeader>
+                    <section aria-labelledby="membres-departement-titre" className="border-t pt-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <h3 id="membres-departement-titre" className="text-sm font-semibold">
+                          Membres du département « {selectedDept.name} »
+                        </h3>
+                        <Badge variant="outline">
+                          {members.length} membre{members.length > 1 ? "s" : ""}
+                        </Badge>
+                      </div>
 
-                      <CardContent>
+                      <div>
                         <Stack gap="md">
                           {membersError && (
                             <Alert variant="destructive">
@@ -602,7 +587,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                                       </TableCell>
                                       <TableCell>
                                         <Cluster gap="sm" wrap={false}>
-                                          <Label htmlFor={`member-level-${member.userId}`}>
+                                          <Label htmlFor={`member-level-${member.userId}`} className="sr-only">
                                             Niveau L
                                           </Label>
                                           <Input
@@ -620,7 +605,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                                                 [member.userId]: event.target.value,
                                               }))
                                             }
-                                            className="h-8 w-20 text-center"
+                                            className="h-8 w-16 text-center tabular-nums"
                                           />
                                         </Cluster>
                                       </TableCell>
@@ -629,7 +614,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                                           <Button
                                             type="button"
                                             size="sm"
-                                            variant="outline"
+                                            variant="ghost"
                                             disabled={isBusy}
                                             onClick={() => void handleUpdateMemberLevel(member)}
                                           >
@@ -696,8 +681,8 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                             </Button>
                           </form>
                         </Stack>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </section>
                   )}
                 </>
               )}

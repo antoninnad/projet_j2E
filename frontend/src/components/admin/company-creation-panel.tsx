@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react"
-import { AlertCircle, Building2, CheckCircle2, Plus } from "lucide-react"
+import { AlertCircle, CheckCircle2, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,6 @@ import {
 import { Field, FieldError, FieldGroup, FieldRow } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Cluster, IconTile, Stack } from "@/components/ui/layout"
 import { Separator } from "@/components/ui/separator"
 import { api, type Api } from "@/lib/api"
 import { ApiError } from "@/lib/api-client"
@@ -106,21 +105,12 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
   return (
     <Card aria-labelledby="creation-entreprise-titre">
       <CardHeader className="border-b">
-        <Cluster gap="md" wrap={false}>
-          <IconTile tone="brand">
-            <Building2 aria-hidden="true" />
-          </IconTile>
-          <Stack gap="xs">
-            <CardTitle>
-              <h2 id="creation-entreprise-titre">
-                Créer une entreprise et son premier administrateur
-              </h2>
-            </CardTitle>
-            <CardDescription>
-              Isolée des autres entreprises, elle disposera de son code d&apos;inscription et de son compte administrateur actif.
-            </CardDescription>
-          </Stack>
-        </Cluster>
+        <CardTitle>
+          <h2 id="creation-entreprise-titre">Créer une entreprise et son premier administrateur</h2>
+        </CardTitle>
+        <CardDescription>
+          Isolée des autres entreprises, elle disposera de son code d&apos;inscription et de son compte administrateur actif.
+        </CardDescription>
       </CardHeader>
 
       <form onSubmit={(event) => void handleSubmit(event)} noValidate>

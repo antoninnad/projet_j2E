@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <body>
-<header th:fragment="header(activePage)" class="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
+<header th:fragment="header(activePage)" class="sticky top-0 z-30 h-14 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
     <a href="#contenu"
-       class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground">
+       class="sr-only focus:not-sr-only focus:absolute focus:top-2.5 focus:left-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground">
         Aller au contenu principal
     </a>
 
-    <div class="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <a th:href="@{/}" class="inline-flex items-center gap-2.5 text-foreground transition-opacity hover:opacity-85">
-            <span class="brand-mark-surface flex size-8 items-center justify-center rounded-lg text-xs font-bold tracking-tight text-primary-foreground shadow-xs ring-1 ring-white/15"
-                  aria-hidden="true">L</span>
+    <div th:classappend="${activePage == 'dashboard'} ? 'max-w-none' : 'max-w-6xl'"
+         class="mx-auto flex h-full items-center justify-between gap-3 px-4 sm:px-6">
+        <a th:href="@{/}" class="flex min-w-0 items-center gap-2.5 rounded-md text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+            <span th:replace="~{fragments/ui :: logo('sm')}"></span>
             <span class="flex flex-col leading-none">
-                <span class="text-base font-semibold tracking-tight">Lagui</span>
-                <span class="text-[11px] text-muted-foreground">Espace collaboratif</span>
+                <span class="text-sm font-semibold tracking-tight">Lagui</span>
+                <span class="mt-0.5 hidden text-xs text-muted-foreground sm:block">Espace collaboratif</span>
             </span>
         </a>
 

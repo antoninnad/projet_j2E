@@ -3,7 +3,9 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
+import { IslandErrorBoundary } from "@/components/island-error-boundary"
 import { SiteHeader } from "@/components/site-header"
+import { Toaster } from "@/components/ui/sonner"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
 import { createApi } from "@/lib/api"
 import { createSessionAwareFetcher } from "@/lib/session"
@@ -26,19 +28,21 @@ function mountReactIslands() {
   document.querySelectorAll<HTMLElement>('[data-react-mount="workspace"]').forEach((element) => {
     createRoot(element).render(
       <StrictMode>
-        <WorkspaceShell
-          embedded
-          initialTab={element.dataset.initialTab || "files"}
-          userName={element.dataset.userName || undefined}
-          isAdmin={element.dataset.isAdmin === "true"}
-          client={createApi({
-            baseUrl: element.dataset.baseUrl,
-            fetcher: createSessionAwareFetcher({
+        <IslandErrorBoundary>
+          <WorkspaceShell
+            embedded
+            initialTab={element.dataset.initialTab || "files"}
+            userName={element.dataset.userName || undefined}
+            isAdmin={element.dataset.isAdmin === "true"}
+            client={createApi({
               baseUrl: element.dataset.baseUrl,
-              loginUrl: element.dataset.loginUrl,
-            }),
-          })}
-        />
+              fetcher: createSessionAwareFetcher({
+                baseUrl: element.dataset.baseUrl,
+                loginUrl: element.dataset.loginUrl,
+              }),
+            })}
+          />
+        </IslandErrorBoundary>
       </StrictMode>,
     )
   })
@@ -47,15 +51,18 @@ function mountReactIslands() {
   document.querySelectorAll<HTMLElement>('[data-react-mount="company-creation"]').forEach((element) => {
     createRoot(element).render(
       <StrictMode>
-        <CompanyCreationPanel
-          client={createApi({
-            baseUrl: element.dataset.baseUrl,
-            fetcher: createSessionAwareFetcher({
+        <IslandErrorBoundary>
+          <CompanyCreationPanel
+            client={createApi({
               baseUrl: element.dataset.baseUrl,
-              loginUrl: element.dataset.loginUrl,
-            }),
-          })}
-        />
+              fetcher: createSessionAwareFetcher({
+                baseUrl: element.dataset.baseUrl,
+                loginUrl: element.dataset.loginUrl,
+              }),
+            })}
+          />
+        </IslandErrorBoundary>
+        <Toaster position="top-right" richColors closeButton />
       </StrictMode>,
     )
   })
