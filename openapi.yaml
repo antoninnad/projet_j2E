@@ -561,6 +561,43 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/StorageError'
+    put:
+      tags: [Documents]
+      summary: Enregistrer le texte d'un fichier
+      description: |
+        Réservé aux fichiers texte (ceux dont l'aperçu est servi en text/plain) ; contenu encodé en UTF-8.
+        Exige le droit de modification. La version chargée est obligatoire : si le fichier a changé depuis,
+        409 et rien n'est écrit ; l'interface garde le brouillon et propose de recharger.
+        Le nouveau contenu est écrit à part ; l'ancien n'est effacé qu'après validation.
+      operationId: saveFileText
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SaveTextRequest'}
+      responses:
+        '200':
+          description: Fichier enregistré, avec sa nouvelle version
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/StorageError'
   /files/{fileId}/download:
     get:
       tags: [Documents]
@@ -603,6 +640,106 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/StorageError'
+  /files/{fileId}/replace:
+    post:
+      tags: [Documents]
+      summary: Remplacer le contenu d'un fichier
+      description: |
+        Envoi multipart/form-data : contenu dans « file », version chargée dans « version » (obligatoire).
+        Exige le droit de modification. Le nom affiché ne change pas ; le nom d'origine, le type et la taille
+        sont ceux du nouveau fichier. Mêmes règles de conflit et de stockage que l'enregistrement d'un texte.
+      operationId: replaceFile
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, version]
+              properties:
+                file: {type: string, format: binary}
+                version: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Contenu remplacé, avec la nouvelle version
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/StorageError'
+  /files/{fileId}:
+    patch:
+      tags: [Documents]
+      summary: Renommer un fichier
+      description: Exige le droit de modification ; le nom doit rester libre dans le dossier (casse ignorée).
+      operationId: renameFile
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RenameFileRequest'}
+      responses:
+        '200':
+          description: Fichier renommé
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Documents]
+      summary: Supprimer un fichier
+      description: |
+        Exige le droit de suppression (propriétaire ou niveau supérieur au seuil). Le contenu est effacé
+        du stockage après validation. Pour déplacer un fichier, utiliser POST /nodes/{nodeId}/move.
+      operationId: deleteFile
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - name: version
+          in: query
+          required: false
+          description: Version chargée ; 409 si le fichier a changé depuis
+          schema: {type: integer, format: int64}
+      responses:
+        '204':
+          description: Fichier supprimé
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /folders/roots:
     get:
       tags: [Documents]
@@ -904,6 +1041,18 @@ components:
       properties:
         name: {type: string, minLength: 1, maxLength: 255}
         version: {type: integer, format: int64, description: Version chargée ; 409 si elle a changé}
+    SaveTextRequest:
+      type: object
+      required: [content, version]
+      properties:
+        content: {type: string, description: Texte complet ; chaîne vide pour vider le fichier}
+        version: {type: integer, format: int64, description: Version chargée par le client}
+    RenameFileRequest:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, maxLength: 255}
+        version: {type: integer, format: int64, description: Version chargée (facultative) ; 409 si elle a changé}
     MoveNodeRequest:
       type: object
       required: [targetFolderId]

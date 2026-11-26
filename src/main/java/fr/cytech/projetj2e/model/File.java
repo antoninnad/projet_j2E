@@ -63,4 +63,15 @@ public class File extends Node {
     public String getStoragePath() {
         return storagePath;
     }
+
+    /**
+     * Remplace le contenu (T23) : nouveau chemin de stockage, taille, type et nom d'origine.
+     * La version (Node) est incrémentée à l'enregistrement ; l'ancien contenu est effacé par le service après validation.
+     */
+    public void replaceContent(String storagePath, long size, String contentType, String originalFileName) {
+        this.storagePath = storagePath;
+        this.size = size;
+        this.contentType = contentType;
+        this.originalFileName = originalFileName;
+    }
 }
