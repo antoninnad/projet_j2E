@@ -141,6 +141,6 @@ class FileManagementRestControllerTest {
     private static NodeResponse file(Long id, String name, Long version) {
         return new NodeResponse(id, name, NodeResponse.FILE, 1L, 1L, "Finance", 0,
                 new NodeResponse.OwnerResponse(1L, "Ada", "Admin"), Instant.EPOCH, Instant.EPOCH, version,
-                name, "text/plain", 5L, new NodePermissions(true, true, true, true, true));
+                name, "text/plain", 5L, new NodePermissions(true, true, true, true, true), false);
     }
 }

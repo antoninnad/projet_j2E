@@ -11,6 +11,7 @@ import fr.cytech.projetj2e.service.PermissionService.NodePermissions;
  * @param kind        "folder" ou "file"
  * @param version     version de verrouillage optimiste, à renvoyer lors d'une modification (T23)
  * @param permissions actions autorisées pour le compte connecté
+ * @param favorite    vrai si le compte connecté a mis l'élément en favori (T31)
  */
 public record NodeResponse(
         Long id,
@@ -27,7 +28,8 @@ public record NodeResponse(
         String originalFileName,
         String contentType,
         Long size,
-        NodePermissions permissions) {
+        NodePermissions permissions,
+        boolean favorite) {
 
     public static final String FOLDER = "folder";
     public static final String FILE = "file";

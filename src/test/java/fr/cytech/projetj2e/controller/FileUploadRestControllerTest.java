@@ -128,6 +128,6 @@ class FileUploadRestControllerTest {
     private static NodeResponse file(Long id, String name, Long parentId) {
         return new NodeResponse(id, name, NodeResponse.FILE, parentId, 1L, "Finance", 0,
                 new NodeResponse.OwnerResponse(1L, "Ada", "Admin"), Instant.EPOCH, Instant.EPOCH, 0L,
-                name, "text/plain", 5L, new NodePermissions(true, true, true, true, true));
+                name, "text/plain", 5L, new NodePermissions(true, true, true, true, true), false);
     }
 }
