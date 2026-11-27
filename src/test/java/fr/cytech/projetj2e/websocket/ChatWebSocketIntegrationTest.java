@@ -43,13 +43,13 @@ import fr.cytech.projetj2e.repository.UserRepository;
 import fr.cytech.projetj2e.service.ChatService;
 
 /**
- * Chat temps réel de bout en bout (T34) : serveur démarré, base H2 en mémoire migrée par Flyway,
+ * Chat temps réel de bout en bout (T34) : serveur démarré, base migrée par Flyway,
  * connexion par le formulaire /login et client WebSocket du JDK.
+ * Base du profil actif : H2 en mémoire pour le profil h2 (src/test/resources/application-h2.properties),
+ * PostgreSQL du CI pour le profil postgres ; le test valide donc aussi les migrations sur les deux moteurs.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "spring.datasource.url=jdbc:h2:mem:t34-websocket;DB_CLOSE_DELAY=-1",
-        "app.storage.root=target/test-storage"
-})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "app.storage.root=target/test-storage")
 class ChatWebSocketIntegrationTest {
 
     private static final String PASSWORD = "Secret123!";
