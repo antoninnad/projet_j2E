@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.cytech.projetj2e.dto.NodeResponse;
 import fr.cytech.projetj2e.exception.ConflictException;
+import fr.cytech.projetj2e.model.ActivityAction;
 import fr.cytech.projetj2e.exception.ForbiddenException;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
 import fr.cytech.projetj2e.model.File;
@@ -42,6 +43,7 @@ public class FolderManagementService {
     private final CompanyStorage storage;
     private final NodeResponseMapper mapper;
     private final NodeNames names;
+    private final ActivityRecorder activity;
 
     public FolderManagementService(CompanyIsolationService isolation,
                                    PermissionService permissions,
@@ -49,7 +51,8 @@ public class FolderManagementService {
                                    FolderRepository folderRepository,
                                    CompanyStorage storage,
                                    NodeResponseMapper mapper,
-                                   NodeNames names) {
+                                   NodeNames names,
+                                   ActivityRecorder activity) {
         this.isolation = isolation;
         this.permissions = permissions;
         this.nodeRepository = nodeRepository;
@@ -57,6 +60,7 @@ public class FolderManagementService {
         this.storage = storage;
         this.mapper = mapper;
         this.names = names;
+        this.activity = activity;
     }
 
     /** Crée un sous-dossier. Il hérite du département et du seuil du parent ; le compte en est propriétaire. */
@@ -66,6 +70,7 @@ public class FolderManagementService {
         String name = NodeNames.valid(rawName);
         names.requireFree(parent, name, null);
         Folder folder = folderRepository.save(new Folder(actor, name, parent));
+        activity.node(actor, ActivityAction.FOLDER_CREATED, folder, "dans « " + parent.getName() + " »");
         return mapper.toResponse(actor, folder);
     }
 
@@ -77,8 +82,12 @@ public class FolderManagementService {
         permissions.requireModify(actor, folder);
         String name = NodeNames.valid(rawName);
         names.requireFree(folder.getParent(), name, folder.getId());
+        String previous = folder.getName();
         folder.setName(name);
         nodeRepository.flush(); // déclenche le contrôle @Version maintenant, pour renvoyer la nouvelle version
+        if (!previous.equals(name)) {
+            activity.node(actor, ActivityAction.FOLDER_RENAMED, folder, ActivityRecorder.change(previous, name));
+        }
         return mapper.toResponse(actor, folder);
     }
 
@@ -98,8 +107,10 @@ public class FolderManagementService {
             return mapper.toResponse(actor, node);
         }
         names.requireFree(target, node.getName(), node.getId());
+        String from = node.getParent().getName();
         target.addChild(node); // refuse cycle, autre entreprise et seuil inférieur à celui de la cible
         nodeRepository.flush();
+        activity.node(actor, ActivityAction.NODE_MOVED, node, "de « " + from + " » vers « " + target.getName() + " »");
         return mapper.toResponse(actor, node);
     }
 
@@ -125,6 +136,10 @@ public class FolderManagementService {
             }
         }
 
+        int contained = subtree.size() - 1;
+        activity.node(actor, ActivityAction.FOLDER_DELETED, folder,
+                contained == 0 ? "dossier vide" : "avec " + contained + " élément" + (contained > 1 ? "s" : ""));
+        activity.freezeHistory(subtree);
         folder.getParent().removeChild(folder);
         nodeRepository.delete(folder); // cascade REMOVE sur tout le sous-arbre
         nodeRepository.flush();

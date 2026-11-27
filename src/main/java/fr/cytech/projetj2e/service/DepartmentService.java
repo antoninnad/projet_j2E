@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.cytech.projetj2e.exception.ForbiddenException;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
+import fr.cytech.projetj2e.model.ActivityAction;
 import fr.cytech.projetj2e.model.Department;
 import fr.cytech.projetj2e.model.Membership;
 import fr.cytech.projetj2e.model.Node;
@@ -22,13 +23,16 @@ public class DepartmentService {
     private final DepartmentRepository departments;
     private final MembershipRepository memberships;
     private final FolderService folderService;
+    private final ActivityRecorder activity;
 
     public DepartmentService(DepartmentRepository departments,
                              MembershipRepository memberships,
-                             FolderService folderService) {
+                             FolderService folderService,
+                             ActivityRecorder activity) {
         this.departments = departments;
         this.memberships = memberships;
         this.folderService = folderService;
+        this.activity = activity;
     }
 
     public Department create(User actor, String name) {
@@ -39,6 +43,7 @@ public class DepartmentService {
         }
         Department department = departments.save(new Department(name.trim(), actor.getCompany()));
         folderService.createDepartmentRoot(department, actor);
+        activity.department(actor, ActivityAction.DEPARTMENT_CREATED, department, null, null);
         return department;
     }
 
@@ -51,9 +56,14 @@ public class DepartmentService {
                         .orElseThrow().getId().equals(departmentId)) {
             throw new IllegalArgumentException("Un département porte déjà ce nom dans cette entreprise.");
         }
+        String previous = department.getName();
         department.setName(name.trim());
         Department saved = departments.save(department);
         folderService.renameDepartmentRoot(saved, name.trim());
+        if (!previous.equals(saved.getName())) {
+            activity.department(actor, ActivityAction.DEPARTMENT_RENAMED, saved, null,
+                    ActivityRecorder.change(previous, saved.getName()));
+        }
         return saved;
     }
 
@@ -68,10 +78,14 @@ public class DepartmentService {
         Department department = requireDepartment(actor, departmentId);
         Membership membership = memberships.findByUserAndDepartment(member, department)
                 .orElseGet(() -> new Membership(member, department, accessLevel));
+        String details = membership.getId() == null
+                ? "niveau " + accessLevel
+                : "niveau " + ActivityRecorder.change(membership.getAccessLevel(), accessLevel);
         membership.setAccessLevel(accessLevel);
         Membership saved = memberships.save(membership);
         department.addMembership(saved);
         member.addMembership(saved);
+        activity.department(actor, ActivityAction.MEMBER_ACCESS_SET, department, member, details);
         return saved;
     }
 
@@ -85,6 +99,7 @@ public class DepartmentService {
         department.removeMembership(membership);
         membership.getUser().removeMembership(membership);
         memberships.delete(membership);
+        activity.department(actor, ActivityAction.MEMBER_REMOVED, department, membership.getUser(), null);
     }
 
     @Transactional(readOnly = true)

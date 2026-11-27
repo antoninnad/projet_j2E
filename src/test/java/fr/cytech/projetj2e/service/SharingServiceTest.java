@@ -50,7 +50,7 @@ class SharingServiceTest {
                 .thenReturn(Optional.of(new Membership(contributor, department, 3)));
         when(nodes.save(node)).thenReturn(node);
 
-        SharingService sharing = new SharingService(nodes, users, memberships, isolation, permissions);
+        SharingService sharing = new SharingService(nodes, users, memberships, isolation, permissions, org.mockito.Mockito.mock(ActivityRecorder.class));
 
         sharing.setThreshold(admin, 20L, 2);
         verify(node).setMinAccessLevel(2);
@@ -83,7 +83,7 @@ class SharingServiceTest {
         when(memberships.findByUserAndDepartment(candidate, department))
                 .thenReturn(Optional.of(new Membership(candidate, department, 1)));
 
-        SharingService sharing = new SharingService(nodes, users, memberships, isolation, permissions);
+        SharingService sharing = new SharingService(nodes, users, memberships, isolation, permissions, org.mockito.Mockito.mock(ActivityRecorder.class));
 
         assertThrows(ForbiddenException.class, () -> sharing.setThreshold(owner, 20L, 3));
         assertThrows(ForbiddenException.class, () -> sharing.addContributor(owner, 20L, 11L));

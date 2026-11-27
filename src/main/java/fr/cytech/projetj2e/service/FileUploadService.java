@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import fr.cytech.projetj2e.dto.NodeResponse;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
 import fr.cytech.projetj2e.exception.StorageException;
+import fr.cytech.projetj2e.model.ActivityAction;
 import fr.cytech.projetj2e.model.File;
 import fr.cytech.projetj2e.model.Folder;
 import fr.cytech.projetj2e.model.User;
@@ -44,19 +45,22 @@ public class FileUploadService {
     private final CompanyStorage storage;
     private final NodeNames names;
     private final NodeResponseMapper mapper;
+    private final ActivityRecorder activity;
 
     public FileUploadService(CompanyIsolationService isolation,
                              PermissionService permissions,
                              FileRepository fileRepository,
                              CompanyStorage storage,
                              NodeNames names,
-                             NodeResponseMapper mapper) {
+                             NodeResponseMapper mapper,
+                             ActivityRecorder activity) {
         this.isolation = isolation;
         this.permissions = permissions;
         this.fileRepository = fileRepository;
         this.storage = storage;
         this.names = names;
         this.mapper = mapper;
+        this.activity = activity;
     }
 
     public NodeResponse upload(User actor, Long folderId, MultipartFile upload) {
@@ -84,8 +88,9 @@ public class FileUploadService {
             throw new StorageException("Le fichier reçu n'a pas pu être lu.", exception);
         }
 
-        File file = new File(actor, name, folder, name, contentType, stored.storagePath(), stored.size());
-        return mapper.toResponse(actor, fileRepository.save(file));
+        File file = fileRepository.save(new File(actor, name, folder, name, contentType, stored.storagePath(), stored.size()));
+        activity.node(actor, ActivityAction.FILE_UPLOADED, file, "dans « " + folder.getName() + " »");
+        return mapper.toResponse(actor, file);
     }
 
     /** Dernier segment du nom envoyé : certains navigateurs transmettent un chemin (C:\fakepath\a.txt). */

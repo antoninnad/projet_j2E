@@ -46,7 +46,7 @@ import fr.cytech.projetj2e.model.UserRole;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "app.storage.root=target/test-storage"
 })
-@Import({ FolderManagementService.class, NodeResponseMapper.class, NodeNames.class, PermissionService.class,
+@Import({ FolderManagementService.class, NodeResponseMapper.class, NodeNames.class, ActivityRecorder.class, PermissionService.class,
         CompanyIsolationService.class, CompanyStorage.class,
         BCryptPasswordEncoder.class }) // BCrypt : requis par le bean init de ProjetJ2eApplication
 class FolderManagementServiceTest {
