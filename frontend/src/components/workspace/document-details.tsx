@@ -1,4 +1,5 @@
 import { FileText, Folder, Star } from "lucide-react"
+import { NodeActivitySection } from "@/components/activity/activity-feed-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -130,6 +131,8 @@ export function DocumentDetails({ node, client, editing, favoriteBusy, onToggleF
           </ul>
         </CardContent>
       </Card>
+
+      {permissions.view && <NodeActivitySection key={node.id} nodeId={node.id} client={client} />}
     </Stack>
   )
 }

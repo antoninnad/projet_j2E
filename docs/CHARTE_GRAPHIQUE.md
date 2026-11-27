@@ -17,8 +17,8 @@
 | **Texte secondaire** | `--muted-foreground` | `#475569` | `oklch(0.475 0.028 256)` | **7.1:1 (AAA)** | Métadonnées, chemins, horodatages et descriptions |
 | **Bordure** | `--border` | `#E2E8F0` | `oklch(0.914 0.013 255)` | Structure | Contours de cartes, séparateurs et tableaux |
 | **Focus clavier** | `--ring` | `#3B82F6` | `oklch(0.565 0.165 260)` | **4.6:1 (AA)** | Anneau `:focus-visible` sur l'ensemble des contrôles |
-| **Barre latérale (Teams)** | `--sidebar` | `#121E3D` | `oklch(0.235 0.062 262)` | **14.2:1 (AAA)** | Rail vertical rétractable d'application (`AppSidebar`) |
-| **Accent latéral** | `--sidebar-primary` | `#3B82F6` | `oklch(0.595 0.172 258)` | Indicateur | Barre d'onglet actif et badges dans la barre latérale |
+| **Barre latérale (Capitalio)** | `--sidebar` | `#FFFFFF` | `oklch(1 0 0)` | Surface | Rail vertical clair rétractable (`AppSidebar`, `.active-sidebar-item`) |
+| **Accent latéral** | `--sidebar-primary` | `#1E40AF` | `oklch(0.425 0.162 262)` | Indicateur | Entrée d'onglet active et badges dans la barre latérale |
 
 ---
 

@@ -6,6 +6,7 @@ import {
   Trash2,
   UserCheck,
   UserMinus,
+  Users,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -30,7 +31,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { SearchInput } from "@/components/ui/input-group"
@@ -81,6 +88,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
   const [departments, setDepartments] = useState<Department[]>([])
   const [departmentsLoading, setDepartmentsLoading] = useState(true)
   const [departmentsError, setDepartmentsError] = useState<string | null>(null)
+  const [departmentsReload, setDepartmentsReload] = useState(0)
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null)
 
   const [newDeptName, setNewDeptName] = useState("")
@@ -155,7 +163,7 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
         setDepartmentsLoading(false)
       })
     return () => controller.abort()
-  }, [client])
+  }, [client, departmentsReload])
 
   useEffect(() => {
     if (selectedDeptId === null) return
@@ -341,22 +349,42 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
               {accountsError && (
                 <Alert variant="destructive">
                   <AlertCircle aria-hidden="true" />
-                  <AlertDescription>{accountsError}</AlertDescription>
+                  <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                    <span>{accountsError}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={accountsLoading}
+                      onClick={() => {
+                        setAccountsLoading(true)
+                        setAccountsError(null)
+                        setAccountsReload((n) => n + 1)
+                      }}
+                    >
+                      Réessayer
+                    </Button>
+                  </AlertDescription>
                 </Alert>
               )}
 
               {accountsLoading ? (
-                <Stack gap="sm">
+                <Stack gap="sm" role="status" aria-label="Chargement des comptes de l'entreprise">
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                 </Stack>
               ) : accounts.length === 0 ? (
                 <Empty>
-                  <EmptyTitle>Aucun compte trouvé</EmptyTitle>
-                  <EmptyDescription>
-                    Aucun compte actif ou désactivé ne correspond à votre filtre.
-                  </EmptyDescription>
+                  <EmptyHeader>
+                    <EmptyIcon>
+                      <Users aria-hidden="true" />
+                    </EmptyIcon>
+                    <EmptyTitle>Aucun compte trouvé</EmptyTitle>
+                    <EmptyDescription>
+                      Aucun compte actif ou désactivé ne correspond à votre filtre.
+                    </EmptyDescription>
+                  </EmptyHeader>
                 </Empty>
               ) : (
                 <Table>
@@ -495,18 +523,40 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
               {departmentsError && (
                 <Alert variant="destructive">
                   <AlertCircle aria-hidden="true" />
-                  <AlertDescription>{departmentsError}</AlertDescription>
+                  <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                    <span>{departmentsError}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={departmentsLoading}
+                      onClick={() => {
+                        setDepartmentsLoading(true)
+                        setDepartmentsError(null)
+                        setDepartmentsReload((n) => n + 1)
+                      }}
+                    >
+                      Réessayer
+                    </Button>
+                  </AlertDescription>
                 </Alert>
               )}
 
               {departmentsLoading ? (
-                <Skeleton className="h-10 w-full" />
+                <div role="status" aria-label="Chargement des départements">
+                  <Skeleton className="h-10 w-full" />
+                </div>
               ) : departments.length === 0 ? (
                 <Empty>
-                  <EmptyTitle>Aucun département créé</EmptyTitle>
-                  <EmptyDescription>
-                    Créez votre premier département ci-dessus pour générer son dossier racine.
-                  </EmptyDescription>
+                  <EmptyHeader>
+                    <EmptyIcon>
+                      <Building aria-hidden="true" />
+                    </EmptyIcon>
+                    <EmptyTitle>Aucun département créé</EmptyTitle>
+                    <EmptyDescription>
+                      Créez votre premier département ci-dessus pour générer son dossier racine.
+                    </EmptyDescription>
+                  </EmptyHeader>
                 </Empty>
               ) : (
                 <>
@@ -549,12 +599,29 @@ export function CompanyAdminPanel({ client = api }: { client?: CompanyAdminApi }
                           {membersError && (
                             <Alert variant="destructive">
                               <AlertCircle aria-hidden="true" />
-                              <AlertDescription>{membersError}</AlertDescription>
+                              <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                                <span>{membersError}</span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={membersLoading}
+                                  onClick={() => {
+                                    setMembersLoading(true)
+                                    setMembersError(null)
+                                    setMembersReload((n) => n + 1)
+                                  }}
+                                >
+                                  Réessayer
+                                </Button>
+                              </AlertDescription>
                             </Alert>
                           )}
 
                           {membersLoading ? (
-                            <Skeleton className="h-20 w-full" />
+                            <div role="status" aria-label="Chargement des membres du département">
+                              <Skeleton className="h-20 w-full" />
+                            </div>
                           ) : members.length === 0 ? (
                             <Empty>
                               <EmptyDescription>

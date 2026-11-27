@@ -170,8 +170,8 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T34 | Chat temps réel backend | Ajouter WebSocket authentifié, contrôle des abonnements et reprise après coupure | B2 | P1 | Terminé | T33 | Livraison des messages sans accès indu ni duplication |
 | T35 | Chat frontend | Créer liste et historique, lancement depuis un profil, envoi, non-lus et reconnexion | F2 | P1 | Terminé | T03, T30, T33, T34 | Deux navigateurs peuvent discuter en temps réel |
 | T36 | Activité backend | Étendre Log et journaliser auteurs/dates/opérations ; filtrer la consultation par droits | B2 | P1 | Terminé | T23, T27 | Historique exploitable sans secrets ni messages privés |
-| T37 | Activité frontend | Afficher opérations récentes et auteurs des modifications | F1 | P1 | À faire | T28, T36 | Activité réelle visible selon les accès |
-| T38 | Qualité écrans F1 | Traiter chargements, erreurs, états vides, mobile, clavier et libellés français | F1 | P1 | Partiel | T17, T28, T30, T37 | Parcours comptes/administration/profils accessibles |
+| T37 | Activité frontend | Afficher opérations récentes et auteurs des modifications | F1 | P1 | Terminé | T28, T36 | Activité réelle visible selon les accès |
+| T38 | Qualité écrans F1 | Traiter chargements, erreurs, états vides, mobile, clavier et libellés français | F1 | P1 | Terminé | T17, T28, T30, T37 | Parcours comptes/administration/profils accessibles |
 | T39 | Qualité écrans F2 | Traiter les mêmes états pour explorateur, éditeur, upload et chat | F2 | P1 | Partiel | T26, T32, T35 | Parcours documents/chat accessibles |
 | T40 | Tests comptes et permissions | Tester DTO, doublons, concordance/hash des mots de passe dans le service, findByEmail/findUser, PublicUser en session, routes MVC, CSRF, déconnexion, comptes inactifs, isolation, rôles et matrice | B1 | P0 | Terminé | T11, T12, T13, T16 | Parcours du cours et refus d’accès démontrés par tests automatisés |
 | T41 | Tests documents et chat | Tester uploads, cycles, sous-arbres, versions, persistance et accès aux conversations | B2 | P0 | Terminé | T23, T34, T36 | Règles métier et isolation REST/WebSocket vérifiées |
@@ -200,6 +200,10 @@ T26 branche l'éditeur de texte et le remplacement des fichiers binaires sur T23
 T32 branche la recherche et les favoris sur T31. Les résultats paginés affichent leur emplacement et peuvent être filtrés par type ou département. L'étoile des détails ajoute ou retire un favori personnel. L'API des favoris conserve le type et les métadonnées des fichiers. Les tests frontend et le parcours Chrome avec deux comptes sur Spring Boot et H2 vérifient les filtres, l'ouverture depuis les résultats et la persistance des favoris selon les droits.
 
 T35 relie l'annuaire et l'onglet Chat privé aux API T33 et à la WebSocket T34. L'historique paginé et les non-lus viennent du serveur. Un envoi échoué peut être retenté avec le même identifiant. À la reconnexion, le chat récupère les messages manqués et les rapproche des événements reçus. Deux comptes Chrome sur Spring Boot et H2 ont vérifié l'ouverture depuis l'annuaire, les échanges, la lecture, la reprise après coupure et l'historique après rechargement.
+
+T37 branche l'onglet Activité (`?tab=activity`) sur `GET /api/activity` et l'historique d'un élément dans `DocumentDetails` sur `GET /api/nodes/{nodeId}/activity` (T36). Les opérations sur les documents, les permissions et l'administration affichent leur auteur (ou « Administrateur de plateforme »), le libellé français, l'élément ou membre visé, les détails de changement et la date, avec pagination `{ items, page }` et filtrage par catégorie.
+
+T38 harmonise la qualité et la nouvelle charte graphique (**Ardoise & Cobalt** et barre latérale claire **Capitalio**) sur l'ensemble des écrans F1 (comptes Thymeleaf, administration, création d'entreprise, profils/annuaire, partage et activité) : indicateurs de chargement annoncés (`role="status"`), états vides structurés, alertes d'erreur avec reprise (`Réessayer`), attributs `aria-invalid`, navigation clavier et adaptation mobile.
 
 ### Avancement MVC des comptes
 

@@ -6,7 +6,7 @@ export const MVC_ROUTES = {
   logout: "/logout",
 } as const
 
-export type WorkspaceTabId = "files" | "directory" | "chat" | "admin"
+export type WorkspaceTabId = "files" | "directory" | "chat" | "activity" | "admin"
 
 export interface WorkspaceTabMeta {
   id: WorkspaceTabId
@@ -30,6 +30,11 @@ export const WORKSPACE_TABS: readonly WorkspaceTabMeta[] = [
     id: "chat",
     label: "Chat privé",
     description: "Conversations privées en temps réel entre membres",
+  },
+  {
+    id: "activity",
+    label: "Activité",
+    description: "Journal des opérations récentes sur les documents, les droits et l'entreprise",
   },
   {
     id: "admin",

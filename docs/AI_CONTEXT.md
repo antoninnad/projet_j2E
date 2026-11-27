@@ -47,7 +47,8 @@ frontend/
    ├─ styles.css                            # Tokens Tailwind v4 + @source templates
    ├─ app/routes.ts                         # Source unique : MVC_ROUTES + WORKSPACE_TABS (?tab=)
    ├─ components/site-{header,menu}.tsx     # Header React (mode standalone ou data-react-mount="site-header")
-   ├─ components/workspace/                 # WorkspaceShell + FileWorkspace + FileExplorer + FileEditor + SharingPanel (T28)
+   ├─ components/workspace/                 # WorkspaceShell + FileWorkspace + FileExplorer + DocumentDetails + SharingPanel (T28)
+   ├─ components/activity/                  # ActivityFeedPanel + NodeActivitySection : fil entreprise/membre et historique par nœud (T37)
    ├─ components/admin/                     # PendingRegistrationsPanel + CompanyAdminPanel (T17) + CompanyCreationPanel (T13)
    ├─ components/directory/                 # DirectoryProfilePanel : profil, avatar, mdp, annuaire paginé (T30)
    ├─ components/ui/*                       # Primitives shadcn/ui
@@ -65,7 +66,7 @@ frontend/
 | MVC (`@Controller`) | `GET/POST /login`, `POST /logout` | `LoginController` → `login.html` | Connexion + déconnexion (à migrer sur `LoginDTO` email + `PublicUser` en T11) |
 | MVC (`@Controller`) | `GET/POST /register` | `RegisterController` → `register.html` | Formulaire `userDto` (`firstName`, `lastName`, `username`, `email`, `companyCode`, `password`, `confirmPassword`) |
 | MVC (`@Controller`) | `GET /dashboard` | `PageController` → `dashboard.html` | Redirige `302 -> /login?required=true` si non authentifié ; sinon rend synthèse serveur + îlot React |
-| Onglet React | `/dashboard?tab={files\|directory\|chat\|admin}` | `WorkspaceShell` (`routes.ts`) | Synchronisé via `History API` ; un reload HTTP repasse toujours par Spring MVC |
+| Onglet React | `/dashboard?tab={files\|directory\|chat\|activity\|admin}` | `WorkspaceShell` (`routes.ts`) | Synchronisé via `History API` ; un reload HTTP repasse toujours par Spring MVC |
 | JSON (`@RestController`) | `/api/**` | Contrat `openapi.yaml` | API consommée par React (proxyfiée par Vite en dev) |
 | WebSocket | `/ws/chat` | `ChatWebSocketHandler` (T34) | Événements du chat poussés au compte connecté ; protocole dans `docs/T34_CHAT_TEMPS_REEL.md` (proxyfiée par Vite en dev) |
 
@@ -133,4 +134,6 @@ cd frontend && npm run test:coverage
   - **T28 (F1)** ouvre `SharingPanel` depuis `DemoFileWorkspace` avec les réponses simulées d'`api-preview.ts`. Le dashboard affiche le droit de partage renvoyé par T18. Le bouton sera activé sur le dashboard quand les routes de T27 seront exposées.
   - **T18/T19 (B2/F2)** alimentent le dashboard Thymeleaf et `FileWorkspace` via les routes Documents d'OpenAPI. `listRootFolders`, `listFolderChildren` et `getNode` chargent l'arborescence, les métadonnées, le fil d'Ariane et les droits. Les indices de l'API partent de 0, les libellés affichés de 1.
   - **T30 (F1)** : Implémenté sur `feature/T30` (`DirectoryProfilePanel` : édition prénom/nom/bio/avatar, changement de mot de passe `POST /api/profiles/me/password`, recherche paginée des collègues `ACTIVE`, fiche publique `GET /api/users/{id}/profile` et ouverture de conversation vers `?tab=chat&peer={id}`) — prêt à valider en réel dès que B1 termine `T29`.
-  - **T35 (F2)** : remplacer le placeholder `chat` dans `WorkspaceShell` (qui reçoit déjà `selectedChatPeer` et `?peer=` depuis l'annuaire T30).
+  - **T35 (F2)** : `ChatPanel` + `useChat` branchés sur les API REST T33 et la WebSocket `/ws/chat` T34 (ouverture depuis l'annuaire T30 `?tab=chat&peer={id}`).
+  - **T37 (F1)** : `ActivityFeedPanel` (`GET /api/activity`) exposé dans l'onglet `?tab=activity` et `NodeActivitySection` (`GET /api/nodes/{nodeId}/activity`) repliable à la demande dans `DocumentDetails`, avec filtres par catégorie (`DOCUMENT`, `RIGHTS`, `ADMINISTRATION`) et pagination `{ items, page }`.
+  - **T38 (F1)** : États de chargement accessibles (`role="status"`), alertes d'erreur avec bouton `Réessayer`, `aria-invalid`, états vides harmonisés et alignement sur la charte **Ardoise & Cobalt / Capitalio** sur tous les écrans F1.

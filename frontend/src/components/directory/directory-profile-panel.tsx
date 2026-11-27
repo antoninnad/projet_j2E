@@ -29,7 +29,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Field, FieldError, FieldGroup, FieldRow } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { SearchInput } from "@/components/ui/input-group"
@@ -107,6 +113,7 @@ export function DirectoryProfilePanel({
   const [profileError, setProfileError] = useState<string | null>(null)
   const [profileFieldErrors, setProfileFieldErrors] = useState<Record<string, string>>({})
   const [profileSavedNotice, setProfileSavedNotice] = useState<string | null>(null)
+  const [profileReload, setProfileReload] = useState(0)
 
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -129,12 +136,17 @@ export function DirectoryProfilePanel({
 
   useEffect(() => {
     const controller = new AbortController()
-    Promise.all([client.getSession(controller.signal), client.getMyProfile(controller.signal)])
+    Promise.all([
+      client.getSession(controller.signal).catch(() => null),
+      client.getMyProfile(controller.signal),
+    ])
       .then(([sessionData, profileData]) => {
         if (controller.signal.aborted) return
-        setMe(sessionData.user)
-        setFirstName(sessionData.user.firstName ?? "")
-        setLastName(sessionData.user.lastName ?? "")
+        if (sessionData) {
+          setMe(sessionData.user)
+          setFirstName(sessionData.user.firstName ?? "")
+          setLastName(sessionData.user.lastName ?? "")
+        }
         setBio(profileData.bio ?? "")
         setAvatarUrl(profileData.profilePictureUrl ?? "")
         setProfileError(null)
@@ -151,7 +163,7 @@ export function DirectoryProfilePanel({
       })
 
     return () => controller.abort()
-  }, [client])
+  }, [client, profileReload])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -339,7 +351,7 @@ export function DirectoryProfilePanel({
 
             {profileLoading ? (
               <CardContent>
-                <Stack gap="sm">
+                <Stack gap="sm" role="status" aria-label="Chargement de votre profil">
                   <Skeleton className="h-14 w-full" />
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-24 w-full" />
@@ -352,7 +364,24 @@ export function DirectoryProfilePanel({
                     {profileError && (
                       <Alert variant="destructive">
                         <AlertCircle aria-hidden="true" />
-                        <AlertDescription>{profileError}</AlertDescription>
+                        <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                          <span>{profileError}</span>
+                          {!me && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={profileLoading}
+                              onClick={() => {
+                                setProfileLoading(true)
+                                setProfileError(null)
+                                setProfileReload((n) => n + 1)
+                              }}
+                            >
+                              Réessayer
+                            </Button>
+                          )}
+                        </AlertDescription>
                       </Alert>
                     )}
 
@@ -363,7 +392,7 @@ export function DirectoryProfilePanel({
                       </Alert>
                     )}
 
-                    <Cluster gap="lg" wrap={false}>
+                    <Cluster gap="lg" className="sm:flex-nowrap">
                       <PresenceAvatar
                         src={avatarUrl.trim() || null}
                         alt="Aperçu de mon avatar"
@@ -377,6 +406,7 @@ export function DirectoryProfilePanel({
                             id="profile-avatar-url"
                             type="url"
                             value={avatarUrl}
+                            aria-invalid={Boolean(profileFieldErrors.profilePictureUrl)}
                             onChange={(event) => setAvatarUrl(event.target.value)}
                             placeholder="https://exemple.fr/avatar.png"
                           />
@@ -405,6 +435,7 @@ export function DirectoryProfilePanel({
                         <Input
                           id="profile-first-name"
                           value={firstName}
+                          aria-invalid={Boolean(profileFieldErrors.firstName)}
                           onChange={(event) => setFirstName(event.target.value)}
                           required
                         />
@@ -418,6 +449,7 @@ export function DirectoryProfilePanel({
                         <Input
                           id="profile-last-name"
                           value={lastName}
+                          aria-invalid={Boolean(profileFieldErrors.lastName)}
                           onChange={(event) => setLastName(event.target.value)}
                           required
                         />
@@ -437,6 +469,7 @@ export function DirectoryProfilePanel({
                         rows={4}
                         maxLength={2000}
                         value={bio}
+                        aria-invalid={Boolean(profileFieldErrors.bio)}
                         onChange={(event) => setBio(event.target.value)}
                         placeholder="Présentez votre rôle, votre équipe et vos sujets…"
                       />
@@ -486,6 +519,7 @@ export function DirectoryProfilePanel({
                       type="password"
                       autoComplete="current-password"
                       value={currentPassword}
+                      aria-invalid={Boolean(passwordFieldErrors.currentPassword)}
                       onChange={(event) => setCurrentPassword(event.target.value)}
                       required
                     />
@@ -503,6 +537,7 @@ export function DirectoryProfilePanel({
                         autoComplete="new-password"
                         minLength={8}
                         value={newPassword}
+                        aria-invalid={Boolean(passwordFieldErrors.newPassword)}
                         onChange={(event) => setNewPassword(event.target.value)}
                         required
                       />
@@ -519,6 +554,7 @@ export function DirectoryProfilePanel({
                         autoComplete="new-password"
                         minLength={8}
                         value={confirmPassword}
+                        aria-invalid={Boolean(passwordFieldErrors.confirmPassword)}
                         onChange={(event) => setConfirmPassword(event.target.value)}
                         required
                       />
@@ -552,25 +588,38 @@ export function DirectoryProfilePanel({
             {directoryError && (
               <Alert variant="destructive">
                 <AlertCircle aria-hidden="true" />
-                <AlertDescription>{directoryError}</AlertDescription>
+                <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                  <span>{directoryError}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={directoryLoading}
+                    onClick={handleRefreshDirectory}
+                  >
+                    Réessayer
+                  </Button>
+                </AlertDescription>
               </Alert>
             )}
 
             {directoryLoading ? (
-              <Stack gap="sm">
+              <Stack gap="sm" role="status" aria-label="Chargement de l'annuaire">
                 <Skeleton className="h-14 w-full" />
                 <Skeleton className="h-14 w-full" />
                 <Skeleton className="h-14 w-full" />
               </Stack>
             ) : colleagues.length === 0 ? (
               <Empty>
-                <EmptyIcon>
-                  <Users aria-hidden="true" />
-                </EmptyIcon>
-                <EmptyTitle>Aucun collègue trouvé</EmptyTitle>
-                <EmptyDescription>
-                  Aucun membre actif ne correspond à votre recherche.
-                </EmptyDescription>
+                <EmptyHeader>
+                  <EmptyIcon>
+                    <Users aria-hidden="true" />
+                  </EmptyIcon>
+                  <EmptyTitle>Aucun collègue trouvé</EmptyTitle>
+                  <EmptyDescription>
+                    Aucun membre actif ne correspond à votre recherche.
+                  </EmptyDescription>
+                </EmptyHeader>
               </Empty>
             ) : (
               <Table>
@@ -759,7 +808,9 @@ export function DirectoryProfilePanel({
                     </CardHeader>
                     <CardContent>
                       {colleagueLoading ? (
-                        <Skeleton className="h-16 w-full" />
+                        <div role="status" aria-label="Chargement de la biographie">
+                          <Skeleton className="h-16 w-full" />
+                        </div>
                       ) : (
                         <p className="text-sm leading-relaxed">
                           {colleagueProfile?.bio?.trim()

@@ -141,6 +141,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   id="company-name"
                   name="companyName"
                   value={form.companyName}
+                  aria-invalid={Boolean(fieldErrors.companyName)}
                   onChange={(event) => updateField("companyName", event.target.value)}
                   placeholder="Ex : Acme SAS"
                   required
@@ -154,6 +155,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   id="company-code"
                   name="companyCode"
                   value={form.companyCode}
+                  aria-invalid={Boolean(fieldErrors.companyCode)}
                   onChange={(event) => updateField("companyCode", event.target.value)}
                   placeholder="EX : ACME-2026"
                   className="uppercase placeholder:normal-case"
@@ -172,6 +174,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   id="admin-first-name"
                   name="adminFirstName"
                   value={form.adminFirstName}
+                  aria-invalid={Boolean(fieldErrors.adminFirstName)}
                   onChange={(event) => updateField("adminFirstName", event.target.value)}
                   required
                 />
@@ -184,6 +187,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   id="admin-last-name"
                   name="adminLastName"
                   value={form.adminLastName}
+                  aria-invalid={Boolean(fieldErrors.adminLastName)}
                   onChange={(event) => updateField("adminLastName", event.target.value)}
                   required
                 />
@@ -198,6 +202,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   id="admin-username"
                   name="adminUsername"
                   value={form.adminUsername}
+                  aria-invalid={Boolean(fieldErrors.adminUsername)}
                   onChange={(event) => updateField("adminUsername", event.target.value)}
                   placeholder="prenom.nom"
                   required
@@ -212,6 +217,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   type="email"
                   name="adminEmail"
                   value={form.adminEmail}
+                  aria-invalid={Boolean(fieldErrors.adminEmail)}
                   onChange={(event) => updateField("adminEmail", event.target.value)}
                   placeholder="admin@entreprise.fr"
                   required
@@ -228,6 +234,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   type="password"
                   name="adminPassword"
                   value={form.adminPassword}
+                  aria-invalid={Boolean(fieldErrors.adminPassword)}
                   onChange={(event) => updateField("adminPassword", event.target.value)}
                   minLength={8}
                   required
@@ -242,6 +249,7 @@ export function CompanyCreationPanel({ client = api }: { client?: CompanyCreatio
                   type="password"
                   name="adminConfirmPassword"
                   value={form.adminConfirmPassword}
+                  aria-invalid={Boolean(fieldErrors.adminConfirmPassword)}
                   onChange={(event) => updateField("adminConfirmPassword", event.target.value)}
                   minLength={8}
                   required

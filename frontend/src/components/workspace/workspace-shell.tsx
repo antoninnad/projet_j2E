@@ -9,6 +9,7 @@ import {
   syncTabToLocation,
   type WorkspaceTabId,
 } from "@/app/routes"
+import { ActivityFeedPanel } from "@/components/activity/activity-feed-panel"
 import { CompanyAdminPanel } from "@/components/admin/company-admin-panel"
 import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
@@ -171,6 +172,8 @@ export function WorkspaceShell({
           {activeTab === "directory" && (
             <DirectoryProfilePanel client={client} onOpenConversation={handleOpenConversation} />
           )}
+
+          {activeTab === "activity" && <ActivityFeedPanel client={client} />}
 
           {activeTab === "chat" && (embedded ? (
             <ChatPanel

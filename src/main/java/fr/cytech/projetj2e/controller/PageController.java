@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class PageController {
 
-    private static final Set<String> ALLOWED_DASHBOARD_TABS = Set.of("files", "admin", "directory", "chat");
+    private static final Set<String> ALLOWED_DASHBOARD_TABS = Set.of("files", "admin", "directory", "chat", "activity");
     private static final Set<String> ADMIN_ONLY_TABS = Set.of("admin");
     private static final int RECENT_DOCUMENTS_LIMIT = 5;
     private final SessionIdentityService identityService;

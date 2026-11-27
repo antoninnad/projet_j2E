@@ -1,52 +1,52 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Tableau de bord', 'Accédez à vos départements, documents autorisés, annuaire et chat privé.')}"></head>
-<body class="flex min-h-screen flex-col bg-canvas text-foreground">
+<body class="flex min-h-svh flex-col bg-canvas text-foreground">
 <header th:replace="~{fragments/header :: header('dashboard')}"></header>
 
 <main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-    <div class="mb-5">
+    <div class="[&:has([role])]:mb-5">
         <div th:replace="~{fragments/messages :: messages}"></div>
     </div>
 
     <!-- Synthèse serveur Thymeleaf des ressources autorisées (alimentée dès T18) -->
     <section aria-labelledby="synthese-dashboard" class="mb-6 grid gap-4 md:grid-cols-2">
-        <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div class="card-base gap-3 px-5 py-5">
             <div class="flex items-center justify-between gap-2">
                 <h1 id="synthese-dashboard" class="text-base font-semibold tracking-tight">
                     Mes départements accessibles
                 </h1>
-                <span class="rounded-full border border-primary/20 bg-primary-subtle px-2.5 py-0.5 text-xs font-medium text-primary-subtle-foreground"
+                <span class="badge-base border-primary/20 bg-primary-subtle text-primary-subtle-foreground"
                       th:text="${#lists.size(departments)}">0</span>
             </div>
 
-            <ul th:if="${!#lists.isEmpty(departments)}" class="mt-3 flex flex-wrap gap-2">
+            <ul th:if="${!#lists.isEmpty(departments)}" class="flex flex-wrap gap-2">
                 <li th:each="dept : ${departments}"
                     class="rounded-md border border-primary/20 bg-primary-subtle px-3 py-1.5 text-xs font-medium text-primary-subtle-foreground"
                     th:text="${dept}">Département</li>
             </ul>
 
-            <p th:if="${#lists.isEmpty(departments)}" class="mt-2.5 text-xs text-muted-foreground">
+            <p th:if="${#lists.isEmpty(departments)}" class="text-xs text-muted-foreground">
                 Aucun département affecté pour le moment. Les départements autorisés apparaîtront ici dès leur chargement côté serveur.
             </p>
         </div>
 
-        <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div class="card-base gap-3 px-5 py-5">
             <div class="flex items-center justify-between gap-2">
                 <h2 class="text-base font-semibold tracking-tight">
                     Documents récents autorisés
                 </h2>
-                <span class="rounded-full border border-primary/20 bg-primary-subtle px-2.5 py-0.5 text-xs font-medium text-primary-subtle-foreground"
+                <span class="badge-base border-primary/20 bg-primary-subtle text-primary-subtle-foreground"
                       th:text="${#lists.size(recentDocuments)}">0</span>
             </div>
 
-            <ul th:if="${!#lists.isEmpty(recentDocuments)}" class="mt-3 space-y-1.5 text-xs">
+            <ul th:if="${!#lists.isEmpty(recentDocuments)}" class="space-y-1.5 text-xs">
                 <li th:each="doc : ${recentDocuments}"
                     class="truncate rounded-md bg-secondary/60 px-3 py-1.5 text-foreground"
                     th:text="${doc}">Document</li>
             </ul>
 
-            <p th:if="${#lists.isEmpty(recentDocuments)}" class="mt-2.5 text-xs text-muted-foreground">
+            <p th:if="${#lists.isEmpty(recentDocuments)}" class="text-xs text-muted-foreground">
                 Utilisez l'espace interactif ci-dessous pour parcourir, consulter et modifier vos dossiers et fichiers.
             </p>
         </div>
@@ -57,13 +57,14 @@
         <div id="workspace-root"
              data-react-mount="workspace"
              th:attr="data-base-url=@{/},data-login-url=@{/login(expired=true)},data-initial-tab=${activeTab},data-user-name=${sessionDisplayName},data-is-admin=${isAdmin}">
-            <div class="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground shadow-xs">
+            <div role="status" class="card-base items-center justify-center p-8 text-center text-sm text-muted-foreground">
                 Chargement de l'espace de travail interactif…
             </div>
         </div>
         <noscript>
-            <div class="mt-4 rounded-lg border border-warning-border bg-warning-subtle px-4 py-3 text-sm text-warning-foreground">
-                JavaScript est nécessaire pour utiliser l'explorateur interactif, l'éditeur et le chat en temps réel.
+            <div role="alert" class="alert-base mt-4 border-warning-border bg-warning-subtle text-warning-foreground">
+                <svg th:replace="~{fragments/ui :: alertIcon('warning')}"></svg>
+                <p class="col-start-2 leading-relaxed">JavaScript est nécessaire pour utiliser l'explorateur interactif, l'éditeur et le chat en temps réel.</p>
             </div>
         </noscript>
     </section>

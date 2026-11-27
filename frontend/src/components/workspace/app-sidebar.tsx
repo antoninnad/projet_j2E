@@ -1,4 +1,5 @@
 import {
+  Activity,
   Building2,
   ChevronsUpDown,
   FolderOpen,
@@ -44,6 +45,7 @@ const TAB_ICONS: Record<WorkspaceTabId, typeof FolderOpen> = {
   files: FolderOpen,
   directory: Users,
   chat: MessageSquare,
+  activity: Activity,
   admin: ShieldCheck,
 }
 

@@ -2,6 +2,7 @@ import { createApiClient, type ApiClientOptions } from "@/lib/api-client"
 import { paginate } from "@/lib/pagination"
 import type { UploadProgress } from "@/lib/upload-request"
 import type {
+  ActivityEntry,
   ChangePasswordRequest,
   ChatMessage,
   ChatMessagePage,
@@ -153,6 +154,13 @@ export function createApi(options?: ApiClientOptions) {
         method: "DELETE",
         signal,
       }),
+    listActivity: (query?: Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
+      json<Page<ActivityEntry>>("/activity", { query, signal }),
+    listNodeActivity: (
+      nodeId: number,
+      query?: Pick<PageQuery, "page" | "size">,
+      signal?: AbortSignal,
+    ) => json<Page<ActivityEntry>>(`/nodes/${nodeId}/activity`, { query, signal }),
   }
 }
 

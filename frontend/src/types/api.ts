@@ -146,6 +146,31 @@ export type Conversation = {
 export type ChatMessagePage = { items: ChatMessage[]; hasMore: boolean }
 export type SendChatMessage = { content: string; clientMessageId: string }
 
+export type ActivityCategory = "DOCUMENT" | "RIGHTS" | "ADMINISTRATION"
+
+export interface ActivityActor {
+  id: number
+  firstName: string
+  lastName: string
+}
+
+export interface ActivityEntry {
+  id: number
+  action: string
+  category: ActivityCategory
+  label: string
+  occurredAt: string
+  actor: ActivityActor | null
+  nodeId: number | null
+  nodeName: string | null
+  nodeKind: "folder" | "file" | null
+  departmentId: number | null
+  departmentName: string | null
+  targetUserId: number | null
+  targetUserName: string | null
+  details: string | null
+}
+
 export interface PageMeta {
   page: number
   size: number

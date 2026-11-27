@@ -274,6 +274,18 @@ class HomeControllerTest {
     }
 
     @Test
+    void dashboardAllowsActivityTabForMember() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(FrontendModelAdvice.ATTR_USER_ID, 7L);
+        when(sessionIdentityService.requireActiveMember(session)).thenReturn(activeUser(7L, UserRole.MEMBER));
+
+        mockMvc.perform(get("/dashboard").param("tab", "activity").session(session))
+                .andExpect(status().isOk())
+                .andExpect(view().name("dashboard"))
+                .andExpect(content().string(containsString("data-initial-tab=\"activity\"")));
+    }
+
+    @Test
     void dashboardRedirectsWithExpiredMessageWhenAccountBecomesInactive() throws Exception {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(FrontendModelAdvice.ATTR_USER_ID, 99L);

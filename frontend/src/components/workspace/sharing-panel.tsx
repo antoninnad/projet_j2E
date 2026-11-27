@@ -8,7 +8,7 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/componen
 import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Cluster, IconTile, SplitGrid, Stack } from "@/components/ui/layout"
+import { Cluster, SplitGrid, Stack } from "@/components/ui/layout"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -48,6 +48,7 @@ export function SharingPanel({
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -75,7 +76,7 @@ export function SharingPanel({
       })
 
     return () => controller.abort()
-  }, [client, nodeId])
+  }, [client, nodeId, reloadToken])
 
   async function handleSaveThreshold(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -152,9 +153,7 @@ export function SharingPanel({
       <Stack gap="md">
         <Cluster justify="between">
           <Cluster gap="sm">
-            <IconTile tone="brand" size="sm">
-              <Shield aria-hidden="true" />
-            </IconTile>
+            <Shield className="size-4 text-primary" aria-hidden="true" />
             <h2 id="panneau-partage-titre" className="text-sm font-semibold">
               Partage et permissions — {nodeName}
             </h2>
@@ -177,12 +176,31 @@ export function SharingPanel({
         {error && (
           <Alert variant="destructive">
             <AlertCircle aria-hidden="true" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+              <span>{error}</span>
+              {!info && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={loading || busy}
+                  onClick={() => {
+                    setLoading(true)
+                    setError(null)
+                    setReloadToken((n) => n + 1)
+                  }}
+                >
+                  Réessayer
+                </Button>
+              )}
+            </AlertDescription>
           </Alert>
         )}
 
         {loading ? (
-          <Skeleton className="h-32 w-full" />
+          <div role="status" aria-label="Chargement des permissions de partage">
+            <Skeleton className="h-32 w-full" />
+          </div>
         ) : info ? (
           <SplitGrid variant="equal">
             {/* Carte Propriétaire & Seuil M */}
@@ -224,7 +242,7 @@ export function SharingPanel({
 
                   <form
                     onSubmit={(event) => void handleSaveThreshold(event)}
-                    className="flex items-end gap-2 pt-1"
+                    className="flex flex-wrap items-end gap-2 pt-1"
                   >
                     <Field className="w-36">
                       <Label htmlFor="sharing-threshold-input">Seuil minimum (M)</Label>
@@ -308,7 +326,7 @@ export function SharingPanel({
                   {info.canManageSharing && (
                     <form
                       onSubmit={(event) => void handleAddContributor(event)}
-                      className="flex items-end gap-2"
+                      className="flex flex-wrap items-end gap-2"
                     >
                       <Field className="min-w-40 flex-1">
                         <Label htmlFor="sharing-add-contributor">Ajouter un contributeur</Label>

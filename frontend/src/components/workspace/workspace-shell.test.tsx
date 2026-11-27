@@ -52,13 +52,14 @@ describe("WorkspaceShell", () => {
 
   afterEach(() => vi.unstubAllGlobals())
 
-  it("affiche les 4 onglets accessibles avec l'onglet Documents actif par défaut", () => {
+  it("affiche les 5 onglets accessibles avec l'onglet Documents actif par défaut", () => {
     render(<WorkspaceShell embedded userName="Alice Dupont" isAdmin />)
 
     expect(screen.getByRole("tablist", { name: /Modules de l'espace de travail/i })).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Documents" })).toHaveAttribute("aria-selected", "true")
     expect(screen.getByRole("tab", { name: "Annuaire" })).toHaveAttribute("aria-selected", "false")
     expect(screen.getByRole("tab", { name: "Chat privé" })).toHaveAttribute("aria-selected", "false")
+    expect(screen.getByRole("tab", { name: "Activité" })).toHaveAttribute("aria-selected", "false")
     expect(screen.getByRole("tab", { name: "Administration" })).toHaveAttribute("aria-selected", "false")
     expect(screen.getByText("Alice Dupont")).toBeInTheDocument()
     expect(screen.getByText("Admin")).toBeInTheDocument()
@@ -86,6 +87,10 @@ describe("WorkspaceShell", () => {
     await user.click(screen.getByRole("tab", { name: "Chat privé" }))
     expect(await screen.findByRole("heading", { name: "Conversations" })).toBeInTheDocument()
     expect(window.location.search).toBe("?tab=chat")
+
+    await user.click(screen.getByRole("tab", { name: "Activité" }))
+    expect(await screen.findByRole("heading", { name: "Activité récente" })).toBeInTheDocument()
+    expect(window.location.search).toBe("?tab=activity")
 
     await user.click(screen.getByRole("tab", { name: "Administration" }))
     expect(await screen.findByText(/Demandes d'inscription en attente/i)).toBeInTheDocument()

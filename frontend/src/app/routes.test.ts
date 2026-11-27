@@ -25,11 +25,12 @@ describe("routes (MVC & onglets React)", () => {
     })
   })
 
-  it("expose les 4 onglets métier attendus dans le tableau de bord", () => {
+  it("expose les 5 onglets métier attendus dans le tableau de bord", () => {
     expect(WORKSPACE_TABS.map((tab) => tab.id)).toEqual([
       "files",
       "directory",
       "chat",
+      "activity",
       "admin",
     ])
   })
@@ -39,14 +40,26 @@ describe("routes (MVC & onglets React)", () => {
     expect(parseWorkspaceTab("admin")).toBe("admin")
     expect(parseWorkspaceTab("directory")).toBe("directory")
     expect(parseWorkspaceTab("chat")).toBe("chat")
+    expect(parseWorkspaceTab("activity")).toBe("activity")
     expect(parseWorkspaceTab("inconnu")).toBe("files")
     expect(parseWorkspaceTab(null, "admin")).toBe("admin")
     expect(parseWorkspaceTab(undefined)).toBe("files")
   })
 
   it("visibleWorkspaceTabs masque les onglets réservés aux administrateurs", () => {
-    expect(visibleWorkspaceTabs(true).map((tab) => tab.id)).toEqual(["files", "directory", "chat", "admin"])
-    expect(visibleWorkspaceTabs(false).map((tab) => tab.id)).toEqual(["files", "directory", "chat"])
+    expect(visibleWorkspaceTabs(true).map((tab) => tab.id)).toEqual([
+      "files",
+      "directory",
+      "chat",
+      "activity",
+      "admin",
+    ])
+    expect(visibleWorkspaceTabs(false).map((tab) => tab.id)).toEqual([
+      "files",
+      "directory",
+      "chat",
+      "activity",
+    ])
   })
 
   it("restrictWorkspaceTab ramène un membre simple sur l'onglet par défaut", () => {

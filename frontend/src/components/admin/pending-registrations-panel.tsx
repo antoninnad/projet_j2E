@@ -13,7 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Empty, EmptyDescription, EmptyIcon, EmptyTitle } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyIcon,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Cluster, Stack } from "@/components/ui/layout"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -136,24 +142,39 @@ export function PendingRegistrationsPanel({ client = api }: { client?: Registrat
           {error && (
             <Alert variant="destructive">
               <AlertCircle aria-hidden="true" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                <span>{error}</span>
+                {!result && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={loading || busy}
+                    onClick={() => loadPage(query.page)}
+                  >
+                    Réessayer
+                  </Button>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
           {loading ? (
-            <Stack gap="sm" aria-label="Chargement des demandes d'inscription">
+            <Stack gap="sm" role="status" aria-label="Chargement des demandes d'inscription">
               <Skeleton className="h-11 w-full" />
               <Skeleton className="h-11 w-full" />
             </Stack>
           ) : result?.items.length === 0 ? (
             <Empty>
-              <EmptyIcon>
-                <ShieldCheck aria-hidden="true" />
-              </EmptyIcon>
-              <EmptyTitle>Aucune demande en attente</EmptyTitle>
-              <EmptyDescription>
-                Les nouvelles inscriptions nécessitant votre approbation apparaîtront automatiquement ici.
-              </EmptyDescription>
+              <EmptyHeader>
+                <EmptyIcon>
+                  <ShieldCheck aria-hidden="true" />
+                </EmptyIcon>
+                <EmptyTitle>Aucune demande en attente</EmptyTitle>
+                <EmptyDescription>
+                  Les nouvelles inscriptions nécessitant votre approbation apparaîtront automatiquement ici.
+                </EmptyDescription>
+              </EmptyHeader>
             </Empty>
           ) : (
             result && (

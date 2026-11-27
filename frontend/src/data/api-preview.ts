@@ -1,6 +1,8 @@
 import { createApi } from "@/lib/api"
 import { paginate } from "@/lib/pagination"
 import type {
+  ActivityCategory,
+  ActivityEntry,
   ChangePasswordRequest,
   Company,
   CreateCompanyRequest,
@@ -171,6 +173,178 @@ export function createPreviewApi() {
     ],
   ])
   let currentPassword = "Password123!"
+  let nextActivityId = 9
+
+  const activities: ActivityEntry[] = [
+    {
+      id: 8,
+      action: "FILE_SAVED",
+      category: "DOCUMENT",
+      label: "a enregistré le fichier",
+      occurredAt: "2026-11-27T14:20:00Z",
+      actor: { id: 3, firstName: "Léa", lastName: "Dubois" },
+      nodeId: 20,
+      nodeName: "guide-demarrage.md",
+      nodeKind: "file",
+      departmentId: 1,
+      departmentName: "Finance",
+      targetUserId: null,
+      targetUserName: null,
+      details: "Version 3 enregistrée",
+    },
+    {
+      id: 7,
+      action: "CONTRIBUTOR_ADDED",
+      category: "RIGHTS",
+      label: "a ajouté un contributeur à",
+      occurredAt: "2026-11-27T11:45:00Z",
+      actor: { id: 1, firstName: "Alice", lastName: "Martin" },
+      nodeId: 20,
+      nodeName: "guide-demarrage.md",
+      nodeKind: "file",
+      departmentId: 1,
+      departmentName: "Finance",
+      targetUserId: 4,
+      targetUserName: "Hugo Petit",
+      details: null,
+    },
+    {
+      id: 6,
+      action: "THRESHOLD_CHANGED",
+      category: "RIGHTS",
+      label: "a changé le seuil d'accès de",
+      occurredAt: "2026-11-26T16:30:00Z",
+      actor: { id: 4, firstName: "Hugo", lastName: "Petit" },
+      nodeId: 21,
+      nodeName: "architecture.md",
+      nodeKind: "file",
+      departmentId: 2,
+      departmentName: "Ressources humaines",
+      targetUserId: null,
+      targetUserName: null,
+      details: "« 1 » → « 2 »",
+    },
+    {
+      id: 5,
+      action: "FILE_UPLOADED",
+      category: "DOCUMENT",
+      label: "a importé le fichier",
+      occurredAt: "2026-11-26T10:15:00Z",
+      actor: { id: 6, firstName: "Lucas", lastName: "Moreau" },
+      nodeId: 22,
+      nodeName: "budget-previsionnel-2026.pdf",
+      nodeKind: "file",
+      departmentId: 1,
+      departmentName: "Finance",
+      targetUserId: null,
+      targetUserName: null,
+      details: null,
+    },
+    {
+      id: 4,
+      action: "MEMBER_ACCESS_SET",
+      category: "ADMINISTRATION",
+      label: "a défini le niveau d'accès d'un membre dans",
+      occurredAt: "2026-11-25T15:10:00Z",
+      actor: { id: 1, firstName: "Alice", lastName: "Martin" },
+      nodeId: null,
+      nodeName: null,
+      nodeKind: null,
+      departmentId: 1,
+      departmentName: "Finance",
+      targetUserId: 6,
+      targetUserName: "Lucas Moreau",
+      details: "Niveau L = 2",
+    },
+    {
+      id: 3,
+      action: "FOLDER_CREATED",
+      category: "DOCUMENT",
+      label: "a créé le dossier",
+      occurredAt: "2026-11-24T09:30:00Z",
+      actor: { id: 1, firstName: "Alice", lastName: "Martin" },
+      nodeId: 10,
+      nodeName: "Archives",
+      nodeKind: "folder",
+      departmentId: 1,
+      departmentName: "Finance",
+      targetUserId: null,
+      targetUserName: null,
+      details: null,
+    },
+    {
+      id: 2,
+      action: "ACCOUNT_APPROVED",
+      category: "ADMINISTRATION",
+      label: "a approuvé l'inscription de",
+      occurredAt: "2026-11-23T17:05:00Z",
+      actor: { id: 1, firstName: "Alice", lastName: "Martin" },
+      nodeId: null,
+      nodeName: null,
+      nodeKind: null,
+      departmentId: null,
+      departmentName: null,
+      targetUserId: 5,
+      targetUserName: "Inès Laurent",
+      details: null,
+    },
+    {
+      id: 1,
+      action: "DEPARTMENT_CREATED",
+      category: "ADMINISTRATION",
+      label: "a créé le département",
+      occurredAt: "2026-11-22T08:00:00Z",
+      actor: null,
+      nodeId: null,
+      nodeName: null,
+      nodeKind: null,
+      departmentId: 1,
+      departmentName: "Finance",
+      targetUserId: null,
+      targetUserName: null,
+      details: null,
+    },
+  ]
+
+  function recordPreviewActivity(
+    entry: Omit<ActivityEntry, "id" | "occurredAt" | "actor"> & { actor?: ActivityEntry["actor"] },
+  ) {
+    const me = users.get(admin.id) ?? admin
+    activities.unshift({
+      id: nextActivityId++,
+      occurredAt: new Date().toISOString(),
+      actor:
+        entry.actor !== undefined
+          ? entry.actor
+          : { id: me.id, firstName: me.firstName, lastName: me.lastName },
+      ...entry,
+    })
+  }
+
+  function recordSharingActivity(
+    action: string,
+    category: ActivityCategory,
+    label: string,
+    sharing: NodeSharingInfo,
+    extra?: { targetUser?: User; details?: string | null },
+  ) {
+    const numericId = /^\d+$/.test(sharing.nodeId) ? Number(sharing.nodeId) : null
+    recordPreviewActivity({
+      action,
+      category,
+      label,
+      nodeId: numericId,
+      nodeName: sharing.nodeName,
+      nodeKind: "file",
+      departmentId: null,
+      departmentName: sharing.departmentName,
+      targetUserId: extra?.targetUser?.id ?? null,
+      targetUserName: extra?.targetUser
+        ? `${extra.targetUser.firstName} ${extra.targetUser.lastName}`.trim()
+        : null,
+      details: extra?.details ?? null,
+    })
+  }
 
   function getOrCreateNodeSharing(nodeId: string): NodeSharingInfo {
     const existing = sharingByNode.get(nodeId)
@@ -312,6 +486,19 @@ export function createPreviewApi() {
         const created: Department = { id, companyId: admin.companyId, name }
         departments.set(id, created)
         memberships.set(id, new Map<number, number>([[admin.id, 4]]))
+        recordPreviewActivity({
+          action: "DEPARTMENT_CREATED",
+          category: "ADMINISTRATION",
+          label: "a créé le département",
+          nodeId: null,
+          nodeName: null,
+          nodeKind: null,
+          departmentId: created.id,
+          departmentName: created.name,
+          targetUserId: null,
+          targetUserName: null,
+          details: null,
+        })
         return Response.json(created satisfies Department, { status: 201 })
       }
 
@@ -362,6 +549,20 @@ export function createPreviewApi() {
             })
           }
           deptMap.set(userId, accessLevel)
+          const dept = departments.get(departmentId)!
+          recordPreviewActivity({
+            action: "MEMBER_ACCESS_SET",
+            category: "ADMINISTRATION",
+            label: "a défini le niveau d'accès d'un membre dans",
+            nodeId: null,
+            nodeName: null,
+            nodeKind: null,
+            departmentId: dept.id,
+            departmentName: dept.name,
+            targetUserId: member.id,
+            targetUserName: `${member.firstName} ${member.lastName}`.trim(),
+            details: `Niveau L = ${accessLevel}`,
+          })
           return Response.json({
             userId: member.id,
             username: member.username,
@@ -374,6 +575,20 @@ export function createPreviewApi() {
 
         if (method === "DELETE") {
           deptMap.delete(userId)
+          const dept = departments.get(departmentId)!
+          recordPreviewActivity({
+            action: "MEMBER_REMOVED",
+            category: "ADMINISTRATION",
+            label: "a retiré un membre de",
+            nodeId: null,
+            nodeName: null,
+            nodeKind: null,
+            departmentId: dept.id,
+            departmentName: dept.name,
+            targetUserId: member.id,
+            targetUserName: `${member.firstName} ${member.lastName}`.trim(),
+            details: null,
+          })
           return new Response(null, { status: 204 })
         }
       }
@@ -407,6 +622,21 @@ export function createPreviewApi() {
             }
             const updatedStatus: User = { ...target, status: payload.status }
             users.set(id, updatedStatus)
+            if (payload.status === "DISABLED") {
+              recordPreviewActivity({
+                action: "ACCOUNT_DISABLED",
+                category: "ADMINISTRATION",
+                label: "a désactivé le compte de",
+                nodeId: null,
+                nodeName: null,
+                nodeKind: null,
+                departmentId: null,
+                departmentName: null,
+                targetUserId: target.id,
+                targetUserName: `${target.firstName} ${target.lastName}`.trim(),
+                details: null,
+              })
+            }
             return Response.json(updatedStatus satisfies User)
           }
           if (id !== admin.id) {
@@ -445,10 +675,36 @@ export function createPreviewApi() {
         if (user.status !== "PENDING") return error(409, "CONFLICT", "Ce compte n'est plus en attente.")
         if (action[2] === "decline") {
           users.delete(id)
+          recordPreviewActivity({
+            action: "ACCOUNT_DECLINED",
+            category: "ADMINISTRATION",
+            label: "a refusé l'inscription de",
+            nodeId: null,
+            nodeName: null,
+            nodeKind: null,
+            departmentId: null,
+            departmentName: null,
+            targetUserId: user.id,
+            targetUserName: `${user.firstName} ${user.lastName}`.trim(),
+            details: null,
+          })
           return new Response(null, { status: 204 })
         }
         const approved = { ...user, status: "ACTIVE" } satisfies User
         users.set(id, approved)
+        recordPreviewActivity({
+          action: "ACCOUNT_APPROVED",
+          category: "ADMINISTRATION",
+          label: "a approuvé l'inscription de",
+          nodeId: null,
+          nodeName: null,
+          nodeKind: null,
+          departmentId: null,
+          departmentName: null,
+          targetUserId: approved.id,
+          targetUserName: `${approved.firstName} ${approved.lastName}`.trim(),
+          details: null,
+        })
         return Response.json(approved)
       }
 
@@ -486,6 +742,9 @@ export function createPreviewApi() {
         }
         const updated: NodeSharingInfo = { ...current, minAccessLevel }
         sharingByNode.set(nodeId, updated)
+        recordSharingActivity("THRESHOLD_CHANGED", "RIGHTS", "a changé le seuil d'accès de", updated, {
+          details: `« ${current.minAccessLevel} » → « ${minAccessLevel} »`,
+        })
         return Response.json(updated satisfies NodeSharingInfo)
       }
 
@@ -512,6 +771,9 @@ export function createPreviewApi() {
           contributors: [...current.contributors, toSharingPerson(candidate)],
         }
         sharingByNode.set(nodeId, updated)
+        recordSharingActivity("CONTRIBUTOR_ADDED", "RIGHTS", "a ajouté un contributeur à", updated, {
+          targetUser: candidate,
+        })
         return Response.json(updated satisfies NodeSharingInfo)
       }
 
@@ -523,12 +785,42 @@ export function createPreviewApi() {
         if (!current.canManageSharing) {
           return error(403, "FORBIDDEN", "Vous n'avez pas le droit de gérer les contributeurs de cet élément.")
         }
+        const removed = users.get(userId)
         const updated: NodeSharingInfo = {
           ...current,
           contributors: current.contributors.filter((person) => person.id !== userId),
         }
         sharingByNode.set(nodeId, updated)
+        recordSharingActivity("CONTRIBUTOR_REMOVED", "RIGHTS", "a retiré un contributeur de", updated, {
+          targetUser: removed,
+        })
         return Response.json(updated satisfies NodeSharingInfo)
+      }
+
+      if (method === "GET" && pathname === "/api/activity") {
+        const page = Number(searchParams.get("page") ?? 0)
+        const size = Number(searchParams.get("size") ?? 20)
+        if (!Number.isSafeInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {
+          return error(400, "BAD_REQUEST", "Les paramètres de pagination sont invalides.")
+        }
+        const ordered = [...activities].sort(
+          (a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt) || b.id - a.id,
+        )
+        return Response.json(paginate(ordered, page, size))
+      }
+
+      const nodeActivityMatch = /^\/api\/nodes\/(\d+)\/activity$/.exec(pathname)
+      if (method === "GET" && nodeActivityMatch) {
+        const nodeId = Number(nodeActivityMatch[1])
+        const page = Number(searchParams.get("page") ?? 0)
+        const size = Number(searchParams.get("size") ?? 20)
+        if (!Number.isSafeInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > 100) {
+          return error(400, "BAD_REQUEST", "Les paramètres de pagination sont invalides.")
+        }
+        const ordered = activities
+          .filter((entry) => entry.nodeId === nodeId)
+          .sort((a, b) => Date.parse(b.occurredAt) - Date.parse(a.occurredAt) || b.id - a.id)
+        return Response.json(paginate(ordered, page, size))
       }
 
       return error(501, "NOT_IMPLEMENTED", "Cette opération n'est pas disponible dans l'aperçu.")
