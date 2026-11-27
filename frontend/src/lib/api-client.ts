@@ -52,9 +52,13 @@ type RequestOptions = Omit<RequestInit, "body" | "credentials"> & {
 }
 
 export function createApiClient({ baseUrl = "/", fetcher = fetchWithUpload }: ApiClientOptions = {}) {
+  function url(path: `/${string}`): string {
+    return resolveAppPath(baseUrl, `/api${path}`)
+  }
+
   async function request(path: `/${string}`, options: RequestOptions = {}): Promise<Response> {
     const { query, json, body, headers: initialHeaders, method = "GET", onProgress, ...init } = options
-    const url = resolveAppPath(baseUrl, `/api${path}`)
+    const endpoint = url(path)
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(query ?? {})) {
       if (value !== undefined) params.set(key, String(value))
@@ -71,7 +75,7 @@ export function createApiClient({ baseUrl = "/", fetcher = fetchWithUpload }: Ap
 
     let response: Response
     try {
-      const requestUrl = params.size ? `${url}?${params}` : url
+      const requestUrl = params.size ? `${endpoint}?${params}` : endpoint
       const requestInit: RequestInit = {
         ...init,
         method,
@@ -120,5 +124,5 @@ export function createApiClient({ baseUrl = "/", fetcher = fetchWithUpload }: Ap
     }
   }
 
-  return { request, json, noContent }
+  return { request, json, noContent, url }
 }

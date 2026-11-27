@@ -61,7 +61,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { api, type Api } from "@/lib/api"
 import { ApiError } from "@/lib/api-client"
-import type { Page, Profile, User } from "@/types/api"
+import type { Colleague, Page, Profile, User } from "@/types/api"
 
 type DirectoryProfileApi = Pick<
   Api,
@@ -70,7 +70,7 @@ type DirectoryProfileApi = Pick<
   | "getMyProfile"
   | "updateMyProfile"
   | "changeMyPassword"
-  | "listUsers"
+  | "listColleagues"
   | "getUserProfile"
 >
 
@@ -83,14 +83,14 @@ function initialsOf(firstName?: string, lastName?: string, username?: string): s
   return (username?.trim().slice(0, 2) || "U").toUpperCase()
 }
 
-function fullNameOf(user: Pick<User, "firstName" | "lastName" | "username" | "email">): string {
+function fullNameOf(user: Colleague): string {
   const joined = [user.firstName, user.lastName].filter(Boolean).join(" ").trim()
-  return joined || user.username || user.email
+  return joined || user.username || user.email || ""
 }
 
 export interface DirectoryProfilePanelProps {
   client?: DirectoryProfileApi
-  onOpenConversation?: (colleague: User) => void
+  onOpenConversation?: (colleague: Colleague) => void
 }
 
 export function DirectoryProfilePanel({
@@ -118,12 +118,12 @@ export function DirectoryProfilePanel({
 
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(0)
-  const [directoryResult, setDirectoryResult] = useState<Page<User> | null>(null)
+  const [directoryResult, setDirectoryResult] = useState<Page<Colleague> | null>(null)
   const [directoryLoading, setDirectoryLoading] = useState(true)
   const [directoryError, setDirectoryError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
-  const [selectedColleague, setSelectedColleague] = useState<User | null>(null)
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null)
   const [colleagueProfile, setColleagueProfile] = useState<Profile | null>(null)
   const [colleagueLoading, setColleagueLoading] = useState(false)
 
@@ -156,11 +156,10 @@ export function DirectoryProfilePanel({
   useEffect(() => {
     const controller = new AbortController()
     client
-      .listUsers(
+      .listColleagues(
         {
           page,
           size: DIRECTORY_PAGE_SIZE,
-          status: "ACTIVE",
           search: search.trim() || undefined,
         },
         controller.signal,
@@ -218,7 +217,7 @@ export function DirectoryProfilePanel({
     setReloadToken((n) => n + 1)
   }
 
-  function handleSelectColleague(colleague: User) {
+  function handleSelectColleague(colleague: Colleague) {
     setColleagueProfile(null)
     setColleagueLoading(true)
     setSelectedColleague(colleague)
@@ -602,7 +601,7 @@ export function DirectoryProfilePanel({
                                 )}
                               </Cluster>
                               <span className="text-xs text-muted-foreground">
-                                @{colleague.username} · {colleague.email}
+                                @{colleague.username}{colleague.email && ` · ${colleague.email}`}
                               </span>
                             </Stack>
                           </Cluster>
@@ -731,22 +730,26 @@ export function DirectoryProfilePanel({
               <SheetBody>
                 <Stack gap="md">
                   <Cluster gap="sm">
-                    <Badge variant="brand">
-                      {selectedColleague.role === "COMPANY_ADMIN"
-                        ? "Administrateur d'entreprise"
-                        : "Membre"}
-                    </Badge>
+                    {selectedColleague.role && (
+                      <Badge variant="brand">
+                        {selectedColleague.role === "COMPANY_ADMIN"
+                          ? "Administrateur d'entreprise"
+                          : "Membre"}
+                      </Badge>
+                    )}
                     <Badge variant="success">Compte actif</Badge>
                   </Cluster>
 
-                  <Card className="py-3">
-                    <CardContent>
-                      <Cluster gap="sm">
-                        <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
-                        <span className="text-xs font-medium">{selectedColleague.email}</span>
-                      </Cluster>
-                    </CardContent>
-                  </Card>
+                  {selectedColleague.email && (
+                    <Card className="py-3">
+                      <CardContent>
+                        <Cluster gap="sm">
+                          <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
+                          <span className="text-xs font-medium">{selectedColleague.email}</span>
+                        </Cluster>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   <Card className="py-4">
                     <CardHeader>

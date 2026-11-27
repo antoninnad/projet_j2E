@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AppSidebar } from "@/components/workspace/app-sidebar"
 import { FileWorkspace } from "@/components/workspace/file-workspace"
 import type { Api } from "@/lib/api"
-import type { User } from "@/types/api"
+import type { Colleague } from "@/types/api"
 
 interface WorkspaceShellProps {
   initialTab?: string
@@ -48,7 +48,7 @@ export function WorkspaceShell({
   const [activeTab, setActiveTab] = useState<WorkspaceTabId>(() =>
     restrictWorkspaceTab(readTabFromLocation(parseWorkspaceTab(initialTab, "files")), isAdmin),
   )
-  const [selectedChatPeer, setSelectedChatPeer] = useState<User | null>(null)
+  const [selectedChatPeer, setSelectedChatPeer] = useState<Colleague | null>(null)
 
   useEffect(() => {
     const onPopState = () => {
@@ -66,7 +66,7 @@ export function WorkspaceShell({
     syncTabToLocation(allowed)
   }
 
-  function handleOpenConversation(colleague: User) {
+  function handleOpenConversation(colleague: Colleague) {
     setSelectedChatPeer(colleague)
     setActiveTab("chat")
     if (typeof window !== "undefined") {
@@ -182,7 +182,7 @@ export function WorkspaceShell({
   )
 }
 
-function ChatModulePlaceholder({ peer }: { peer: User | null }) {
+function ChatModulePlaceholder({ peer }: { peer: Colleague | null }) {
   const title = peer
     ? `Conversation privée avec ${peer.firstName} ${peer.lastName}`
     : "Chat privé en temps réel"

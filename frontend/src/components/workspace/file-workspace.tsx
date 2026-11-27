@@ -220,6 +220,7 @@ export function FileWorkspace({
               {detailData ? (
                 <DocumentDetails
                   node={detailData.node}
+                  client={client}
                   onFolderAction={kind => setAction({ kind, node: detailData.node })}
                 />
               ) : currentDetail?.error ? (

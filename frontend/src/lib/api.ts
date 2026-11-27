@@ -1,7 +1,9 @@
 import { createApiClient, type ApiClientOptions } from "@/lib/api-client"
+import { paginate } from "@/lib/pagination"
 import type { UploadProgress } from "@/lib/upload-request"
 import type {
   ChangePasswordRequest,
+  Colleague,
   Company,
   CreateCompanyRequest,
   CreateCompanyResponse,
@@ -26,7 +28,7 @@ import type {
 } from "@/types/api"
 
 export function createApi(options?: ApiClientOptions) {
-  const { json, noContent } = createApiClient(options)
+  const { request, json, noContent, url } = createApiClient(options)
 
   return {
     register: (data: RegisterRequest, signal?: AbortSignal) =>
@@ -39,6 +41,13 @@ export function createApi(options?: ApiClientOptions) {
       json<CreateCompanyResponse>("/companies", { method: "POST", json: data, signal }),
     getCompany: (id: number, signal?: AbortSignal) => json<Company>(`/companies/${id}`, { signal }),
     listUsers: (query?: UserQuery, signal?: AbortSignal) => json<Page<User>>("/users", { query, signal }),
+    listColleagues: async (query: Pick<PageQuery, "page" | "size" | "search">, signal?: AbortSignal) => {
+      const result = await json<Page<Colleague> | Colleague[]>("/users", {
+        query: { ...query, status: "ACTIVE" },
+        signal,
+      })
+      return Array.isArray(result) ? paginate(result, query.page, query.size) : result
+    },
     getUser: (id: number, signal?: AbortSignal) => json<User>(`/users/${id}`, { signal }),
     updateUser: (id: number, data: UpdateUserRequest, signal?: AbortSignal) =>
       json<User>(`/users/${id}`, { method: "PATCH", json: data, signal }),
@@ -73,6 +82,8 @@ export function createApi(options?: ApiClientOptions) {
     listFolderChildren: (id: number, query?: Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
       json<Page<DocumentNode>>(`/folders/${id}/children`, { query, signal }),
     getNode: (id: number, signal?: AbortSignal) => json<NodeDetail>(`/nodes/${id}`, { signal }),
+    getFileContent: (id: number, signal?: AbortSignal) => request(`/files/${id}/content`, { signal }),
+    fileDownloadUrl: (id: number) => url(`/files/${id}/download`),
     createFolder: (parentId: number, name: string) =>
       json<DocumentNode>("/folders", { method: "POST", json: { parentId, name } }),
     renameFolder: (id: number, name: string, version: number) =>

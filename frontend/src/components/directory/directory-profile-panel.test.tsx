@@ -3,8 +3,31 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import { DirectoryProfilePanel } from "@/components/directory/directory-profile-panel"
 import { createPreviewApi } from "@/data/api-preview"
+import { createApi } from "@/lib/api"
 
 describe("DirectoryProfilePanel (T30)", () => {
+  it("affiche la liste simple renvoyée par Spring même sans la route de session JSON", async () => {
+    const colleagues = Array.from({ length: 5 }, (_, index) => ({
+      id: index + 1,
+      username: `membre${index + 1}`,
+      firstName: "Membre",
+      lastName: String(index + 1),
+    }))
+    const fetcher = vi.fn(async (url: string) => {
+      if (url === "/api/auth/session") return new Response(null, { status: 404 })
+      if (url === "/api/profiles/me") return Response.json({ id: null, bio: null, profilePictureUrl: null })
+      if (url.startsWith("/api/users?")) return Response.json(colleagues)
+      throw new Error(`Unexpected route: ${url}`)
+    })
+    const user = userEvent.setup()
+    render(<DirectoryProfilePanel client={createApi({ fetcher })} />)
+
+    expect(await screen.findByText("Membre 1")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Page suivante de l'annuaire" }))
+    expect(await screen.findByText("Membre 5")).toBeInTheDocument()
+    expect(screen.queryByText("Membre 1")).not.toBeInTheDocument()
+  })
+
   it("charge et met à jour le nom, le prénom, la biographie et l'avatar du membre connecté", async () => {
     const user = userEvent.setup()
     const client = createPreviewApi()

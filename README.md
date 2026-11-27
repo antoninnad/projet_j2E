@@ -207,6 +207,8 @@ L’interface principale est composée dans `frontend/src/App.tsx` et `frontend/
 
 Sur le dashboard, l'explorateur charge les racines, les enfants par pages de six et les métadonnées avec le fil d'Ariane. Selon les droits renvoyés par le serveur, il permet de créer, renommer, déplacer ou supprimer un dossier. Ouvrir un dossier accessible en écriture pour importer un fichier par sélection ou glisser-déposer. La progression s'affiche pendant l'envoi.
 
+Sélectionner un fichier pour consulter ses détails et son aperçu. Les textes, images matricielles et PDF s'affichent dans le panneau. Le bouton **Télécharger** permet de récupérer le fichier dans son format d'origine.
+
 L'aperçu Vite utilise les fichiers d'exemple de `frontend/src/data/workspace.ts` pour la recherche, les favoris et l'édition de texte. Les brouillons survivent au changement de fichier tant que l'explorateur reste ouvert. `Ctrl+S` ou `Cmd+S` enregistre le brouillon en mémoire. Sur mobile, les deux panneaux sont empilés.
 
 ### Développement et build

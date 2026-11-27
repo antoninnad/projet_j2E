@@ -48,6 +48,9 @@ function explore(url: string): Response {
   if (url === "/api/folders/10/children?page=0&size=6") return financePage(0)
   if (url === "/api/nodes/10") return Response.json({ node: finance, path: [] })
   if (url === "/api/nodes/20") return Response.json(reportDetail)
+  if (url === "/api/files/20/content") {
+    return new Response("Budget", { headers: { "Content-Type": "text/plain" } })
+  }
   throw new Error("Unexpected route: " + url)
 }
 
@@ -68,6 +71,7 @@ describe("FileWorkspace", () => {
     const pdf = await screen.findByRole("button", { name: "Ouvrir le fichier budget.pdf" })
     await user.click(pdf)
     expect(await details.findByText("application/pdf")).toBeInTheDocument()
+    expect(await details.findByText("Budget")).toBeInTheDocument()
     expect(details.getByText("2.0 Ko")).toBeInTheDocument()
     expect(details.getByText("Consulter")).toBeInTheDocument()
     expect(details.queryByText("Supprimer")).not.toBeInTheDocument()

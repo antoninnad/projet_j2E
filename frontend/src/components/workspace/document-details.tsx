@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Cluster, IconTile, Stack } from "@/components/ui/layout"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import type { Api } from "@/lib/api"
 import { formatFileSize } from "@/lib/utils"
 import type { DocumentNode, NodePermissions } from "@/types/api"
+import { FilePreview } from "./file-preview"
 import type { FolderAction } from "./folder-action-dialog"
 
 const ACTIONS: Record<keyof NodePermissions, string> = {
@@ -16,8 +18,9 @@ const ACTIONS: Record<keyof NodePermissions, string> = {
   createChild: "Créer dans ce dossier",
 }
 
-export function DocumentDetails({ node, onFolderAction }: {
+export function DocumentDetails({ node, client, onFolderAction }: {
   node: DocumentNode
+  client: Api
   onFolderAction: (kind: FolderAction["kind"]) => void
 }) {
   const { owner, permissions } = node
@@ -59,6 +62,10 @@ export function DocumentDetails({ node, onFolderAction }: {
             ))}
         </TableBody>
       </Table>
+
+      {file && permissions.view && (
+        <FilePreview key={`${node.id}:${node.version}`} file={node} client={client} />
+      )}
 
       {!file && node.parentId != null && (
         <Cluster gap="sm">
