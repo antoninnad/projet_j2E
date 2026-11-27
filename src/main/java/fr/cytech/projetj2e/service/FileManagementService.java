@@ -19,6 +19,7 @@ import fr.cytech.projetj2e.dto.NodeResponse;
 import fr.cytech.projetj2e.exception.ConflictException;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
 import fr.cytech.projetj2e.exception.StorageException;
+import fr.cytech.projetj2e.model.ActivityAction;
 import fr.cytech.projetj2e.model.File;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.repository.NodeRepository;
@@ -49,6 +50,7 @@ public class FileManagementService {
     private final NodeNames names;
     private final NodeResponseMapper mapper;
     private final DataSize maxFileSize;
+    private final ActivityRecorder activity;
 
     public FileManagementService(CompanyIsolationService isolation,
                                  PermissionService permissions,
@@ -56,7 +58,8 @@ public class FileManagementService {
                                  CompanyStorage storage,
                                  NodeNames names,
                                  NodeResponseMapper mapper,
-                                 @Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize maxFileSize) {
+                                 @Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize maxFileSize,
+                                 ActivityRecorder activity) {
         this.isolation = isolation;
         this.permissions = permissions;
         this.nodeRepository = nodeRepository;
@@ -64,6 +67,7 @@ public class FileManagementService {
         this.names = names;
         this.mapper = mapper;
         this.maxFileSize = maxFileSize;
+        this.activity = activity;
     }
 
     /** Enregistre le texte édité dans l'interface (fichiers texte uniquement), encodé en UTF-8. */
@@ -85,7 +89,9 @@ public class FileManagementService {
         String contentType = "text".equals(type.getType())
                 ? new MediaType(type, StandardCharsets.UTF_8).toString()
                 : file.getContentType();
-        return writeContent(actor, file, new ByteArrayInputStream(bytes), contentType, file.getOriginalFileName());
+        NodeResponse saved = writeContent(actor, file, new ByteArrayInputStream(bytes), contentType, file.getOriginalFileName());
+        activity.node(actor, ActivityAction.FILE_SAVED, file, "version " + saved.version());
+        return saved;
     }
 
     /** Remplace le contenu par un fichier importé ; le nom affiché ne change pas. */
@@ -103,7 +109,9 @@ public class FileManagementService {
         String originalFileName = sentName.isEmpty() || sentName.length() > NodeNames.MAX_LENGTH ? file.getName() : sentName;
         String contentType = FileUploadService.contentType(upload.getContentType(), originalFileName);
         try (InputStream content = upload.getInputStream()) {
-            return writeContent(actor, file, content, contentType, originalFileName);
+            NodeResponse replaced = writeContent(actor, file, content, contentType, originalFileName);
+            activity.node(actor, ActivityAction.FILE_REPLACED, file, "par « " + originalFileName + " »");
+            return replaced;
         } catch (IOException exception) {
             throw new StorageException("Le fichier reçu n'a pas pu être lu.", exception);
         }
@@ -116,8 +124,12 @@ public class FileManagementService {
         permissions.requireModify(actor, file);
         String name = NodeNames.valid(rawName);
         names.requireFree(file.getParent(), name, file.getId());
+        String previous = file.getName();
         file.setName(name);
         nodeRepository.flush();
+        if (!previous.equals(name)) {
+            activity.node(actor, ActivityAction.FILE_RENAMED, file, ActivityRecorder.change(previous, name));
+        }
         return mapper.toResponse(actor, file);
     }
 
@@ -127,6 +139,8 @@ public class FileManagementService {
         requireVersion(file, expectedVersion);
         permissions.requireDelete(actor, file);
         Path content = storage.resolve(file);
+        activity.node(actor, ActivityAction.FILE_DELETED, file, "dans « " + file.getParent().getName() + " »");
+        activity.freezeHistory(List.of(file));
         file.getParent().removeChild(file);
         nodeRepository.delete(file);
         nodeRepository.flush();

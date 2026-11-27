@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import fr.cytech.projetj2e.exception.ForbiddenException;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
 import fr.cytech.projetj2e.model.AccountStatus;
+import fr.cytech.projetj2e.model.ActivityAction;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.model.UserRole;
 import fr.cytech.projetj2e.repository.UserRepository;
@@ -15,9 +16,11 @@ import fr.cytech.projetj2e.repository.UserRepository;
 public class UserAdministrationService {
 
     private final UserRepository users;
+    private final ActivityRecorder activity;
 
-    public UserAdministrationService(UserRepository users) {
+    public UserAdministrationService(UserRepository users, ActivityRecorder activity) {
         this.users = users;
+        this.activity = activity;
     }
 
     public User approve(User actor, Long userId) {
@@ -26,7 +29,9 @@ public class UserAdministrationService {
             throw new IllegalArgumentException("Ce compte n'est pas en attente d'approbation.");
         }
         target.setStatus(AccountStatus.ACTIVE);
-        return users.save(target);
+        User saved = users.save(target);
+        activity.account(actor, ActivityAction.ACCOUNT_APPROVED, saved);
+        return saved;
     }
 
     public void decline(User actor, Long userId) {
@@ -34,13 +39,16 @@ public class UserAdministrationService {
         if (target.getStatus() != AccountStatus.PENDING) {
             throw new IllegalArgumentException("Ce compte n'est pas en attente d'approbation.");
         }
+        activity.account(actor, ActivityAction.ACCOUNT_DECLINED, target);
         users.delete(target);
     }
 
     public User disable(User actor, Long userId) {
         User target = requireCompanyTarget(actor, userId);
         target.setStatus(AccountStatus.DISABLED);
-        return users.save(target);
+        User saved = users.save(target);
+        activity.account(actor, ActivityAction.ACCOUNT_DISABLED, saved);
+        return saved;
     }
 
     private User requireCompanyTarget(User actor, Long userId) {

@@ -23,7 +23,7 @@ class UserAdministrationServiceTest {
     @Test
     void companyAdminApprovesAndDisablesOnlyOwnCompanyUser() {
         UserRepository users = mock(UserRepository.class);
-        UserAdministrationService service = new UserAdministrationService(users);
+        UserAdministrationService service = new UserAdministrationService(users, org.mockito.Mockito.mock(ActivityRecorder.class));
         Company company = company(1L);
         User admin = user(10L, company, UserRole.COMPANY_ADMIN, AccountStatus.ACTIVE);
         User target = user(11L, company, UserRole.MEMBER, AccountStatus.PENDING);
@@ -40,7 +40,7 @@ class UserAdministrationServiceTest {
     @Test
     void refusesMemberAndCrossCompanyTarget() {
         UserRepository users = mock(UserRepository.class);
-        UserAdministrationService service = new UserAdministrationService(users);
+        UserAdministrationService service = new UserAdministrationService(users, org.mockito.Mockito.mock(ActivityRecorder.class));
         Company company = company(1L);
         User member = user(10L, company, UserRole.MEMBER, AccountStatus.ACTIVE);
 
@@ -54,7 +54,7 @@ class UserAdministrationServiceTest {
     @Test
     void declineRefusesNonPendingUser() {
         UserRepository users = mock(UserRepository.class);
-        UserAdministrationService service = new UserAdministrationService(users);
+        UserAdministrationService service = new UserAdministrationService(users, org.mockito.Mockito.mock(ActivityRecorder.class));
         Company company = company(1L);
         User admin = user(10L, company, UserRole.COMPANY_ADMIN, AccountStatus.ACTIVE);
         User active = user(11L, company, UserRole.MEMBER, AccountStatus.ACTIVE);
