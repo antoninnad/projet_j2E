@@ -111,6 +111,8 @@ export type PageQuery = {
 }
 
 export type UserQuery = PageQuery & { status?: AccountStatus }
+export type Colleague = Pick<User, "id" | "username" | "firstName" | "lastName"> &
+  Partial<Pick<User, "email" | "role">>
 
 export interface PageMeta {
   page: number
