@@ -91,10 +91,10 @@ public class ExplorationService {
                         .ifPresent(roots::add);
             }
         }
-        return roots.stream()
+        List<Folder> sorted = roots.stream()
                 .sorted(Comparator.comparing((Folder folder) -> folder.getName().toLowerCase()).thenComparing(Folder::getId))
-                .map(root -> mapper.toResponse(actor, root))
                 .toList();
+        return mapper.toResponses(actor, sorted);
     }
 
     /** Enfants visibles d'un dossier, dossiers d'abord puis par nom. */
@@ -104,7 +104,8 @@ public class ExplorationService {
         int level = levelIn(actor, folder.getDepartment());
         requireVisible(level, folder);
         Page<Node> children = nodeRepository.findVisibleChildren(folder, level, PageRequest.of(page, size));
-        return PageResponse.from(children, child -> mapper.toResponse(actor, child));
+        List<NodeResponse> items = mapper.toResponses(actor, children.getContent());
+        return new PageResponse<>(items, PageResponse.from(children, child -> child).page());
     }
 
     /** Métadonnées d'un élément visible et fil d'Ariane de ses parents. */

@@ -138,6 +138,6 @@ class FolderRestControllerTest {
     private static NodeResponse folder(Long id, String name, Long parentId) {
         return new NodeResponse(id, name, NodeResponse.FOLDER, parentId, 1L, "Finance", 0,
                 new NodeResponse.OwnerResponse(1L, "Ada", "Admin"), Instant.EPOCH, Instant.EPOCH, 0L,
-                null, null, null, new NodePermissions(true, true, true, true, true));
+                null, null, null, new NodePermissions(true, true, true, true, true), false);
     }
 }

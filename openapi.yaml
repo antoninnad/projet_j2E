@@ -15,6 +15,10 @@ tags:
   - name: Profiles
   - name: Departments
   - name: Documents
+  - name: Search
+    description: |
+      Recherche par nom et favoris personnels (T31). Résultats et favoris ne contiennent que des éléments
+      visibles par le compte ; un favori ne donne aucun droit et disparaît de la liste si l'accès est retiré.
   - name: Activity
     description: |
       Journal d'activité (T36) : opérations sur les documents et changements de droits, avec auteur et date.
@@ -851,6 +855,95 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /search:
+    get:
+      tags: [Search]
+      summary: Rechercher des dossiers et des fichiers par nom
+      description: |
+        Nom contenant q, sans tenir compte de la casse (% et _ sont cherchés tels quels). Seuls les éléments
+        visibles sont renvoyés et comptés. Tri : nom exact, puis noms commençant par q, puis dossiers d'abord
+        et ordre alphabétique. location donne les dossiers parents (« Finance / Archives »).
+      operationId: searchNodes
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: {type: string, minLength: 1, maxLength: 100}
+        - name: kind
+          in: query
+          required: false
+          schema: {type: string, enum: [file, folder]}
+        - name: departmentId
+          in: query
+          required: false
+          schema: {type: integer, format: int64}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Page de résultats autorisés
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SearchResultPage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /favorites:
+    get:
+      tags: [Search]
+      summary: Lister mes favoris encore accessibles
+      description: Le plus récent d'abord. Un favori dont l'élément n'est plus visible est masqué (il revient avec l'accès).
+      operationId: listFavorites
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Page de favoris
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/FavoritePage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /favorites/{nodeId}:
+    put:
+      tags: [Search]
+      summary: Ajouter un élément à mes favoris
+      description: Idempotent. L'élément doit être visible (404 sinon).
+      operationId: addFavorite
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Élément, avec favorite = true
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Node'}
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Search]
+      summary: Retirer un élément de mes favoris
+      description: Idempotent.
+      operationId: removeFavorite
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '204':
+          description: Favori retiré (ou absent)
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /activity:
     get:
       tags: [Activity]
@@ -1298,6 +1391,35 @@ components:
       properties:
         name: {type: string, maxLength: 255}
         version: {type: integer, format: int64, description: Version chargée (facultative) ; 409 si elle a changé}
+    SearchResult:
+      type: object
+      required: [node, location]
+      properties:
+        node: {$ref: '#/components/schemas/Node'}
+        location: {type: string, description: "Dossiers parents, par exemple « Finance / Archives » (vide pour une racine)"}
+    SearchResultPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/SearchResult'}
+        page: {$ref: '#/components/schemas/PageMeta'}
+    Favorite:
+      type: object
+      required: [node, location, addedAt]
+      properties:
+        node: {$ref: '#/components/schemas/Node'}
+        location: {type: string}
+        addedAt: {type: string, format: date-time}
+    FavoritePage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Favorite'}
+        page: {$ref: '#/components/schemas/PageMeta'}
     ActivityEntry:
       type: object
       required: [id, action, category, label, occurredAt]
@@ -1423,7 +1545,7 @@ components:
     Node:
       type: object
       description: Dossier ou fichier. Le chemin de stockage n'est jamais exposé ; les champs fichier sont null pour un dossier.
-      required: [id, name, kind, departmentId, departmentName, minAccessLevel, owner, createdAt, version, permissions]
+      required: [id, name, kind, departmentId, departmentName, minAccessLevel, owner, createdAt, version, permissions, favorite]
       properties:
         id: {type: integer, format: int64}
         name: {type: string}
@@ -1440,6 +1562,7 @@ components:
         contentType: {type: [string, 'null']}
         size: {type: [integer, 'null'], format: int64}
         permissions: {$ref: '#/components/schemas/NodePermissions'}
+        favorite: {type: boolean, description: "Vrai si le compte connecté a mis l'élément en favori (T31)"}
     NodePage:
       type: object
       required: [items, page]
