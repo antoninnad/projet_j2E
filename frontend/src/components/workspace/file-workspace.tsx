@@ -24,7 +24,8 @@ import type {
 import { DocumentDetails } from "./document-details"
 import { FileExplorer, PAGE_SIZE } from "./file-explorer"
 import { FileImport } from "./file-import"
-import { FolderActionDialog, type FolderAction } from "./folder-action-dialog"
+import type { TextDraft } from "./file-preview"
+import { NodeActionDialog, type NodeAction } from "./node-action-dialog"
 import { WorkspacePanels } from "./workspace-panels"
 
 type BrowseRequest = { path: NodeBreadcrumbItem[]; page: number }
@@ -46,7 +47,8 @@ export function FileWorkspace({
   const [selection, setSelection] = useState<NodeBreadcrumbItem | null>(null)
   const [listing, setListing] = useState<Result<BrowseRequest, Listing>>()
   const [detail, setDetail] = useState<Result<NodeBreadcrumbItem, NodeDetail>>()
-  const [action, setAction] = useState<FolderAction>()
+  const [action, setAction] = useState<NodeAction>()
+  const [drafts, setDrafts] = useState(() => new Map<number, TextDraft>())
 
   const folder = browse.path.at(-1)
   const currentListing = listing?.request === browse ? listing : undefined
@@ -107,9 +109,37 @@ export function FileWorkspace({
     setBrowse(current => ({ ...current }))
   }
 
+  function setDraft(id: number, draft?: TextDraft, expected?: TextDraft) {
+    setDrafts(current => {
+      if (expected && current.get(id) !== expected) return current
+      const next = new Map(current)
+      if (draft) next.set(id, draft)
+      else next.delete(id)
+      return next
+    })
+  }
+
+  function reloadFile() {
+    setSelection(current => current ? { ...current } : null)
+  }
+
+  function fileSaved(updated: DocumentNode, savedDraft?: TextDraft) {
+    if (savedDraft) setDraft(updated.id, undefined, savedDraft)
+    setDetail(current => {
+      if (!current?.data || current.data.node.id !== updated.id ||
+        current.data.node.version > updated.version) return current
+      return { ...current, data: { ...current.data, node: updated } }
+    })
+    refreshListing()
+  }
+
   function finishAction(updated?: DocumentNode) {
     setAction(undefined)
-    if (action?.kind === "create") {
+    if (action?.node.kind === "file") {
+      if (action.kind === "delete") setDraft(action.node.id)
+      setSelection(null)
+      refreshListing()
+    } else if (action?.kind === "create") {
       refreshListing()
     } else {
       const parentPath = currentFolder?.path ?? browse.path.slice(0, -1)
@@ -221,7 +251,13 @@ export function FileWorkspace({
                 <DocumentDetails
                   node={detailData.node}
                   client={client}
-                  onFolderAction={kind => setAction({ kind, node: detailData.node })}
+                  editing={{
+                    draft: drafts.get(detailData.node.id),
+                    onDraftChange: draft => setDraft(detailData.node.id, draft),
+                    onSaved: fileSaved,
+                    onReload: reloadFile,
+                  }}
+                  onNodeAction={kind => setAction({ kind, node: detailData.node })}
                 />
               ) : currentDetail?.error ? (
                 <Stack gap="sm">
@@ -233,7 +269,7 @@ export function FileWorkspace({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => selection && setSelection({ ...selection })}
+                      onClick={reloadFile}
                     >
                       Recharger les détails
                     </Button>
@@ -261,12 +297,15 @@ export function FileWorkspace({
         }
       />
       {action && (
-        <FolderActionDialog
+        <NodeActionDialog
           action={action}
           client={client}
           onClose={(refresh) => {
             setAction(undefined)
-            if (refresh) refreshListing()
+            if (refresh) {
+              refreshListing()
+              if (action.node.kind === "file") reloadFile()
+            }
           }}
           onDone={finishAction}
         />

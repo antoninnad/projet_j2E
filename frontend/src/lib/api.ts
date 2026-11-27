@@ -84,6 +84,16 @@ export function createApi(options?: ApiClientOptions) {
     getNode: (id: number, signal?: AbortSignal) => json<NodeDetail>(`/nodes/${id}`, { signal }),
     getFileContent: (id: number, signal?: AbortSignal) => request(`/files/${id}/content`, { signal }),
     fileDownloadUrl: (id: number) => url(`/files/${id}/download`),
+    saveFileText: (id: number, content: string, version: number) =>
+      json<DocumentNode>(`/files/${id}/content`, { method: "PUT", json: { content, version } }),
+    replaceFile: (id: number, file: File, version: number) => {
+      const body = new FormData()
+      body.set("file", file)
+      body.set("version", String(version))
+      return json<DocumentNode>(`/files/${id}/replace`, { method: "POST", body })
+    },
+    deleteFile: (id: number, version: number) =>
+      noContent(`/files/${id}`, { method: "DELETE", query: { version } }),
     createFolder: (parentId: number, name: string) =>
       json<DocumentNode>("/folders", { method: "POST", json: { parentId, name } }),
     renameFolder: (id: number, name: string, version: number) =>

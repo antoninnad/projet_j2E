@@ -31,6 +31,14 @@ const report: DocumentNode = {
   permissions: { view: true, modify: false, delete: false, manage: false, createChild: false },
 }
 
+const note: DocumentNode = {
+  ...report,
+  id: 22,
+  name: "note.txt",
+  contentType: "text/plain",
+  permissions: { ...report.permissions, modify: true, delete: true },
+}
+
 const financePath = [{ id: finance.id, name: finance.name }]
 const reportDetail: NodeDetail = { node: report, path: financePath }
 const archives: DocumentNode = { ...finance, id: 11, name: "Archives" }
@@ -75,6 +83,7 @@ describe("FileWorkspace", () => {
     expect(details.getByText("2.0 Ko")).toBeInTheDocument()
     expect(details.getByText("Consulter")).toBeInTheDocument()
     expect(details.queryByText("Supprimer")).not.toBeInTheDocument()
+    expect(details.queryByRole("button", { name: /Modifier le texte|Déplacer le fichier/ })).not.toBeInTheDocument()
     expect(details.queryByRole("button", { name: "Partager" })).not.toBeInTheDocument()
 
     const breadcrumb = within(screen.getByRole("navigation", { name: "Fil d'Ariane" }))
@@ -236,6 +245,128 @@ describe("FileWorkspace", () => {
 
     fireEvent.drop(screen.getByText("Ou glissez un fichier ici."), { dataTransfer: { files: [file] } })
     expect(await screen.findByRole("alert")).toHaveTextContent("Ce fichier existe déjà.")
+  })
+
+  it("conserve le brouillon après un conflit et attend la validation de la version récente", async () => {
+    const user = userEvent.setup()
+    let version = 1
+    let content = "Texte initial"
+    const fetcher = vi.fn(async (url: string, init: RequestInit) => {
+      if (url.includes("/folders/10/children?")) return Response.json(paginate([note, report]))
+      if (url === "/api/nodes/22") {
+        return Response.json({ node: { ...note, version: version === 1 ? 0 : version }, path: financePath })
+      }
+      if (url !== "/api/files/22/content") return explore(url)
+
+      if (init.method === "PUT") {
+        const payload = JSON.parse(String(init.body))
+        expect(payload).toEqual({ content: "Mon brouillon", version })
+        if (++version === 2) {
+          content = "Texte concurrent"
+          return Response.json({ code: "CONFLICT", message: "Le fichier a changé." }, { status: 409 })
+        }
+        content = payload.content
+        return Response.json({ ...note, version })
+      }
+      return new Response(content, { headers: { "Content-Type": "text/plain", ETag: `"22-${version}"` } })
+    })
+    render(<FileWorkspace client={createApi({ fetcher })} />)
+
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le dossier Finance" }))
+    const noteButton = { name: "Ouvrir le fichier note.txt" }
+    const draftInput = { name: "Brouillon de note.txt" }
+    await user.click(await screen.findByRole("button", noteButton))
+    await user.click(await screen.findByRole("button", { name: "Modifier le texte" }))
+    fireEvent.change(screen.getByRole("textbox", draftInput), { target: { value: "Mon brouillon" } })
+    await user.click(screen.getByRole("button", { name: "Ouvrir le fichier budget.pdf" }))
+    await user.click(screen.getByRole("button", noteButton))
+    expect(await screen.findByRole("textbox", draftInput)).toHaveValue("Mon brouillon")
+
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }))
+    expect(await screen.findByRole("alert")).toHaveTextContent("Le fichier a changé.")
+    expect(screen.getByRole("textbox", draftInput)).toHaveValue("Mon brouillon")
+    await user.click(screen.getByRole("button", { name: "Recharger la version récente" }))
+    expect(await screen.findByLabelText("Dernière version du serveur")).toHaveTextContent("Texte concurrent")
+    expect(screen.getByRole("textbox", draftInput)).toHaveValue("Mon brouillon")
+    expect(screen.getByRole("button", { name: "Enregistrer" })).toBeDisabled()
+
+    await user.click(screen.getByRole("button", { name: "Reprendre avec cette version" }))
+    screen.getByRole("textbox", draftInput).focus()
+    await user.keyboard("{Control>}s{/Control}")
+    expect(await screen.findByText("Mon brouillon")).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", draftInput)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Modifier le texte" }))
+    fireEvent.change(screen.getByRole("textbox", draftInput), { target: { value: "À annuler" } })
+    await user.click(screen.getByRole("button", { name: "Annuler le brouillon" }))
+    expect(screen.getByText("Mon brouillon")).toBeInTheDocument()
+    expect(fetcher.mock.calls.filter(([, init]) => init.method === "PUT")).toHaveLength(2)
+  })
+
+  it("remplace, déplace et supprime un fichier avec sa version courante", async () => {
+    const user = userEvent.setup()
+    let file: DocumentNode | undefined = { ...note, name: "archive.zip", contentType: "application/zip" }
+    const replacement = new File(["binary"], "nouvelle.zip", { type: "application/zip" })
+    const fetcher = vi.fn(async (url: string, init: RequestInit) => {
+      if (url === "/api/folders/roots") return Response.json([finance, archives])
+      if (url === "/api/nodes/11") return Response.json({ node: archives, path: [] })
+      if (url === "/api/nodes/22" && file) {
+        return Response.json({ node: file, path: [file.parentId === finance.id ? finance : archives] })
+      }
+      const children = /^\/api\/folders\/(\d+)\/children\?/.exec(url)
+      if (children) return Response.json(paginate(file && file.parentId === Number(children[1]) ? [file] : []))
+      if (url === "/api/files/22/content") {
+        return new Response("binary", { headers: { "Content-Type": "application/octet-stream" } })
+      }
+      if (file && url === "/api/files/22/replace" && init.method === "POST") {
+        const body = init.body as FormData
+        expect(body.get("file")).toMatchObject({ name: replacement.name, size: replacement.size })
+        expect(body.get("version")).toBe("0")
+        file = { ...file, size: replacement.size, version: 1 }
+        return Response.json(file)
+      }
+      if (file && url === "/api/nodes/22/move" && init.method === "POST") {
+        expect(JSON.parse(String(init.body))).toEqual({ targetFolderId: 11, version: 1 })
+        file = { ...file, parentId: 11, version: 2 }
+        return Response.json(file)
+      }
+      if (url === "/api/files/22?version=2" && init.method === "DELETE") {
+        file = undefined
+        return new Response(null, { status: 204 })
+      }
+      return explore(url)
+    })
+    render(<FileWorkspace client={createApi({ fetcher })} />)
+
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le dossier Finance" }))
+    const fileButton = { name: "Ouvrir le fichier archive.zip" }
+    await user.click(await screen.findByRole("button", fileButton))
+    await user.upload(await screen.findByLabelText("Fichier de remplacement"), replacement)
+    await user.click(screen.getByRole("button", { name: "Annuler le remplacement" }))
+    expect(fetcher.mock.calls.some(([, init]) => init.method === "POST")).toBe(false)
+    await user.upload(screen.getByLabelText("Fichier de remplacement"), replacement)
+    await user.click(screen.getByRole("button", { name: "Confirmer le remplacement" }))
+    const details = within(screen.getByRole("region", { name: "Détails du document" }))
+    expect(await details.findByText("6 o")).toBeInTheDocument()
+    await user.click(details.getByRole("button", { name: "Déplacer le fichier" }))
+
+    let dialog = within(screen.getByRole("dialog"))
+    await user.click(await dialog.findByRole("button", { name: "Archives" }))
+    await user.click(dialog.getByRole("button", { name: "Choisir ce dossier" }))
+    await user.click(dialog.getByRole("button", { name: "Déplacer" }))
+    expect(await screen.findByText("Ce dossier est vide.")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Départements" }))
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le dossier Archives" }))
+    await user.click(await screen.findByRole("button", fileButton))
+    await user.click(await details.findByRole("button", { name: "Supprimer le fichier" }))
+    dialog = within(screen.getByRole("dialog"))
+    expect(dialog.getByText(/« archive.zip » sera supprimé/)).toBeInTheDocument()
+    await user.click(dialog.getByRole("button", { name: "Annuler" }))
+    expect(fetcher.mock.calls.some(([, init]) => init.method === "DELETE")).toBe(false)
+    await user.click(details.getByRole("button", { name: "Supprimer le fichier" }))
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Supprimer" }))
+    expect(await screen.findByText("Ce dossier est vide.")).toBeInTheDocument()
   })
 
   it("masque les actions d'écriture sans permission de création ou de modification", async () => {
