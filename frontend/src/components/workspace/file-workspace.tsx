@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { AlertCircle, FolderOpen, FolderPlus } from "lucide-react"
+import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Breadcrumb,
@@ -10,15 +11,18 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyIcon } from "@/components/ui/empty"
-import { Stack } from "@/components/ui/layout"
+import { Cluster, Stack } from "@/components/ui/layout"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { api, type Api } from "@/lib/api"
+import { ApiError } from "@/lib/api-client"
 import { cn, formatFileSize } from "@/lib/utils"
 import type {
   BreadcrumbItem as NodeBreadcrumbItem,
   DocumentNode,
   NodeDetail,
+  NodeSearchQuery,
   PageMeta,
 } from "@/types/api"
 import { DocumentDetails } from "./document-details"
@@ -28,8 +32,11 @@ import type { TextDraft } from "./file-preview"
 import { NodeActionDialog, type NodeAction } from "./node-action-dialog"
 import { WorkspacePanels } from "./workspace-panels"
 
-type BrowseRequest = { path: NodeBreadcrumbItem[]; page: number }
-type Listing = { items: DocumentNode[]; page?: PageMeta; folder?: NodeDetail }
+type View = { mode: "browse" | "favorites" } | ({ mode: "search" } & NodeSearchQuery)
+type BrowseRequest = { path: NodeBreadcrumbItem[]; page: number; view: View }
+type Entry = DocumentNode & { location?: string }
+type Listing = { items: Entry[]; page?: PageMeta; folder?: NodeDetail }
+type Selection = NodeBreadcrumbItem & { kind: DocumentNode["kind"] }
 
 type Result<Q, T> = { request: Q } & (
   | { data: T; error?: never }
@@ -43,46 +50,101 @@ export function FileWorkspace({
   embedded?: boolean
   client?: Api
 }) {
-  const [browse, setBrowse] = useState<BrowseRequest>({ path: [], page: 0 })
-  const [selection, setSelection] = useState<NodeBreadcrumbItem | null>(null)
+  const [browse, setBrowse] = useState<BrowseRequest>({ path: [], page: 0, view: { mode: "browse" } })
+  const [selection, setSelection] = useState<Selection | null>(null)
   const [listing, setListing] = useState<Result<BrowseRequest, Listing>>()
-  const [detail, setDetail] = useState<Result<NodeBreadcrumbItem, NodeDetail>>()
+  const [detail, setDetail] = useState<Result<Selection, NodeDetail>>()
+  const [detailRevision, setDetailRevision] = useState(0)
   const [action, setAction] = useState<NodeAction>()
   const [drafts, setDrafts] = useState(() => new Map<number, TextDraft>())
+  const [query, setQuery] = useState("")
+  const [departmentRoots, setDepartmentRoots] = useState<DocumentNode[]>()
+  const [favoriteBusy, setFavoriteBusy] = useState(false)
+  const favoritePending = useRef(false)
 
   const folder = browse.path.at(-1)
+  const search = browse.view.mode === "search" ? browse.view : undefined
+  const searching = search !== undefined
+  const favorites = browse.view.mode === "favorites"
+  const browsing = browse.view.mode === "browse"
   const currentListing = listing?.request === browse ? listing : undefined
-  const folderListing = listing?.request.path === browse.path ? listing.data : undefined
-  const pagination = folderListing?.page
-  const currentFolder = folderListing?.folder
+  const previousPage = listing?.request.path === browse.path && listing.request.view === browse.view
+    ? listing.data
+    : undefined
+  const pagination = previousPage?.page
+  const currentFolder = previousPage?.folder
   const currentDetail = detail?.request === selection ? detail : undefined
   const detailData = selection ? currentDetail?.data : currentFolder
+
+  const openFolder = useCallback((path: NodeBreadcrumbItem[]) => {
+    setBrowse({ path, page: 0, view: { mode: "browse" } })
+    setQuery("")
+    setSelection(null)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
-    const request: Promise<Listing> = folder
-      ? Promise.all([
-          client.listFolderChildren(folder.id, { page: browse.page, size: PAGE_SIZE }, signal),
-          client.getNode(folder.id, signal),
-        ]).then(([page, folder]) => ({ ...page, folder }))
-      : client.listRootFolders(signal).then((items) => ({ items }))
+    const { view, page } = browse
+    const pagination = { page, size: PAGE_SIZE }
 
-    void request
-      .then((data) => {
-        if (signal.aborted) return
-        const lastPage = Math.max(0, (data.page?.totalPages ?? 1) - 1)
-        if (browse.page > lastPage) {
-          setBrowse(current => current === browse ? { ...browse, page: lastPage } : current)
-          return
+    async function loadListing(): Promise<Listing> {
+      if (view.mode === "search" || view.mode === "favorites") {
+        const response = view.mode === "search"
+          ? await client.searchNodes({ q: view.q, kind: view.kind, departmentId: view.departmentId, ...pagination }, signal)
+          : await client.listFavorites(pagination, signal)
+        return {
+          page: response.page,
+          items: response.items.map(({ node, location }) => ({ ...node, location: location || node.departmentName })),
         }
-        setListing({ request: browse, data })
-      })
-      .catch((error: Error) => {
-        if (!signal.aborted) setListing({ request: browse, error: error.message })
-      })
-    return () => controller.abort()
+      }
+
+      if (!folder) {
+        const items = await client.listRootFolders(signal)
+        if (!signal.aborted) setDepartmentRoots(items)
+        return { items }
+      }
+
+      const [children, folderDetail] = await Promise.all([
+        client.listFolderChildren(folder.id, pagination, signal),
+        client.getNode(folder.id, signal),
+      ])
+      return { ...children, folder: folderDetail }
+    }
+
+    function load() {
+      void loadListing()
+        .then(data => {
+          if (signal.aborted) return
+          const lastPage = Math.max(0, (data.page?.totalPages ?? 1) - 1)
+          if (page > lastPage) {
+            setBrowse(current => current === browse ? { ...browse, page: lastPage } : current)
+            return
+          }
+          setListing({ request: browse, data })
+        })
+        .catch((error: Error) => {
+          if (!signal.aborted) setListing({ request: browse, error: error.message })
+        })
+    }
+
+    const timer = view.mode === "search" ? window.setTimeout(load, 250) : undefined
+    if (timer === undefined) load()
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
   }, [client, browse, folder])
+
+  useEffect(() => {
+    if (!searching || departmentRoots) return
+    const controller = new AbortController()
+    const { signal } = controller
+    void client.listRootFolders(signal).then(items => {
+      if (!signal.aborted) setDepartmentRoots(items)
+    }).catch(() => {})
+    return () => controller.abort()
+  }, [client, departmentRoots, searching])
 
   useEffect(() => {
     if (!selection) return
@@ -92,17 +154,43 @@ export function FileWorkspace({
     void client
       .getNode(selection.id, signal)
       .then((data) => {
-        if (!signal.aborted) setDetail({ request: selection, data })
+        if (signal.aborted) return
+        if (selection.kind === "folder") openFolder([...data.path, data.node])
+        else setDetail({ request: selection, data })
       })
       .catch((error: Error) => {
         if (!signal.aborted) setDetail({ request: selection, error: error.message })
       })
     return () => controller.abort()
-  }, [client, selection])
+  }, [client, detailRevision, openFolder, selection])
 
-  function openFolder(path: NodeBreadcrumbItem[]) {
-    setBrowse({ path, page: 0 })
+  function changeSearch(value: string) {
+    const q = value.trim()
+    setQuery(value)
+    if (q === query.trim()) return
     setSelection(null)
+    setBrowse(current => ({
+      ...current,
+      page: 0,
+      view: q ? { ...current.view, mode: "search", q } : { mode: "browse" },
+    }))
+  }
+
+  function changeSearchFilters(filters: Partial<Omit<NodeSearchQuery, "q">>) {
+    setSelection(null)
+    setBrowse(current => current.view.mode === "search"
+      ? { ...current, page: 0, view: { ...current.view, ...filters } }
+      : current)
+  }
+
+  function toggleFavorites() {
+    setQuery("")
+    setSelection(null)
+    setBrowse(current => ({
+      ...current,
+      page: 0,
+      view: { mode: current.view.mode === "favorites" ? "browse" : "favorites" },
+    }))
   }
 
   function refreshListing() {
@@ -128,9 +216,45 @@ export function FileWorkspace({
     setDetail(current => {
       if (!current?.data || current.data.node.id !== updated.id ||
         current.data.node.version > updated.version) return current
-      return { ...current, data: { ...current.data, node: updated } }
+      const node = { ...updated, favorite: current.data.node.favorite }
+      return { ...current, data: { ...current.data, node } }
     })
     refreshListing()
+  }
+
+  async function toggleFavorite(node: DocumentNode) {
+    if (favoritePending.current) return
+    favoritePending.current = true
+    setFavoriteBusy(true)
+    try {
+      const favorite = !node.favorite
+      if (favorite) await client.addFavorite(node.id)
+      else await client.removeFavorite(node.id)
+
+      setDetail(current => {
+        if (!current?.data || current.data.node.id !== node.id) return current
+        return { request: current.request, data: { ...current.data, node: { ...current.data.node, favorite } } }
+      })
+      setListing(current => {
+        const folder = current?.data?.folder
+        if (!current?.data || !folder || folder.node.id !== node.id) return current
+        return {
+          request: current.request,
+          data: { ...current.data, folder: { ...folder, node: { ...folder.node, favorite } } },
+        }
+      })
+      refreshListing()
+      setDetailRevision(value => value + 1)
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 403 || error.status === 404)) {
+        refreshListing()
+        setDetailRevision(value => value + 1)
+      }
+      toast.error(error instanceof Error ? error.message : "Impossible de modifier les favoris.")
+    } finally {
+      favoritePending.current = false
+      setFavoriteBusy(false)
+    }
   }
 
   function finishAction(updated?: DocumentNode) {
@@ -147,10 +271,14 @@ export function FileWorkspace({
     }
   }
 
-  const currentPath = detailData?.path ?? browse.path
+  const currentPath = detailData?.path ?? (browsing ? browse.path : [])
   const breadcrumb = detailData ? [...currentPath, detailData.node] : currentPath
   const folderPath =
     currentFolder ? [...currentFolder.path, currentFolder.node] : browse.path
+  const listTitle = searching ? "Résultats de recherche" : favorites ? "Mes favoris" : folder?.name ?? "Dossiers de département"
+  const emptyMessage = searching ? "Aucun document ne correspond à cette recherche."
+    : favorites ? "Aucun favori accessible."
+    : folder ? "Ce dossier est vide." : "Aucun dossier de département accessible."
   const Wrapper = embedded ? "div" : "main"
 
   return (
@@ -165,7 +293,7 @@ export function FileWorkspace({
       <Breadcrumb aria-label="Fil d'Ariane" className="shrink-0 border-b px-4 py-3 sm:px-5">
         <BreadcrumbList className="text-sm">
           <BreadcrumbItem>
-            {breadcrumb.length > 0 ? (
+            {breadcrumb.length > 0 || !browsing ? (
               <Button
                 type="button"
                 variant="link"
@@ -207,9 +335,46 @@ export function FileWorkspace({
         explorer={
           <FileExplorer
             entries={currentListing?.data?.items ?? []}
-            selectedId={selection?.id ?? folder?.id}
-            folderName={folder?.name ?? "Dossiers de département"}
-            tools={currentFolder?.node.permissions.createChild && (
+            selectedId={selection?.id ?? (browsing ? folder?.id : undefined)}
+            folderName={listTitle}
+            filters={{
+              query,
+              favoritesOnly: favorites,
+              searchLabel: "Rechercher dans les documents",
+              maxLength: 100,
+              onSearch: changeSearch,
+              onToggleFavorites: toggleFavorites,
+            }}
+            tools={search ? (
+              <Cluster gap="xs">
+                <NativeSelect
+                  size="sm"
+                  aria-label="Type de document"
+                  value={search.kind ?? ""}
+                  onChange={event => {
+                    const { value } = event.currentTarget
+                    changeSearchFilters({ kind: value === "file" || value === "folder" ? value : undefined })
+                  }}
+                >
+                  <NativeSelectOption value="">Tous les types</NativeSelectOption>
+                  <NativeSelectOption value="file">Fichiers</NativeSelectOption>
+                  <NativeSelectOption value="folder">Dossiers</NativeSelectOption>
+                </NativeSelect>
+                <NativeSelect
+                  size="sm"
+                  aria-label="Département"
+                  value={search.departmentId ?? ""}
+                  onChange={event => changeSearchFilters({ departmentId: Number(event.target.value) || undefined })}
+                >
+                  <NativeSelectOption value="">Tous les départements</NativeSelectOption>
+                  {departmentRoots?.map(root => (
+                    <NativeSelectOption key={root.departmentId} value={root.departmentId}>
+                      {root.departmentName}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </Cluster>
+            ) : currentFolder?.node.permissions.createChild && (
               <>
                 <Button
                   type="button"
@@ -231,16 +396,14 @@ export function FileWorkspace({
             pagination={pagination}
             loading={!currentListing}
             error={currentListing?.error}
-            emptyMessage={
-              folder ? "Ce dossier est vide." : "Aucun dossier de département accessible."
-            }
+            emptyMessage={emptyMessage}
             sizeLabel={(node) => formatFileSize(node.size)}
             onOpen={(node) => {
-              if (node.kind === "folder") openFolder([...folderPath, node])
+              if (browsing && node.kind === "folder") openFolder([...folderPath, node])
               else setSelection(node)
             }}
             onPage={(page) => setBrowse((current) => ({ ...current, page }))}
-            onBack={folder ? () => openFolder(folderPath.slice(0, -1)) : undefined}
+            onBack={browsing && folder ? () => openFolder(folderPath.slice(0, -1)) : undefined}
             onRetry={refreshListing}
           />
         }
@@ -257,6 +420,8 @@ export function FileWorkspace({
                     onSaved: fileSaved,
                     onReload: reloadFile,
                   }}
+                  favoriteBusy={favoriteBusy}
+                  onToggleFavorite={() => void toggleFavorite(detailData.node)}
                   onNodeAction={kind => setAction({ kind, node: detailData.node })}
                 />
               ) : currentDetail?.error ? (
@@ -275,7 +440,7 @@ export function FileWorkspace({
                     </Button>
                   </div>
                 </Stack>
-              ) : selection || (folder && !currentListing) ? (
+              ) : selection || (browsing && folder && !currentListing) ? (
                 <Stack gap="sm">
                   <p role="status" className="sr-only">
                     Chargement des détails…

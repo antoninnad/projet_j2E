@@ -15,6 +15,7 @@ const file: DocumentNode = {
   owner: { id: 7, firstName: "Alice", lastName: "Martin" },
   createdAt: "2026-11-27T09:00:00Z",
   version: 0,
+  favorite: false,
   contentType: "text/html",
   permissions: { view: true, modify: false, delete: false, manage: false, createChild: false },
 }

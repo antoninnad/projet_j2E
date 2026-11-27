@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 import { FileWorkspace } from "./file-workspace"
@@ -17,6 +17,7 @@ const finance: DocumentNode = {
   owner: { id: 7, firstName: "Alice", lastName: "Martin" },
   createdAt: "2026-11-25T09:00:00Z",
   version: 0,
+  favorite: false,
   permissions: { view: true, modify: true, delete: true, manage: true, createChild: true },
 }
 
@@ -386,5 +387,97 @@ describe("FileWorkspace", () => {
     expect(screen.queryByRole("button", { name: "Nouveau dossier" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Importer un fichier" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /Renommer|Déplacer|Supprimer/ })).not.toBeInTheDocument()
+  })
+
+  it("recherche et pagine côté serveur, puis ouvre un dossier avec son chemin réel", async () => {
+    const user = userEvent.setup()
+    const budget = { ...projects, name: "Budget 2026", parentId: archives.id }
+    const budgetPath = [...financePath, { id: archives.id, name: archives.name }]
+    let replyToOldSearch!: (response: Response) => void
+    const oldSearch = new Promise<Response>(resolve => { replyToOldSearch = resolve })
+    let oldSignal: AbortSignal | null | undefined
+    const requests: URLSearchParams[] = []
+    const fetcher = vi.fn(async (url: string, init: RequestInit) => {
+      if (url === "/api/nodes/12") return Response.json({ node: budget, path: budgetPath })
+      if (url === "/api/folders/12/children?page=0&size=6") return Response.json(paginate([]))
+      if (!url.startsWith("/api/search?")) return explore(url)
+
+      const query = new URLSearchParams(url.split("?")[1])
+      if (query.get("q") === "ancien") {
+        oldSignal = init.signal
+        return oldSearch
+      }
+      requests.push(query)
+      const page = Number(query.get("page"))
+      const node = query.get("kind") === "folder"
+        ? page === 1 ? budget : { ...budget, id: 13, name: "Budget 2025" }
+        : report
+      return Response.json({
+        items: [{ node, location: "Finance / Archives" }],
+        page: { page, size: 6, totalElements: 7, totalPages: 2, first: page === 0, last: page === 1 },
+      })
+    })
+    render(<FileWorkspace client={createApi({ fetcher })} />)
+    await screen.findByRole("button", { name: "Ouvrir le dossier Finance" })
+
+    const search = screen.getByRole("textbox", { name: "Rechercher dans les documents" })
+    fireEvent.change(search, { target: { value: "ancien" } })
+    const oldUrl = "/api/search?q=ancien&page=0&size=6"
+    await waitFor(() => expect(fetcher).toHaveBeenCalledWith(oldUrl, expect.anything()))
+    fireEvent.change(search, { target: { value: "  budget  " } })
+    expect(await screen.findByRole("button", { name: "Ouvrir le fichier budget.pdf (Finance / Archives)" })).toBeInTheDocument()
+    await act(async () => replyToOldSearch(Response.json(paginate([{
+      node: { ...report, name: "ancien.pdf" }, location: "Finance",
+    }]))))
+    expect(screen.queryByRole("button", { name: /ancien\.pdf/ })).not.toBeInTheDocument()
+    expect(oldSignal?.aborted).toBe(true)
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Type de document" }), "folder")
+    await user.selectOptions(screen.getByRole("combobox", { name: "Département" }), "2")
+    await screen.findByRole("button", { name: /Ouvrir le dossier Budget 2025/ })
+    await user.click(screen.getByRole("button", { name: "Page suivante" }))
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le dossier Budget 2026 (Finance / Archives)" }))
+    expect(Object.fromEntries(requests.at(-1)!)).toEqual({ q: "budget", kind: "folder", departmentId: "2", page: "1", size: "6" })
+
+    const breadcrumb = within(screen.getByRole("navigation", { name: "Fil d'Ariane" }))
+    expect(await breadcrumb.findByRole("button", { name: "Archives" })).toBeInTheDocument()
+    expect(breadcrumb.getByText("Budget 2026")).toHaveAttribute("aria-current", "page")
+    expect(search).toHaveValue("")
+    expect(await screen.findByText("Ce dossier est vide.")).toBeInTheDocument()
+  })
+
+  it("ajoute et retire un favori persistant depuis les détails d'un fichier en lecture seule", async () => {
+    const user = userEvent.setup()
+    let favorite = false
+    const fetcher = vi.fn(async (url: string, init: RequestInit) => {
+      if (url === "/api/favorites/20" && init.method === "PUT") {
+        favorite = true
+        return Response.json({ ...report, favorite })
+      }
+      if (url === "/api/favorites/20" && init.method === "DELETE") {
+        favorite = false
+        return new Response(null, { status: 204 })
+      }
+      if (url === "/api/favorites?page=0&size=6") {
+        const entry = { node: { ...report, favorite }, location: "Finance", addedAt: report.createdAt }
+        return Response.json(paginate(favorite ? [entry] : [], 0, 6))
+      }
+      if (url === "/api/nodes/20") return Response.json({ ...reportDetail, node: { ...report, favorite } })
+      return explore(url)
+    })
+    const client = createApi({ fetcher })
+    const workspace = render(<FileWorkspace client={client} />)
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le dossier Finance" }))
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le fichier budget.pdf" }))
+    await user.click(await screen.findByRole("button", { name: "Ajouter aux favoris" }))
+    expect(await screen.findByRole("button", { name: "Retirer des favoris" })).toHaveAttribute("aria-pressed", "true")
+    workspace.unmount()
+
+    render(<FileWorkspace client={client} />)
+    await user.click(screen.getByRole("button", { name: "Afficher les favoris" }))
+    await user.click(await screen.findByRole("button", { name: "Ouvrir le fichier budget.pdf (Finance)" }))
+    await user.click(await screen.findByRole("button", { name: "Retirer des favoris" }))
+    expect(await screen.findByText("Aucun favori accessible.")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Ajouter aux favoris" })).toHaveAttribute("aria-pressed", "false")
   })
 })

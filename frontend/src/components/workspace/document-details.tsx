@@ -1,11 +1,11 @@
-import { FileText, Folder } from "lucide-react"
+import { FileText, Folder, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Cluster, IconTile, Stack } from "@/components/ui/layout"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import type { Api } from "@/lib/api"
-import { formatFileSize } from "@/lib/utils"
+import { cn, formatFileSize } from "@/lib/utils"
 import type { DocumentNode, NodePermissions } from "@/types/api"
 import { FilePreview, type FileEditing } from "./file-preview"
 import type { NodeAction } from "./node-action-dialog"
@@ -18,15 +18,18 @@ const ACTIONS: Record<keyof NodePermissions, string> = {
   createChild: "Créer dans ce dossier",
 }
 
-export function DocumentDetails({ node, client, editing, onNodeAction }: {
+export function DocumentDetails({ node, client, editing, favoriteBusy, onToggleFavorite, onNodeAction }: {
   node: DocumentNode
   client: Api
   editing: FileEditing
+  favoriteBusy: boolean
+  onToggleFavorite: () => void
   onNodeAction: (kind: NodeAction["kind"]) => void
 }) {
   const { owner, permissions } = node
   const file = node.kind === "file"
   const Icon = file ? FileText : Folder
+  const favoriteLabel = node.favorite ? "Retirer des favoris" : "Ajouter aux favoris"
   const metadata = [
     ["Département", node.departmentName],
     ["Propriétaire", [owner.firstName, owner.lastName].filter(Boolean).join(" ")],
@@ -48,7 +51,21 @@ export function DocumentDetails({ node, client, editing, onNodeAction }: {
         <IconTile tone={file ? "file" : "folder"}>
           <Icon aria-hidden="true" />
         </IconTile>
-        <h2 className="break-all text-lg font-semibold">{node.name}</h2>
+        <h2 className="min-w-0 flex-1 break-all text-lg font-semibold">{node.name}</h2>
+        {permissions.view && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label={favoriteLabel}
+            aria-pressed={node.favorite}
+            title={favoriteLabel}
+            disabled={favoriteBusy}
+            onClick={onToggleFavorite}
+          >
+            <Star aria-hidden="true" className={cn(node.favorite && "fill-warning text-warning")} />
+          </Button>
+        )}
       </Cluster>
 
       <Table>
