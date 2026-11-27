@@ -114,6 +114,34 @@ export type UserQuery = PageQuery & { status?: AccountStatus }
 export type Colleague = Pick<User, "id" | "username" | "firstName" | "lastName"> &
   Partial<Pick<User, "email" | "role">>
 
+export type ChatParticipant = Pick<User, "id" | "firstName" | "lastName" | "username"> & {
+  active: boolean
+}
+
+export type ChatMessage = {
+  id: number
+  conversationId: number
+  senderId: number
+  content: string
+  sentAt: string
+  clientMessageId?: string | null
+  mine: boolean
+}
+
+export type Conversation = {
+  id: number
+  peer: ChatParticipant
+  lastMessage: ChatMessage | null
+  lastReadMessageId: number | null
+  unreadCount: number
+  canSend: boolean
+  createdAt: string
+  lastActivityAt: string
+}
+
+export type ChatMessagePage = { items: ChatMessage[]; hasMore: boolean }
+export type SendChatMessage = { content: string; clientMessageId: string }
+
 export interface PageMeta {
   page: number
   size: number

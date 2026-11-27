@@ -230,6 +230,8 @@ Avec le droit de modification, **Modifier le texte** permet d'enregistrer (`Ctrl
 
 L'aperçu Vite utilise les fichiers d'exemple de `frontend/src/data/workspace.ts` pour la recherche, les favoris et l'édition de texte. Les brouillons survivent au changement de fichier tant que l'explorateur reste ouvert. `Ctrl+S` ou `Cmd+S` enregistre le brouillon en mémoire. Sur mobile, les deux panneaux sont empilés.
 
+Sur le dashboard Spring Boot, ouvrir **Annuaire** puis **Message** sur un collègue actif pour démarrer une conversation. **Chat privé** affiche l'historique et les non-lus. Après une coupure, les messages manqués se chargent automatiquement. Si un envoi a échoué, **Réessayer l’envoi** reprend le même message.
+
 ### Développement et build
 
 Vite actualise l’interface sur **http://localhost:5173/** lors des modifications React ou CSS.

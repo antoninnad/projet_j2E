@@ -1,14 +1,24 @@
 import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "@/App"
 import { WorkspaceShell } from "@/components/workspace/workspace-shell"
 import { paginate } from "@/lib/pagination"
 
+const colleague = { id: 3, firstName: "Léa", lastName: "Dubois", username: "lea.dubois" }
+const conversation = {
+  id: 5,
+  peer: { ...colleague, active: true },
+  lastMessage: null,
+  unreadCount: 0,
+  canSend: true,
+}
+
 describe("WorkspaceShell", () => {
   beforeEach(() => {
     window.history.replaceState({}, "", "/dashboard")
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    vi.stubGlobal("WebSocket", class { close() {} })
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
       if (url.includes("/api/auth/session")) {
         return Response.json({
@@ -29,9 +39,18 @@ describe("WorkspaceShell", () => {
         return Response.json({ id: 1, bio: "", profilePictureUrl: null })
       }
       if (url.endsWith("/api/folders/roots")) return Response.json([])
+      if (url.includes("/api/users?")) return Response.json(paginate([colleague]))
+      if (url.endsWith("/api/conversations/unread")) return Response.json({ total: 0 })
+      if (url.endsWith("/api/conversations/5/messages")) return Response.json({ items: [], hasMore: false })
+      if (url.endsWith("/api/conversations") && init?.method === "POST") {
+        expect(JSON.parse(String(init.body))).toEqual({ peerId: colleague.id })
+        return Response.json(conversation)
+      }
       return Response.json(paginate([]))
     })
   })
+
+  afterEach(() => vi.unstubAllGlobals())
 
   it("affiche les 4 onglets accessibles avec l'onglet Documents actif par défaut", () => {
     render(<WorkspaceShell embedded userName="Alice Dupont" isAdmin />)
@@ -65,7 +84,7 @@ describe("WorkspaceShell", () => {
     expect(window.location.search).toBe("?tab=directory")
 
     await user.click(screen.getByRole("tab", { name: "Chat privé" }))
-    expect(screen.getByText(/Chat privé en temps réel/i)).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Conversations" })).toBeInTheDocument()
     expect(window.location.search).toBe("?tab=chat")
 
     await user.click(screen.getByRole("tab", { name: "Administration" }))
@@ -73,11 +92,11 @@ describe("WorkspaceShell", () => {
     expect(window.location.search).toBe("?tab=admin")
   })
 
-  it("respecte initialTab lorsqu'aucun paramètre ?tab= n'est dans l'URL", () => {
+  it("respecte initialTab lorsqu'aucun paramètre ?tab= n'est dans l'URL", async () => {
     render(<WorkspaceShell embedded initialTab="chat" />)
 
     expect(screen.getByRole("tab", { name: "Chat privé" })).toHaveAttribute("aria-selected", "true")
-    expect(screen.getByText(/Chat privé en temps réel/i)).toBeInTheDocument()
+    expect(await screen.findByText("Aucune conversation pour le moment.")).toBeInTheDocument()
   })
 
   it("réagit à l'événement navigateur popstate (précédent/suivant)", async () => {
@@ -106,14 +125,14 @@ describe("WorkspaceShell", () => {
 
   it("ouvre une conversation privée depuis l'annuaire et bascule sur l'onglet Chat privé (?tab=chat&peer=...)", async () => {
     const user = userEvent.setup()
-    render(<App />)
+    render(<WorkspaceShell embedded />)
 
     await user.click(screen.getByRole("tab", { name: "Annuaire" }))
     const messageButton = await screen.findByRole("button", { name: "Envoyer un message à Léa Dubois" })
     await user.click(messageButton)
 
     expect(screen.getByRole("tab", { name: "Chat privé" })).toHaveAttribute("aria-selected", "true")
-    expect(screen.getByText(/Conversation privée avec Léa Dubois/i)).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Léa Dubois" })).toBeInTheDocument()
     expect(window.location.search).toContain("tab=chat")
     expect(window.location.search).toContain("peer=3")
   })
