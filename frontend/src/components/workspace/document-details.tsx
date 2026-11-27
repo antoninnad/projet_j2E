@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import type { Api } from "@/lib/api"
 import { formatFileSize } from "@/lib/utils"
 import type { DocumentNode, NodePermissions } from "@/types/api"
-import { FilePreview } from "./file-preview"
-import type { FolderAction } from "./folder-action-dialog"
+import { FilePreview, type FileEditing } from "./file-preview"
+import type { NodeAction } from "./node-action-dialog"
 
 const ACTIONS: Record<keyof NodePermissions, string> = {
   view: "Consulter",
@@ -18,10 +18,11 @@ const ACTIONS: Record<keyof NodePermissions, string> = {
   createChild: "Créer dans ce dossier",
 }
 
-export function DocumentDetails({ node, client, onFolderAction }: {
+export function DocumentDetails({ node, client, editing, onNodeAction }: {
   node: DocumentNode
   client: Api
-  onFolderAction: (kind: FolderAction["kind"]) => void
+  editing: FileEditing
+  onNodeAction: (kind: NodeAction["kind"]) => void
 }) {
   const { owner, permissions } = node
   const file = node.kind === "file"
@@ -64,23 +65,28 @@ export function DocumentDetails({ node, client, onFolderAction }: {
       </Table>
 
       {file && permissions.view && (
-        <FilePreview key={`${node.id}:${node.version}`} file={node} client={client} />
+        <FilePreview
+          key={`${node.id}:${node.version}`}
+          file={node}
+          client={client}
+          editing={permissions.modify ? editing : undefined}
+        />
       )}
 
-      {!file && node.parentId != null && (
+      {(file ? permissions.delete : node.parentId != null && (permissions.modify || permissions.delete)) && (
         <Cluster gap="sm">
-          {permissions.modify && (
-            <Button type="button" size="sm" variant="outline" onClick={() => onFolderAction("rename")}>
+          {!file && permissions.modify && (
+            <Button type="button" size="sm" variant="outline" onClick={() => onNodeAction("rename")}>
               Renommer le dossier
             </Button>
           )}
           {permissions.delete && (
             <>
-              <Button type="button" size="sm" variant="outline" onClick={() => onFolderAction("move")}>
-                Déplacer le dossier
+              <Button type="button" size="sm" variant="outline" onClick={() => onNodeAction("move")}>
+                Déplacer le {file ? "fichier" : "dossier"}
               </Button>
-              <Button type="button" size="sm" variant="destructive" onClick={() => onFolderAction("delete")}>
-                Supprimer le dossier
+              <Button type="button" size="sm" variant="destructive" onClick={() => onNodeAction("delete")}>
+                Supprimer le {file ? "fichier" : "dossier"}
               </Button>
             </>
           )}

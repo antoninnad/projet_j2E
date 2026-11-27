@@ -16,25 +16,33 @@ import { FolderDestination } from "./folder-destination"
 const LABELS = {
   create: ["Nouveau dossier", "Créer", "Dossier créé"],
   rename: ["Renommer le dossier", "Renommer", "Dossier renommé"],
-  move: ["Déplacer le dossier", "Déplacer", "Dossier déplacé"],
-  delete: ["Supprimer le dossier", "Supprimer", "Dossier supprimé"],
 } as const
 
-export type FolderAction = { kind: keyof typeof LABELS; node: DocumentNode }
+export type NodeAction = {
+  kind: keyof typeof LABELS | "move" | "delete"
+  node: DocumentNode
+}
 
-export function FolderActionDialog({
+export function NodeActionDialog({
   action,
   client,
   onClose,
   onDone,
 }: {
-  action: FolderAction
+  action: NodeAction
   client: Api
   onClose: (refresh?: boolean) => void
   onDone: (updated?: DocumentNode) => void
 }) {
   const { kind, node } = action
-  const [title, submitLabel, success] = LABELS[kind]
+  const file = node.kind === "file"
+  const noun = file ? "fichier" : "dossier"
+  const labels = {
+    ...LABELS,
+    move: [`Déplacer le ${noun}`, "Déplacer", `Le ${noun} a été déplacé.`],
+    delete: [`Supprimer le ${noun}`, "Supprimer", `Le ${noun} a été supprimé.`],
+  }
+  const [title, submitLabel, success] = labels[kind]
   const [name, setName] = useState(kind === "rename" ? node.name : "")
   const [target, setTarget] = useState<DocumentNode>()
   const [busy, setBusy] = useState(false)
@@ -48,8 +56,10 @@ export function FolderActionDialog({
   const descriptions = {
     create: `Dans « ${node.name} ».`,
     rename: `Nom actuel : ${node.name}.`,
-    move: `Choisissez la destination du dossier « ${node.name} ».`,
-    delete: `Le dossier « ${node.name} » et tout son contenu seront supprimés.`,
+    move: `Choisissez la destination du ${noun} « ${node.name} ».`,
+    delete: file
+      ? `Le fichier « ${node.name} » sera supprimé définitivement.`
+      : `Le dossier « ${node.name} » et tout son contenu seront supprimés.`,
   }
 
   async function submit(event: FormEvent) {
@@ -64,6 +74,7 @@ export function FolderActionDialog({
       let updated: DocumentNode | undefined
       if (kind === "create") updated = await client.createFolder(node.id, trimmed)
       else if (kind === "rename") updated = await client.renameFolder(node.id, trimmed, node.version)
+      else if (kind === "delete" && file) await client.deleteFile(node.id, node.version)
       else if (kind === "delete") await client.deleteFolder(node.id, node.version)
       else if (target) updated = await client.moveNode(node.id, target.id, node.version)
 

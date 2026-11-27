@@ -209,6 +209,8 @@ Sur le dashboard, l'explorateur charge les racines, les enfants par pages de six
 
 Sélectionner un fichier pour consulter ses détails et son aperçu. Les textes, images matricielles et PDF s'affichent dans le panneau. Le bouton **Télécharger** permet de récupérer le fichier dans son format d'origine.
 
+Avec le droit de modification, **Modifier le texte** permet d'enregistrer (`Ctrl+S` ou `Cmd+S`) ou d'annuler le brouillon. En cas de conflit, **Recharger la version récente** permet de comparer le texte du serveur avec le brouillon avant de réessayer. Les fichiers binaires peuvent être remplacés. Le déplacement et la suppression dépendent du droit de suppression.
+
 L'aperçu Vite utilise les fichiers d'exemple de `frontend/src/data/workspace.ts` pour la recherche, les favoris et l'édition de texte. Les brouillons survivent au changement de fichier tant que l'explorateur reste ouvert. `Ctrl+S` ou `Cmd+S` enregistre le brouillon en mémoire. Sur mobile, les deux panneaux sont empilés.
 
 ### Développement et build
