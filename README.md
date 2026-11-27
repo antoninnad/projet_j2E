@@ -228,6 +228,8 @@ Sélectionner un fichier pour consulter ses détails et son aperçu. Les textes,
 
 Avec le droit de modification, **Modifier le texte** permet d'enregistrer (`Ctrl+S` ou `Cmd+S`) ou d'annuler le brouillon. En cas de conflit, **Recharger la version récente** permet de comparer le texte du serveur avec le brouillon avant de réessayer. Les fichiers binaires peuvent être remplacés. Le déplacement et la suppression dépendent du droit de suppression.
 
+Dans **Documents**, rechercher un fichier ou un dossier par nom et filtrer les résultats par type ou département. L'étoile dans les détails ajoute ou retire un favori. L'étoile de l'explorateur ouvre la vue **Mes favoris**.
+
 L'aperçu Vite utilise les fichiers d'exemple de `frontend/src/data/workspace.ts` pour la recherche, les favoris et l'édition de texte. Les brouillons survivent au changement de fichier tant que l'explorateur reste ouvert. `Ctrl+S` ou `Cmd+S` enregistre le brouillon en mémoire. Sur mobile, les deux panneaux sont empilés.
 
 Sur le dashboard Spring Boot, ouvrir **Annuaire** puis **Message** sur un collègue actif pour démarrer une conversation. **Chat privé** affiche l'historique et les non-lus. Après une coupure, les messages manqués se chargent automatiquement. Si un envoi a échoué, **Réessayer l’envoi** reprend le même message.

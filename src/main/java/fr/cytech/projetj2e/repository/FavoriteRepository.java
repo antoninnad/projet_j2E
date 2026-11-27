@@ -35,7 +35,7 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
      * adhésion retirée) est masqué sans être supprimé ; il réapparaît si l'accès revient.
      */
     @Query(value = """
-            select f from Favorite f join f.node n
+            select f from Favorite f join fetch f.node n
             where f.user = :user and n.company.id = :companyId
               and (:admin = true or exists (select m.id from Membership m
                                              where m.user = :user and m.department = n.department

@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import fr.cytech.projetj2e.dto.FavoriteResponse;
+import fr.cytech.projetj2e.dto.NodeResponse;
 import fr.cytech.projetj2e.dto.SearchResultResponse;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
 import fr.cytech.projetj2e.model.AccountStatus;
@@ -166,9 +167,13 @@ class SearchAndFavoriteServiceTest {
         assertTrue(favorites.add(alice, budgetTxt.getId()).favorite());
         favorites.add(alice, budgetTxt.getId()); // déjà en favori : sans effet
         favorites.add(alice, budgetFinal.getId());
+        em.flush();
+        em.clear();
 
         List<FavoriteResponse> listed = favorites.list(alice, 0, 20).items();
         assertEquals(List.of("budget-final.xlsx", "budget.txt"), listed.stream().map(f -> f.node().name()).toList());
+        assertEquals(List.of(NodeResponse.FILE, NodeResponse.FILE), listed.stream().map(f -> f.node().kind()).toList());
+        assertEquals("application/octet-stream", listed.get(0).node().contentType());
         assertEquals("Finance / Budget 2026", listed.get(0).location());
 
         // Personnel : Bob ne voit ni la liste ni l'étoile d'Alice.

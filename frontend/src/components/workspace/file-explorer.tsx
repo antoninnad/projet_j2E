@@ -28,6 +28,7 @@ type Entry = {
   kind: "folder" | "file"
   updatedAt?: string | null
   favorite?: boolean
+  location?: string
 }
 
 type Props<T extends Entry> = {
@@ -38,6 +39,8 @@ type Props<T extends Entry> = {
   filters?: {
     query: string
     favoritesOnly: boolean
+    searchLabel?: string
+    maxLength?: number
     onSearch: (query: string) => void
     onToggleFavorites: () => void
   }
@@ -63,18 +66,18 @@ export function FileExplorer<T extends Entry>({
   dirtyIds,
   loading,
   error,
-  emptyMessage = "Ce dossier est vide.",
+  emptyMessage,
   sizeLabel,
   onPage,
   onOpen,
   onBack,
   onRetry,
 }: Props<T>) {
-  const empty = filters?.query
+  const empty = emptyMessage ?? (filters?.query
     ? "Essayez un autre nom de fichier."
     : filters?.favoritesOnly
       ? "Aucun favori dans ce dossier."
-      : emptyMessage
+      : "Ce dossier est vide.")
 
   function changePage(offset: number) {
     if (!pagination || loading) return
@@ -115,8 +118,9 @@ export function FileExplorer<T extends Entry>({
 
         {filters && (
           <SearchInput
-            aria-label="Rechercher dans le dossier"
-            placeholder="Rechercher un fichier…"
+            aria-label={filters.searchLabel ?? "Rechercher dans le dossier"}
+            placeholder={filters.searchLabel ?? "Rechercher un fichier…"}
+            maxLength={filters.maxLength}
             value={filters.query}
             onChange={(event) => filters.onSearch(event.target.value)}
           />
@@ -167,6 +171,7 @@ export function FileExplorer<T extends Entry>({
               const folder = entry.kind === "folder"
               const selected = entry.id === selectedId
               const Icon = folder ? Folder : FileText
+              const name = (folder ? "Ouvrir le dossier " : "Ouvrir le fichier ") + entry.name
               return (
                 <Button
                   key={entry.id}
@@ -174,7 +179,7 @@ export function FileExplorer<T extends Entry>({
                   variant="ghost"
                   onClick={() => onOpen(entry)}
                   aria-current={selected ? "true" : undefined}
-                  aria-label={(folder ? "Ouvrir le dossier " : "Ouvrir le fichier ") + entry.name}
+                  aria-label={entry.location ? `${name} (${entry.location})` : name}
                   className={cn(
                     "h-auto w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left font-normal",
                     selected && "bg-primary-subtle/80 ring-1 ring-primary/25",
@@ -202,11 +207,11 @@ export function FileExplorer<T extends Entry>({
                         />
                       )}
                     </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {folder
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground" title={entry.location}>
+                      {entry.location ?? (folder
                         ? "Dossier"
                         : entry.updatedAt &&
-                          new Date(entry.updatedAt).toLocaleDateString("fr-FR")}
+                          new Date(entry.updatedAt).toLocaleDateString("fr-FR"))}
                     </span>
                   </span>
 

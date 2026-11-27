@@ -77,10 +77,14 @@ export type DocumentNode = {
   contentType?: string | null
   size?: number | null
   permissions: NodePermissions
+  favorite: boolean
 }
 
 export type BreadcrumbItem = Pick<DocumentNode, "id" | "name">
 export type NodeDetail = { node: DocumentNode; path: BreadcrumbItem[] }
+export type NodeSearchQuery = { q: string; kind?: DocumentNode["kind"]; departmentId?: number }
+export type NodeSearchResult = { node: DocumentNode; location: string }
+export type Favorite = NodeSearchResult & { addedAt: string }
 
 export type SharingPerson = Pick<User, "id" | "username" | "firstName" | "lastName" | "email">
 export type NodeSharingInfo = {

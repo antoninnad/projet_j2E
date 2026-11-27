@@ -14,8 +14,11 @@ import type {
   Department,
   DepartmentMember,
   DocumentNode,
+  Favorite,
   LoginRequest,
   NodeDetail,
+  NodeSearchQuery,
+  NodeSearchResult,
   NodeSharingInfo,
   Page,
   PageQuery,
@@ -98,6 +101,12 @@ export function createApi(options?: ApiClientOptions) {
     listFolderChildren: (id: number, query?: Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
       json<Page<DocumentNode>>(`/folders/${id}/children`, { query, signal }),
     getNode: (id: number, signal?: AbortSignal) => json<NodeDetail>(`/nodes/${id}`, { signal }),
+    searchNodes: (query: NodeSearchQuery & Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
+      json<Page<NodeSearchResult>>("/search", { query, signal }),
+    listFavorites: (query: Pick<PageQuery, "page" | "size">, signal?: AbortSignal) =>
+      json<Page<Favorite>>("/favorites", { query, signal }),
+    addFavorite: (id: number) => json<DocumentNode>(`/favorites/${id}`, { method: "PUT" }),
+    removeFavorite: (id: number) => noContent(`/favorites/${id}`, { method: "DELETE" }),
     getFileContent: (id: number, signal?: AbortSignal) => request(`/files/${id}/content`, { signal }),
     fileDownloadUrl: (id: number) => url(`/files/${id}/download`),
     saveFileText: (id: number, content: string, version: number) =>
