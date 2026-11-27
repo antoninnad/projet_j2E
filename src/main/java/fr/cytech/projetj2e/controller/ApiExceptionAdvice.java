@@ -65,7 +65,7 @@ public class ApiExceptionAdvice {
     public ResponseEntity<ErrorResponse> payloadTooLarge(MaxUploadSizeExceededException exception) {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .body(new ErrorResponse("PAYLOAD_TOO_LARGE",
-                        "Le fichier dépasse la taille maximale autorisée (" + maxFileSize.toMegabytes() + " Mo)."));
+                        "Le fichier dépasse la taille maximale autorisée (" + readable(maxFileSize) + ")."));
     }
 
     /** Échec disque : détail dans le journal du serveur, jamais de chemin dans la réponse. */
@@ -74,5 +74,10 @@ public class ApiExceptionAdvice {
         LOG.error("Erreur de stockage", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("STORAGE_ERROR", exception.getMessage()));
+    }
+
+    /** 20 Mo, 512 Ko… : taille lisible pour les messages d'erreur. */
+    static String readable(DataSize size) {
+        return size.toMegabytes() >= 1 ? size.toMegabytes() + " Mo" : Math.max(1, size.toKilobytes()) + " Ko";
     }
 }
