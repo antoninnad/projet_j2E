@@ -15,6 +15,11 @@ tags:
   - name: Profiles
   - name: Departments
   - name: Documents
+  - name: Activity
+    description: |
+      Journal d'activité (T36) : opérations sur les documents et changements de droits, avec auteur et date.
+      L'administrateur voit toute son entreprise ; un membre, l'activité des éléments qu'il peut voir aujourd'hui.
+      Ni contenu de fichier, ni message de chat, ni secret.
   - name: Chat
     description: |
       Conversations privées entre deux membres actifs d'une même entreprise (T33).
@@ -846,6 +851,53 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /activity:
+    get:
+      tags: [Activity]
+      summary: Fil d'activité de l'entreprise
+      description: |
+        La plus récente d'abord. Administrateur : toute l'activité de l'entreprise, y compris départements,
+        adhésions et comptes. Membre : seulement les entrées des éléments qu'il peut voir aujourd'hui
+        (élément supprimé : selon le dernier département et le dernier seuil qu'il avait).
+      operationId: listActivity
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Page d'activité
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActivityPage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /nodes/{nodeId}/activity:
+    get:
+      tags: [Activity]
+      summary: Historique d'un dossier ou d'un fichier
+      description: Exige de pouvoir voir l'élément (404 sinon).
+      operationId: listNodeActivity
+      parameters:
+        - name: nodeId
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Page d'activité de l'élément
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ActivityPage'}
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /conversations:
     post:
       tags: [Chat]
@@ -1246,6 +1298,48 @@ components:
       properties:
         name: {type: string, maxLength: 255}
         version: {type: integer, format: int64, description: Version chargée (facultative) ; 409 si elle a changé}
+    ActivityEntry:
+      type: object
+      required: [id, action, category, label, occurredAt]
+      description: |
+        À afficher : « {actor.firstName} {label} {nodeName ou departmentName} », puis targetUserName et details.
+        node* et department* décrivent l'élément au moment de l'action ; nodeId peut désigner un élément supprimé.
+      properties:
+        id: {type: integer, format: int64}
+        action:
+          type: string
+          enum: [FOLDER_CREATED, FOLDER_RENAMED, FOLDER_DELETED, NODE_MOVED, FILE_UPLOADED, FILE_SAVED,
+                 FILE_REPLACED, FILE_RENAMED, FILE_DELETED, THRESHOLD_CHANGED, CONTRIBUTOR_ADDED,
+                 CONTRIBUTOR_REMOVED, DEPARTMENT_CREATED, DEPARTMENT_RENAMED, MEMBER_ACCESS_SET,
+                 MEMBER_REMOVED, ACCOUNT_APPROVED, ACCOUNT_DECLINED, ACCOUNT_DISABLED]
+        category: {type: string, enum: [DOCUMENT, RIGHTS, ADMINISTRATION]}
+        label: {type: string, example: a renommé le dossier}
+        occurredAt: {type: string, format: date-time}
+        actor:
+          oneOf:
+            - type: object
+              required: [id, firstName, lastName]
+              properties:
+                id: {type: integer, format: int64}
+                firstName: {type: string}
+                lastName: {type: string}
+            - type: 'null'
+        nodeId: {type: [integer, 'null'], format: int64}
+        nodeName: {type: [string, 'null']}
+        nodeKind: {type: [string, 'null'], enum: [folder, file, null]}
+        departmentId: {type: [integer, 'null'], format: int64}
+        departmentName: {type: [string, 'null']}
+        targetUserId: {type: [integer, 'null'], format: int64}
+        targetUserName: {type: [string, 'null']}
+        details: {type: [string, 'null'], example: « Archives » → « Archives 2025 »}
+    ActivityPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ActivityEntry'}
+        page: {$ref: '#/components/schemas/PageMeta'}
     ChatParticipant:
       type: object
       required: [id, firstName, lastName, username, active]

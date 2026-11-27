@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.cytech.projetj2e.exception.ForbiddenException;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
+import fr.cytech.projetj2e.model.ActivityAction;
 import fr.cytech.projetj2e.model.Node;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.model.UserRole;
@@ -21,17 +22,20 @@ public class SharingService {
     private final MembershipRepository memberships;
     private final CompanyIsolationService isolation;
     private final PermissionService permissions;
+    private final ActivityRecorder activity;
 
     public SharingService(NodeRepository nodes,
                           UserRepository users,
                           MembershipRepository memberships,
                           CompanyIsolationService isolation,
-                          PermissionService permissions) {
+                          PermissionService permissions,
+                          ActivityRecorder activity) {
         this.nodes = nodes;
         this.users = users;
         this.memberships = memberships;
         this.isolation = isolation;
         this.permissions = permissions;
+        this.activity = activity;
     }
 
     public Node setThreshold(User actor, Long nodeId, int threshold) {
@@ -49,8 +53,13 @@ public class SharingService {
                         "Vous ne pouvez pas définir un seuil supérieur à votre niveau d'accès.");
             }
         }
+        int previous = node.getMinAccessLevel();
         node.setMinAccessLevel(threshold);
-        return nodes.save(node);
+        Node saved = nodes.save(node);
+        if (previous != threshold) {
+            activity.node(actor, ActivityAction.THRESHOLD_CHANGED, saved, ActivityRecorder.change(previous, threshold));
+        }
+        return saved;
     }
 
     public Node addContributor(User actor, Long nodeId, Long contributorId) {
@@ -67,7 +76,9 @@ public class SharingService {
                     "Un contributeur doit atteindre le seuil d'accès du nœud.");
         }
         node.addContributor(contributor);
-        return nodes.save(node);
+        Node saved = nodes.save(node);
+        activity.node(actor, ActivityAction.CONTRIBUTOR_ADDED, saved, contributor, null);
+        return saved;
     }
 
     public Node removeContributor(User actor, Long nodeId, Long contributorId) {
@@ -76,7 +87,9 @@ public class SharingService {
         User contributor = users.findByIdAndCompany(requireId(contributorId), actor.getCompany())
                 .orElseThrow(() -> new ResourceNotFoundException("Contributeur introuvable."));
         node.removeContributor(contributor);
-        return nodes.save(node);
+        Node saved = nodes.save(node);
+        activity.node(actor, ActivityAction.CONTRIBUTOR_REMOVED, saved, contributor, null);
+        return saved;
     }
 
     private static boolean isCompanyAdmin(User actor) {

@@ -52,7 +52,7 @@ import fr.cytech.projetj2e.model.UserRole;
         "app.storage.root=target/test-storage",
         "spring.servlet.multipart.max-file-size=1KB"
 })
-@Import({ FileManagementService.class, NodeResponseMapper.class, NodeNames.class, PermissionService.class,
+@Import({ FileManagementService.class, NodeResponseMapper.class, NodeNames.class, ActivityRecorder.class, PermissionService.class,
         CompanyIsolationService.class, CompanyStorage.class,
         BCryptPasswordEncoder.class }) // BCrypt : requis par le bean init de ProjetJ2eApplication
 class FileManagementServiceTest {

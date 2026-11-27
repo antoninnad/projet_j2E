@@ -26,7 +26,7 @@ class DepartmentServiceTest {
         DepartmentRepository departments = mock(DepartmentRepository.class);
         MembershipRepository memberships = mock(MembershipRepository.class);
         FolderService folders = mock(FolderService.class);
-        DepartmentService service = new DepartmentService(departments, memberships, folders);
+        DepartmentService service = new DepartmentService(departments, memberships, folders, org.mockito.Mockito.mock(ActivityRecorder.class));
         Company company = company(1L);
         User admin = user(10L, company, UserRole.COMPANY_ADMIN);
 
@@ -49,7 +49,7 @@ class DepartmentServiceTest {
         DepartmentRepository departments = mock(DepartmentRepository.class);
         MembershipRepository memberships = mock(MembershipRepository.class);
         FolderService folders = mock(FolderService.class);
-        DepartmentService service = new DepartmentService(departments, memberships, folders);
+        DepartmentService service = new DepartmentService(departments, memberships, folders, org.mockito.Mockito.mock(ActivityRecorder.class));
         Company company = company(1L);
         User member = user(10L, company, UserRole.MEMBER);
 
@@ -68,7 +68,7 @@ class DepartmentServiceTest {
         DepartmentRepository departments = mock(DepartmentRepository.class);
         MembershipRepository memberships = mock(MembershipRepository.class);
         FolderService folders = mock(FolderService.class);
-        DepartmentService service = new DepartmentService(departments, memberships, folders);
+        DepartmentService service = new DepartmentService(departments, memberships, folders, org.mockito.Mockito.mock(ActivityRecorder.class));
         Company company = company(1L);
         User admin = user(10L, company, UserRole.COMPANY_ADMIN);
         Department department = new Department("Finance", company);
