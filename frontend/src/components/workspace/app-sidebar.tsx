@@ -34,6 +34,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
@@ -65,6 +66,7 @@ export interface AppSidebarProps {
   userName?: string
   isAdmin?: boolean
   baseUrl?: string
+  chatUnread?: number
 }
 
 export function AppSidebar({
@@ -73,6 +75,7 @@ export function AppSidebar({
   userName,
   isAdmin = false,
   baseUrl = "/",
+  chatUnread = 0,
 }: AppSidebarProps) {
   const { state, setOpenMobile } = useSidebar()
   const collapsed = state === "collapsed"
@@ -152,6 +155,7 @@ export function AppSidebar({
               {tabs.map((tab) => {
                 const Icon = TAB_ICONS[tab.id]
                 const selected = activeTab === tab.id
+                const unread = tab.id === "chat" ? chatUnread : 0
                 return (
                   <SidebarMenuItem key={tab.id}>
                     <SidebarMenuButton
@@ -160,12 +164,17 @@ export function AppSidebar({
                       id={`tab-${tab.id}`}
                       aria-selected={selected}
                       aria-controls={`panel-${tab.id}`}
+                      aria-label={unread ? `${tab.label}, ${unread} non lus` : undefined}
                       isActive={selected}
                       tooltip={tab.label}
                       onClick={() => selectModule(tab.id)}
                     >
-                      <Icon aria-hidden="true" />
+                      <span className="relative shrink-0" aria-hidden="true">
+                        <Icon className="size-4" />
+                        {unread > 0 && collapsed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary" />}
+                      </span>
                       <span className={collapsed ? "sr-only" : "truncate"}>{tab.label}</span>
+                      {unread > 0 && <SidebarMenuBadge aria-hidden="true">{unread > 99 ? "99+" : unread}</SidebarMenuBadge>}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )

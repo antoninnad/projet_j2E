@@ -168,7 +168,7 @@ Une dépendance désigne un prérequis pour terminer et intégrer la tâche. L�
 | T32 | Recherche et favoris frontend | Brancher recherche et vue des favoris sur les API | F2 | P1 | Partiel | T19, T31 | Favoris conservés et résultats autorisés |
 | T33 | Chat persistant backend | Créer conversations à deux, envoi, historique paginé et état de lecture | B2 | P1 | Terminé | T08, T11, T29 | Messages persistants accessibles uniquement aux participants |
 | T34 | Chat temps réel backend | Ajouter WebSocket authentifié, contrôle des abonnements et reprise après coupure | B2 | P1 | Terminé | T33 | Livraison des messages sans accès indu ni duplication |
-| T35 | Chat frontend | Créer liste et historique, lancement depuis un profil, envoi, non-lus et reconnexion | F2 | P1 | À faire | T03, T30, T33, T34 | Deux navigateurs peuvent discuter en temps réel |
+| T35 | Chat frontend | Créer liste et historique, lancement depuis un profil, envoi, non-lus et reconnexion | F2 | P1 | Terminé | T03, T30, T33, T34 | Deux navigateurs peuvent discuter en temps réel |
 | T36 | Activité backend | Étendre Log et journaliser auteurs/dates/opérations ; filtrer la consultation par droits | B2 | P1 | Terminé | T23, T27 | Historique exploitable sans secrets ni messages privés |
 | T37 | Activité frontend | Afficher opérations récentes et auteurs des modifications | F1 | P1 | À faire | T28, T36 | Activité réelle visible selon les accès |
 | T38 | Qualité écrans F1 | Traiter chargements, erreurs, états vides, mobile, clavier et libellés français | F1 | P1 | Partiel | T17, T28, T30, T37 | Parcours comptes/administration/profils accessibles |
@@ -196,6 +196,8 @@ T24 relie l'explorateur aux API T20 et T21. Les actions sur les dossiers suivent
 T25 affiche les métadonnées et l'aperçu des fichiers consultables dans l'explorateur. Le frontend utilise le type et la disposition renvoyés par T22 pour afficher le texte, les images matricielles et les PDF. Les autres formats restent téléchargeables. Les tests couvrent l'encodage du texte, le repli sur le téléchargement et le rechargement après erreur. Le parcours a été vérifié dans Chrome avec Spring Boot et H2, y compris le téléchargement d'un fichier au nom accentué.
 
 T26 branche l'éditeur de texte et le remplacement des fichiers binaires sur T23. La sauvegarde utilise la version du texte chargé. En cas de conflit, l'explorateur conserve le brouillon et permet de le comparer à la version récente avant de réessayer. Le déplacement et la suppression réutilisent les dialogues de l'explorateur et suivent les droits renvoyés par l'API. Les tests frontend et le parcours Chrome avec Spring Boot et H2 couvrent la sauvegarde, le conflit, l'annulation, le remplacement, le déplacement et la suppression.
+
+T35 relie l'annuaire et l'onglet Chat privé aux API T33 et à la WebSocket T34. L'historique paginé et les non-lus viennent du serveur. Un envoi échoué peut être retenté avec le même identifiant. À la reconnexion, le chat récupère les messages manqués et les rapproche des événements reçus. Deux comptes Chrome sur Spring Boot et H2 ont vérifié l'ouverture depuis l'annuaire, les échanges, la lecture, la reprise après coupure et l'historique après rechargement.
 
 ### Avancement MVC des comptes
 
@@ -308,7 +310,7 @@ Une fonctionnalité est terminée lorsque son interface utilise l’API réelle,
 - [ ] Les cycles, seuils incohérents et suppressions de sous-arbres non autorisées sont refusés ; les imports respectent les limites configurées.
 - [x] Deux éditions concurrentes produisent un conflit explicite et préservent le brouillon local.
 - [ ] La recherche, les favoris et l’activité n’exposent aucun document devenu inaccessible.
-- [ ] Deux comptes actifs de la même entreprise échangent en temps réel ; historique, non-lus et reconnexion fonctionnent sans doublons.
+- [x] Deux comptes actifs de la même entreprise échangent en temps réel ; historique, non-lus et reconnexion fonctionnent sans doublons.
 - [ ] Un tiers, même administrateur, ne peut pas lire une conversation privée à laquelle il ne participe pas.
 - [ ] Les comptes, documents, profils, favoris et messages survivent au redémarrage ; une sauvegarde base/fichiers a été restaurée avec succès.
 - [ ] Les écrans sont vérifiés sur mobile et au clavier, avec chargement, états vides et erreurs lisibles.

@@ -3,8 +3,11 @@ import { paginate } from "@/lib/pagination"
 import type { UploadProgress } from "@/lib/upload-request"
 import type {
   ChangePasswordRequest,
+  ChatMessage,
+  ChatMessagePage,
   Colleague,
   Company,
+  Conversation,
   CreateCompanyRequest,
   CreateCompanyResponse,
   CreateDepartmentRequest,
@@ -19,6 +22,7 @@ import type {
   Profile,
   RegisterRequest,
   RegistrationResponse,
+  SendChatMessage,
   SessionResponse,
   UpdateProfileRequest,
   UpdateUserRequest,
@@ -60,6 +64,18 @@ export function createApi(options?: ApiClientOptions) {
       noContent("/profiles/me/password", { method: "POST", json: data, signal }),
     getUserProfile: (id: number, signal?: AbortSignal) =>
       json<Profile>(`/users/${id}/profile`, { signal }),
+    listConversations: (page: number, signal?: AbortSignal) =>
+      json<Page<Conversation>>("/conversations", { query: { page }, signal }),
+    openConversation: (peerId: number, signal?: AbortSignal) =>
+      json<Conversation>("/conversations", { method: "POST", json: { peerId }, signal }),
+    getChatUnread: (signal?: AbortSignal) =>
+      json<{ total: number }>("/conversations/unread", { signal }),
+    listChatMessages: (id: number, query?: { before?: number; after?: number }, signal?: AbortSignal) =>
+      json<ChatMessagePage>(`/conversations/${id}/messages`, { query, signal }),
+    sendChatMessage: (id: number, data: SendChatMessage) =>
+      json<ChatMessage>(`/conversations/${id}/messages`, { method: "POST", json: data }),
+    markChatRead: (id: number, lastMessageId: number, signal?: AbortSignal) =>
+      json<Conversation>(`/conversations/${id}/read`, { method: "POST", json: { lastMessageId }, signal }),
     listDepartments: (query?: PageQuery, signal?: AbortSignal) =>
       json<Page<Department>>("/departments", { query, signal }),
     createDepartment: (data: CreateDepartmentRequest, signal?: AbortSignal) =>
