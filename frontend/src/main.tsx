@@ -34,6 +34,8 @@ function mountReactIslands() {
             initialTab={element.dataset.initialTab || "files"}
             userName={element.dataset.userName || undefined}
             isAdmin={element.dataset.isAdmin === "true"}
+            baseUrl={element.dataset.baseUrl}
+            loginUrl={element.dataset.loginUrl}
             client={createApi({
               baseUrl: element.dataset.baseUrl,
               fetcher: createSessionAwareFetcher({

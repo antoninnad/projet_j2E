@@ -76,7 +76,15 @@ export function readTabFromLocation(fallback: WorkspaceTabId = "files"): Workspa
   return parseWorkspaceTab(params.get("tab"), fallback)
 }
 
-export function syncTabToLocation(tab: WorkspaceTabId): void {
+export function readChatPeerFromLocation(): number | undefined {
+  if (typeof window === "undefined") return
+  const value = new URLSearchParams(window.location.search).get("peer")
+  if (!value || !/^\d+$/.test(value)) return
+  const id = Number(value)
+  if (Number.isSafeInteger(id) && id > 0) return id
+}
+
+export function syncTabToLocation(tab: WorkspaceTabId, peerId?: number): void {
   if (typeof window === "undefined") {
     return
   }
@@ -86,6 +94,8 @@ export function syncTabToLocation(tab: WorkspaceTabId): void {
   } else {
     url.searchParams.set("tab", tab)
   }
+  if (tab === "chat" && peerId !== undefined) url.searchParams.set("peer", String(peerId))
+  else url.searchParams.delete("peer")
   const next = `${url.pathname}${url.search}${url.hash}`
   const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
   if (next !== current) {
