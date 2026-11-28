@@ -38,6 +38,11 @@ public class AdminUserController {
 
     @GetMapping("/dashboard")
     public String pending(HttpSession session, Model model) {
+        if (session != null && session.getAttribute("adminId") != null) {
+            model.addAttribute("users", List.of());
+            return "admin-dashboard";
+        }
+
         User actor;
         try {
             actor = identity.requireActiveMember(session);

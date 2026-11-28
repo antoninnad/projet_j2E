@@ -40,6 +40,12 @@ export type CreateCompanyResponse = {
 }
 export type Department = { id: number; name: string; companyId: number }
 export type CreateDepartmentRequest = { name: string }
+export type DepartmentMembership = {
+  id: number
+  userId: number
+  departmentId: number
+  accessLevel: number
+}
 export type DepartmentMember = {
   userId: number
   username: string

@@ -7,8 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,8 @@ import fr.cytech.projetj2e.service.UserService;
 import fr.cytech.projetj2e.model.Admin;
 import fr.cytech.projetj2e.model.AccountStatus;
 import fr.cytech.projetj2e.model.Company;
+import fr.cytech.projetj2e.model.Department;
+import fr.cytech.projetj2e.model.Membership;
 import fr.cytech.projetj2e.model.User;
 import fr.cytech.projetj2e.model.UserRole;
 import fr.cytech.projetj2e.exception.InactiveAccountException;
@@ -40,7 +44,7 @@ import java.util.Optional;
 import java.util.List;
 
 @WebMvcTest({ HomeController.class, PageController.class, LoginController.class, RegisterController.class,
-        AdminDashboardController.class })
+        AdminDashboardController.class, AdminUserController.class, PlatformCompanyRestController.class })
 @Import(FrontendModelAdvice.class)
 class HomeControllerTest {
 
@@ -66,6 +70,9 @@ class HomeControllerTest {
     private NodeRepository nodeRepository;
 
     @MockitoBean
+    private fr.cytech.projetj2e.repository.MembershipRepository membershipRepository;
+
+    @MockitoBean
     private UserService userService;
 
     @MockitoBean
@@ -76,6 +83,15 @@ class HomeControllerTest {
 
     @MockitoBean
     private ExplorationService explorationService;
+
+    @MockitoBean
+    private fr.cytech.projetj2e.service.PlatformAdministrationService platformAdministrationService;
+
+    @MockitoBean
+    private fr.cytech.projetj2e.service.UserAdministrationService userAdministrationService;
+
+    @MockitoBean
+    private fr.cytech.projetj2e.service.CompanyCreationService companyCreationService;
 
     @BeforeEach
     void setUpActiveUsers() {
@@ -155,8 +171,139 @@ class HomeControllerTest {
         when(userRepository.findAll()).thenReturn(List.of());
         mockMvc.perform(get("/admin/dashboard/listUsers")
                         .session((MockHttpSession) loginResult.getRequest().getSession(false)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/dashboard/listCompanies"));
+    }
+
+    @Test
+    void globalAdminCanOpenDashboardWithCompanyCreationPanel() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("adminId", 5L);
+
+        mockMvc.perform(get("/admin/dashboard").session(session))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin-dashboard-listUsers"));
+                .andExpect(view().name("admin-dashboard"))
+                .andExpect(content().string(containsString("company-creation-root")));
+    }
+
+    @Test
+    void globalAdminCanCreateCompanyThroughApiButMemberCannot() throws Exception {
+        String request = """
+                {
+                  "companyName":"Acme",
+                  "companyCode":"ACME",
+                  "adminFirstName":"Alice",
+                  "adminLastName":"Martin",
+                  "adminUsername":"alice",
+                  "adminEmail":"alice@example.test",
+                  "adminPassword":"Password123",
+                  "adminConfirmPassword":"Password123"
+                }
+                """;
+        Company company = new Company("Acme", "ACME");
+        company.setId(7L);
+        User companyAdmin = new User();
+        companyAdmin.setId(12L);
+        companyAdmin.setUsername("alice");
+        companyAdmin.setFirstName("Alice");
+        companyAdmin.setLastName("Martin");
+        companyAdmin.setEmail("alice@example.test");
+        companyAdmin.setStatus(AccountStatus.ACTIVE);
+        companyAdmin.setRole(UserRole.COMPANY_ADMIN);
+        companyAdmin.setCompany(company);
+        when(companyCreationService.create(
+                "Acme", "ACME", "Alice", "Martin", "alice", "alice@example.test",
+                "Password123", "Password123"))
+                .thenReturn(new fr.cytech.projetj2e.service.CompanyCreationService.CreatedCompany(
+                        company, companyAdmin));
+
+        mockMvc.perform(post("/api/companies")
+                        .contentType("application/json")
+                        .content(request))
+                .andExpect(status().isForbidden());
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("adminId", 5L);
+        mockMvc.perform(post("/api/companies")
+                        .session(session)
+                        .contentType("application/json")
+                        .content(request))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.company.id").value(7))
+                .andExpect(jsonPath("$.admin.role").value("COMPANY_ADMIN"))
+                .andExpect(jsonPath("$.admin.companyId").value(7));
+    }
+
+    @Test
+    void globalAdminDepartmentMembershipRoutesMatchForms() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("adminId", 5L);
+
+        mockMvc.perform(post("/admin/dashboard/departments/3/members")
+                        .session(session)
+                        .with(csrf())
+                        .param("userId", "12")
+                        .param("accessLevel", "2"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/dashboard/listCompanies"));
+        verify(platformAdministrationService).setAccessLevel(12L, 3L, 2);
+
+        mockMvc.perform(post("/admin/dashboard/departments/3/users/12/access")
+                        .session(session)
+                        .with(csrf())
+                        .param("accessLevel", "4"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/dashboard/listCompanies"));
+        verify(platformAdministrationService).setAccessLevel(12L, 3L, 4);
+
+        mockMvc.perform(post("/admin/dashboard/users/12/role")
+                        .session(session)
+                        .with(csrf())
+                        .param("companyAdmin", "true"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/dashboard/listCompanies"));
+        verify(platformAdministrationService).setCompanyAdminRole(12L, true);
+    }
+
+    @Test
+    void companiesViewRendersTheRoutesSubmittedByItsForms() throws Exception {
+        Company company = new Company("Acme", "ACME");
+        company.setId(7L);
+        Department department = new Department("Finance", company);
+        department.setId(3L);
+        User user = new User();
+        user.setId(12L);
+        user.setUsername("alice");
+        user.setFirstName("Alice");
+        user.setLastName("Martin");
+        user.setEmail("alice@example.test");
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setRole(UserRole.MEMBER);
+        user.setCompany(company);
+        User available = new User();
+        available.setId(13L);
+        available.setUsername("bob");
+        available.setFirstName("Bob");
+        available.setLastName("Petit");
+        available.setEmail("bob@example.test");
+        available.setStatus(AccountStatus.ACTIVE);
+        available.setRole(UserRole.MEMBER);
+        available.setCompany(company);
+        Membership membership = new Membership(user, department, 2);
+
+        when(companyRepository.findAll()).thenReturn(List.of(company));
+        when(userRepository.findByCompany(company)).thenReturn(List.of(user, available));
+        when(departmentRepository.findByCompany(company)).thenReturn(List.of(department));
+        when(membershipRepository.findByDepartment(department)).thenReturn(List.of(membership));
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("adminId", 5L);
+        mockMvc.perform(get("/admin/dashboard/listCompanies").session(session))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin-dashboard-listCompanies"))
+                .andExpect(content().string(containsString("/admin/dashboard/users/12/role")))
+                .andExpect(content().string(containsString("/admin/dashboard/departments/3/users/12/access")))
+                .andExpect(content().string(containsString("/admin/dashboard/departments/3/members")));
     }
 
     @Test

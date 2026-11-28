@@ -2,6 +2,8 @@ package fr.cytech.projetj2e.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import fr.cytech.projetj2e.exception.ForbiddenException;
 import fr.cytech.projetj2e.exception.ResourceNotFoundException;
@@ -51,16 +53,27 @@ public class UserAdministrationService {
         return saved;
     }
 
+    @Transactional(readOnly = true)
+    public Page<User> listCompanyUsers(User actor, AccountStatus status, String search, Pageable pageable) {
+        requireCompanyAdmin(actor);
+        String normalizedSearch = search == null || search.isBlank() ? null : search.strip();
+        return users.searchCompanyUsers(actor.getCompany(), status, normalizedSearch, pageable);
+    }
+
     private User requireCompanyTarget(User actor, Long userId) {
-        if (actor == null || !actor.isActive()
-                || actor.getRole() != UserRole.COMPANY_ADMIN
-                || actor.getCompany() == null) {
-            throw new ForbiddenException("Administrateur de l'entreprise requis.");
-        }
+        requireCompanyAdmin(actor);
         if (userId == null) {
             throw new ResourceNotFoundException("Compte introuvable.");
         }
         return users.findByIdAndCompany(userId, actor.getCompany())
                 .orElseThrow(() -> new ResourceNotFoundException("Compte introuvable."));
+    }
+
+    private static void requireCompanyAdmin(User actor) {
+        if (actor == null || !actor.isActive()
+                || actor.getRole() != UserRole.COMPANY_ADMIN
+                || actor.getCompany() == null) {
+            throw new ForbiddenException("Administrateur de l'entreprise requis.");
+        }
     }
 }

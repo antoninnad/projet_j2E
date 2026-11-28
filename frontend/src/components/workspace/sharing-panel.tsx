@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { api, type Api } from "@/lib/api"
 import { ApiError } from "@/lib/api-client"
-import type { NodeSharingInfo, User } from "@/types/api"
+import type { Colleague, NodeSharingInfo } from "@/types/api"
 
 export type SharingPanelApi = Pick<
   Api,
@@ -27,7 +27,7 @@ export type SharingPanelApi = Pick<
   | "updateNodeThreshold"
   | "addNodeContributor"
   | "removeNodeContributor"
-  | "listUsers"
+  | "listColleagues"
 >
 
 export function SharingPanel({
@@ -42,7 +42,7 @@ export function SharingPanel({
   onClose?: () => void
 }) {
   const [info, setInfo] = useState<NodeSharingInfo | null>(null)
-  const [colleagues, setColleagues] = useState<User[]>([])
+  const [colleagues, setColleagues] = useState<Colleague[]>([])
   const [thresholdDraft, setThresholdDraft] = useState<string>("0")
   const [selectedUserId, setSelectedUserId] = useState<string>("")
   const [loading, setLoading] = useState(true)
@@ -54,7 +54,7 @@ export function SharingPanel({
     const controller = new AbortController()
     Promise.all([
       client.getNodeSharing(nodeId, controller.signal),
-      client.listUsers({ status: "ACTIVE", size: 50 }, controller.signal).catch(() => null),
+      client.listColleagues({ page: 0, size: 50 }, controller.signal).catch(() => null),
     ])
       .then(([sharing, usersPage]) => {
         if (controller.signal.aborted) return

@@ -72,7 +72,7 @@ describe("SharingPanel (T28)", () => {
       updateNodeThreshold: vi.fn(),
       addNodeContributor: vi.fn(),
       removeNodeContributor: vi.fn(),
-      listUsers: vi.fn().mockResolvedValue(paginate([])),
+      listColleagues: vi.fn().mockResolvedValue(paginate([])),
     }
 
     render(<SharingPanel nodeId="secret" nodeName="rapport.pdf" client={mockClient} />)

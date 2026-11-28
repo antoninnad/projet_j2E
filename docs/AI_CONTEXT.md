@@ -24,9 +24,11 @@ src/main/java/fr/cytech/projetj2e/
 ├─ controller/LoginController.java          # @Controller MVC : GET/POST /login, /adminLogin, POST /logout
 ├─ controller/RegisterController.java       # @Controller MVC : GET/POST /register (UserDto)
 ├─ controller/Admin{Dashboard,User}Controller & NodeManagementController # Vues/actions admin MVC
+├─ controller/PlatformCompanyRestController.java # POST /api/companies (session adminId uniquement)
 ├─ controller/FrontendModelAdvice.java      # @ControllerAdvice(@Controller) : assets Vite + état session sûr
 ├─ configuration/SecurityConfig.java        # Bean BCryptPasswordEncoder
-└─ model/ & repository/ & service/          # Company, Department, Membership, User, UserProfile, Node, Folder, File
+└─ service/{CompanyCreation,PlatformAdministration}Service.java # Création entreprise/admin, promotion, niveaux
+   model/ & repository/                     # Company, Department, Membership, User, UserProfile, Node, Folder, File
 
 openapi.yaml                                # Contrat OpenAPI (T01)
 
@@ -35,7 +37,7 @@ src/main/resources/
 ├─ static/ui/{app.css,app.js,favicon.svg}   # Généré par `cd frontend && npm run build`
 └─ templates/
    ├─ index.html | login.html | register.html | dashboard.html
-   ├─ admin-login.html | admin-dashboard{,-listUsers,-listDepartements,-listNodes,-listFiles}.html
+   ├─ admin-login.html | admin-dashboard{,-listCompanies,-listUsers,-listDepartements,-listNodes,-listFiles}.html
    └─ fragments/{head,header,nav,admin-nav,messages,footer}.html
 
 frontend/
@@ -66,6 +68,11 @@ frontend/
 | MVC (`@Controller`) | `GET/POST /login`, `POST /logout` | `LoginController` → `login.html` | Connexion + déconnexion (à migrer sur `LoginDTO` email + `PublicUser` en T11) |
 | MVC (`@Controller`) | `GET/POST /register` | `RegisterController` → `register.html` | Formulaire `userDto` (`firstName`, `lastName`, `username`, `email`, `companyCode`, `password`, `confirmPassword`) |
 | MVC (`@Controller`) | `GET /dashboard` | `PageController` → `dashboard.html` | Redirige `302 -> /login?required=true` si non authentifié ; sinon rend synthèse serveur + îlot React |
+| MVC (`@Controller`) | `GET /admin/dashboard` | `AdminUserController` → `admin-dashboard.html` | Administrateur global voit la création d'entreprise ; admin d'entreprise voit ses inscriptions en attente |
+| MVC (`@Controller`) | `GET /admin/dashboard/listCompanies` | `AdminDashboardController` → `admin-dashboard-listCompanies.html` | Arborescence globale entreprises → départements → utilisateurs ; rôle et accès modifiables |
+| JSON (`@RestController`) | `POST /api/companies` | `PlatformCompanyRestController` | Création atomique entreprise + premier administrateur, réservée à `adminId` |
+| JSON (`@RestController`) | `GET /api/users` | `UserAdministrationRestController` | Comptes paginés de l'entreprise pour l'administration (statut/recherche) |
+| JSON (`@RestController`) | `GET /api/colleagues` | `ProfileRestController` | Annuaire des collègues actifs, sans champs d'administration |
 | Onglet React | `/dashboard?tab={files\|directory\|chat\|activity\|admin}` | `WorkspaceShell` (`routes.ts`) | Synchronisé via `History API` ; un reload HTTP repasse toujours par Spring MVC |
 | JSON (`@RestController`) | `/api/**` | Contrat `openapi.yaml` | API consommée par React (proxyfiée par Vite en dev) |
 | WebSocket | `/ws/chat` | `ChatWebSocketHandler` (T34) | Événements du chat poussés au compte connecté ; protocole dans `docs/T34_CHAT_TEMPS_REEL.md` (proxyfiée par Vite en dev) |
@@ -130,10 +137,10 @@ cd frontend && npm run test:coverage
   - **T03 (F2)** fournit `createApi()` au panneau d'inscriptions sur le dashboard Thymeleaf et `createPreviewApi()` dans l'aperçu Vite. `ApiError` porte `status`, `code` et `errors` par champ. Les mutations lisent le jeton CSRF de la page lorsque Spring le fournit.
   - **T10 (F1)** : Terminé — CI frontend active uniquement sur `main` (`.github/workflows/frontend-ci.yml`, `npm run ci`, Node 22 via `.nvmrc`, ESLint TS, `tsc`, Vitest + V8 coverage, `scripts/{check-node,verify-bundle}.mjs`). Voir `docs/T10_FRONTEND_CI.md`.
   - **T11–T13 (B1/F1)** : Terminé sur `dev` (`LoginDTO` email, `RegisterDTO`, `PublicUser` en session, `SessionIdentityService`, CSRF, expiration de session, création d'entreprise React + fragments Thymeleaf).
-  - **T17 (F1)** : `CompanyAdminPanel` implémenté sur `feature/T17-T28` (désactivation/réactivation de comptes, création de départements, affectation des membres et niveaux `L`, simulé dans `api-preview.ts` en attendant `T14`/`T15`).
+  - **T17 (F1)** : `CompanyAdminPanel` gère les comptes, départements, adhésions et niveaux `L`. Les routes départementales paginées, la liste des membres, la mise à jour des adhésions et la lecture de session sont alignées entre le client React, l'API backend, OpenAPI et l'aperçu Vite.
   - **T28 (F1)** ouvre `SharingPanel` depuis `DemoFileWorkspace` avec les réponses simulées d'`api-preview.ts`. Le dashboard affiche le droit de partage renvoyé par T18. Le bouton sera activé sur le dashboard quand les routes de T27 seront exposées.
   - **T18/T19 (B2/F2)** alimentent le dashboard Thymeleaf et `FileWorkspace` via les routes Documents d'OpenAPI. `listRootFolders`, `listFolderChildren` et `getNode` chargent l'arborescence, les métadonnées, le fil d'Ariane et les droits. Les indices de l'API partent de 0, les libellés affichés de 1.
-  - **T30 (F1)** : Implémenté sur `feature/T30` (`DirectoryProfilePanel` : édition prénom/nom/bio/avatar, changement de mot de passe `POST /api/profiles/me/password`, recherche paginée des collègues `ACTIVE`, fiche publique `GET /api/users/{id}/profile` et ouverture de conversation vers `?tab=chat&peer={id}`) — prêt à valider en réel dès que B1 termine `T29`.
+  - **T30 (F1)** : Implémenté sur `feature/T30` (`DirectoryProfilePanel` : édition prénom/nom/bio/avatar, changement de mot de passe `POST /api/profiles/me/password`, annuaire des collègues via `GET /api/colleagues`, fiche publique `GET /api/users/{id}/profile` et ouverture de conversation vers `?tab=chat&peer={id}`) — prêt à valider en réel dès que B1 termine `T29`.
   - **T35 (F2)** : `ChatPanel` + `useChat` branchés sur les API REST T33 et la WebSocket `/ws/chat` T34 (ouverture depuis l'annuaire T30 `?tab=chat&peer={id}`).
   - **T37 (F1)** : `ActivityFeedPanel` (`GET /api/activity`) exposé dans l'onglet `?tab=activity` et `NodeActivitySection` (`GET /api/nodes/{nodeId}/activity`) repliable à la demande dans `DocumentDetails`, avec filtres par catégorie (`DOCUMENT`, `RIGHTS`, `ADMINISTRATION`) et pagination `{ items, page }`.
   - **T38 (F1)** : États de chargement accessibles (`role="status"`), alertes d'erreur avec bouton `Réessayer`, `aria-invalid`, états vides harmonisés et alignement sur la charte **Ardoise & Cobalt / Capitalio** sur tous les écrans F1.

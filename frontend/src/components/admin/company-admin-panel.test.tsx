@@ -56,7 +56,9 @@ describe("CompanyAdminPanel (T17)", () => {
     })
     await user.click(screen.getByRole("button", { name: "Affecter" }))
 
-    expect(await screen.findByText("Hugo Petit")).toBeInTheDocument()
+    expect(await screen.findByRole("button", {
+      name: "Retirer Hugo Petit du département",
+    })).toBeInTheDocument()
     const hugoLevelInput = screen.getByDisplayValue("3")
     expect(hugoLevelInput).toBeInTheDocument()
 

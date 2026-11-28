@@ -15,6 +15,30 @@ describe("API contract", () => {
     }))
   })
 
+  it("uses the department membership route and request shape from the API contract", async () => {
+    const membership = { id: 8, userId: 12, departmentId: 4, accessLevel: 3 }
+    const fetcher = vi.fn().mockResolvedValue(Response.json(membership))
+    const api = createApi({ fetcher })
+
+    await expect(api.upsertDepartmentMember(4, { userId: 12, accessLevel: 3 })).resolves.toEqual(membership)
+    expect(fetcher).toHaveBeenCalledWith("/api/departments/4/members", expect.objectContaining({
+      method: "PUT",
+      body: JSON.stringify({ userId: 12, accessLevel: 3 }),
+    }))
+  })
+
+  it("uses the colleagues route for the directory, separate from admin account listings", async () => {
+    const colleagues = [{ id: 12, username: "alice", firstName: "Alice", lastName: "Martin" }]
+    const fetcher = vi.fn().mockResolvedValue(Response.json(colleagues))
+    const api = createApi({ fetcher })
+
+    await expect(api.listColleagues({ page: 0, size: 10 })).resolves.toEqual(paginate(colleagues, 0, 10))
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/colleagues",
+      expect.objectContaining({ method: "GET" }),
+    )
+  })
+
   it("sends JSON credentials with the Spring CSRF header on mutations", async () => {
     const token = document.createElement("meta")
     token.name = "_csrf"

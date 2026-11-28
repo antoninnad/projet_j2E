@@ -39,7 +39,7 @@ describe("WorkspaceShell", () => {
         return Response.json({ id: 1, bio: "", profilePictureUrl: null })
       }
       if (url.endsWith("/api/folders/roots")) return Response.json([])
-      if (url.includes("/api/users?")) return Response.json(paginate([colleague]))
+      if (url.includes("/api/colleagues")) return Response.json(paginate([colleague]))
       if (url.endsWith("/api/conversations/unread")) return Response.json({ total: 0 })
       if (url.endsWith("/api/conversations/5/messages")) return Response.json({ items: [], hasMore: false })
       if (url.endsWith("/api/conversations") && init?.method === "POST") {

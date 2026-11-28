@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react"
-import { Building2, LayoutDashboard, UserCheck, Users } from "lucide-react"
+import { LayoutDashboard, UserCheck, Users } from "lucide-react"
 import {
   WORKSPACE_TABS,
   parseWorkspaceTab,
@@ -11,7 +11,6 @@ import {
 } from "@/app/routes"
 import { ActivityFeedPanel } from "@/components/activity/activity-feed-panel"
 import { CompanyAdminPanel } from "@/components/admin/company-admin-panel"
-import { CompanyCreationPanel } from "@/components/admin/company-creation-panel"
 import { PendingRegistrationsPanel } from "@/components/admin/pending-registrations-panel"
 import { ChatPanel } from "@/components/chat/chat-panel"
 import { useChat } from "@/components/chat/use-chat"
@@ -140,10 +139,6 @@ export function WorkspaceShell({
                     <Users aria-hidden="true" />
                     Comptes &amp; Départements
                   </TabsTrigger>
-                  <TabsTrigger value="companies">
-                    <Building2 aria-hidden="true" />
-                    Créer une entreprise
-                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -151,7 +146,6 @@ export function WorkspaceShell({
                 <Stack gap="lg">
                   <PendingRegistrationsPanel client={client} />
                   <CompanyAdminPanel client={client} />
-                  <CompanyCreationPanel client={client} />
                 </Stack>
               </TabsContent>
 
@@ -163,9 +157,6 @@ export function WorkspaceShell({
                 <CompanyAdminPanel client={client} />
               </TabsContent>
 
-              <TabsContent value="companies">
-                <CompanyCreationPanel client={client} />
-              </TabsContent>
             </Tabs>
           )}
 

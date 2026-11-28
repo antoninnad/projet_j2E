@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Administration — Entreprises', 'Naviguez des entreprises vers leurs départements et utilisateurs.')}"></head>
+<body class="flex min-h-screen flex-col bg-canvas text-foreground">
+<header th:replace="~{fragments/header :: header('admin')}"></header>
+
+<main id="contenu" tabindex="-1" class="mx-auto w-full max-w-7xl flex-1 space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div>
+        <h1 class="text-2xl font-semibold tracking-tight">Administration — Entreprises</h1>
+        <p class="mt-1 text-sm text-muted-foreground">
+            Naviguez par entreprise et département, gérez les administrateurs et les niveaux d'accès.
+        </p>
+    </div>
+
+    <div th:replace="~{fragments/admin-nav :: adminNav('companies')}"></div>
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <div th:if="${#lists.isEmpty(companies)}" class="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        Aucune entreprise enregistrée.
+    </div>
+
+    <section th:each="company : ${companies}" class="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+        <header class="border-b border-border bg-muted/30 px-5 py-4">
+            <h2 class="text-base font-semibold" th:text="${company.name}">Entreprise</h2>
+            <p class="mt-1 font-mono text-xs text-muted-foreground" th:text="${company.code}">CODE</p>
+        </header>
+
+        <div class="space-y-5 p-5">
+            <div th:if="${#lists.isEmpty(company.departments)}" class="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">
+                Aucun département dans cette entreprise.
+            </div>
+
+            <article th:each="department : ${company.departments}" class="overflow-hidden rounded-lg border border-border">
+                <div class="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3">
+                    <h3 class="text-sm font-semibold" th:text="${department.name}">Département</h3>
+                    <span class="text-xs text-muted-foreground"
+                          th:text="${#lists.size(department.users) + ' utilisateur(s)'}">0 utilisateur(s)</span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(department.users)}" class="px-4 py-4 text-sm text-muted-foreground">
+                    Aucun utilisateur affecté à ce département.
+                </div>
+
+                <div th:unless="${#lists.isEmpty(department.users)}" class="divide-y divide-border">
+                    <div th:each="user : ${department.users}" class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                        <div class="min-w-48">
+                            <p class="text-sm font-medium" th:text="${user.displayName}">Utilisateur</p>
+                            <p class="text-xs text-muted-foreground" th:text="${user.email}">email@example.com</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <form th:action="@{/admin/dashboard/users/{id}/role(id=${user.id})}" method="post" class="inline">
+                                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="companyAdmin" th:value="${!user.companyAdmin}" />
+                                <button type="submit"
+                                        th:text="${user.companyAdmin ? 'Rétrograder membre' : 'Promouvoir admin'}"
+                                        class="h-8 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-secondary">
+                                </button>
+                            </form>
+                            <form th:action="@{/admin/dashboard/departments/{departmentId}/users/{userId}/access(departmentId=${department.id},userId=${user.id})}"
+                                  method="post" class="flex items-center gap-2">
+                                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <label class="text-xs text-muted-foreground" th:for="${'access-' + department.id + '-' + user.id}">Niveau</label>
+                                <input th:id="${'access-' + department.id + '-' + user.id}" type="number" min="0" name="accessLevel"
+                                       th:value="${user.accessLevel}" required
+                                       class="h-8 w-20 rounded-md border border-input bg-background px-2 text-xs" />
+                                <button type="submit" class="h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">
+                                    Modifier
+                                </button>
+                            </form>
+                            <form th:action="@{/admin/dashboard/departments/{departmentId}/users/{userId}/access/remove(departmentId=${department.id},userId=${user.id})}"
+                                  method="post">
+                                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="h-8 rounded-md border border-destructive/30 px-3 text-xs font-medium text-destructive hover:bg-destructive/10">
+                                    Retirer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(department.availableUsers)}"
+                     class="border-t border-border bg-muted/10 px-4 py-3">
+                    <form th:action="@{/admin/dashboard/departments/{departmentId}/members(departmentId=${department.id})}"
+                          method="post" class="flex flex-wrap items-center gap-2">
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <label class="sr-only" th:for="${'user-' + department.id}">Utilisateur</label>
+                        <select th:id="${'user-' + department.id}" name="userId" required
+                                class="h-8 rounded-md border border-input bg-background px-2 text-xs">
+                            <option value="" disabled selected>Ajouter un utilisateur</option>
+                            <option th:each="available : ${department.availableUsers}"
+                                    th:value="${available.id}" th:text="${available.displayName}">Utilisateur</option>
+                        </select>
+                        <input type="number" min="0" name="accessLevel" value="0" aria-label="Niveau d'accès" required
+                               class="h-8 w-20 rounded-md border border-input bg-background px-2 text-xs" />
+                        <button type="submit" class="h-8 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-secondary">
+                            Affecter
+                        </button>
+                    </form>
+                </div>
+            </article>
+
+            <article class="overflow-hidden rounded-lg border border-border">
+                <div class="border-b border-border bg-muted/20 px-4 py-3">
+                    <h3 class="text-sm font-semibold">Utilisateurs sans département</h3>
+                </div>
+                <div th:if="${#lists.isEmpty(company.unassignedUsers)}" class="px-4 py-4 text-sm text-muted-foreground">
+                    Tous les utilisateurs sont affectés à au moins un département.
+                </div>
+                <div th:unless="${#lists.isEmpty(company.unassignedUsers)}" class="divide-y divide-border">
+                    <div th:each="user : ${company.unassignedUsers}" class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                        <div>
+                            <p class="text-sm font-medium" th:text="${user.displayName}">Utilisateur</p>
+                            <p class="text-xs text-muted-foreground" th:text="${user.email}">email@example.com</p>
+                        </div>
+                        <form th:action="@{/admin/dashboard/users/{id}/role(id=${user.id})}" method="post">
+                            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <input type="hidden" name="companyAdmin" th:value="${!user.companyAdmin}" />
+                            <button type="submit"
+                                    th:text="${user.companyAdmin ? 'Rétrograder membre' : 'Promouvoir admin'}"
+                                    class="h-8 rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-secondary">
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

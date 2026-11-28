@@ -11,11 +11,11 @@
         Inscriptions &amp; Entreprises
     </a>
 
-    <a th:href="@{/admin/dashboard/listUsers}"
-       th:attr="aria-current=${activeSection == 'users' ? 'page' : null}"
-       th:classappend="${activeSection == 'users'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
+    <a th:href="@{/admin/dashboard/listCompanies}"
+       th:attr="aria-current=${activeSection == 'companies' ? 'page' : null}"
+       th:classappend="${activeSection == 'companies'} ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'"
        class="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-colors">
-        Utilisateurs
+        Entreprises
     </a>
 
     <a th:href="@{/admin/dashboard/listDepartements}"

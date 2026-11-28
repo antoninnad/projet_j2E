@@ -16,7 +16,7 @@ describe("DirectoryProfilePanel (T30)", () => {
     const fetcher = vi.fn(async (url: string) => {
       if (url === "/api/auth/session") return new Response(null, { status: 404 })
       if (url === "/api/profiles/me") return Response.json({ id: null, bio: null, profilePictureUrl: null })
-      if (url.startsWith("/api/users?")) return Response.json(colleagues)
+      if (url.startsWith("/api/colleagues")) return Response.json(colleagues)
       throw new Error(`Unexpected route: ${url}`)
     })
     const user = userEvent.setup()

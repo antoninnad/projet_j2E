@@ -13,6 +13,7 @@ import type {
   CreateCompanyResponse,
   CreateDepartmentRequest,
   Department,
+  DepartmentMembership,
   DepartmentMember,
   DocumentNode,
   Favorite,
@@ -50,8 +51,8 @@ export function createApi(options?: ApiClientOptions) {
     getCompany: (id: number, signal?: AbortSignal) => json<Company>(`/companies/${id}`, { signal }),
     listUsers: (query?: UserQuery, signal?: AbortSignal) => json<Page<User>>("/users", { query, signal }),
     listColleagues: async (query: Pick<PageQuery, "page" | "size" | "search">, signal?: AbortSignal) => {
-      const result = await json<Page<Colleague> | Colleague[]>("/users", {
-        query: { ...query, status: "ACTIVE" },
+      const result = await json<Page<Colleague> | Colleague[]>("/colleagues", {
+        query: query.search ? { search: query.search } : undefined,
         signal,
       })
       return Array.isArray(result) ? paginate(result, query.page, query.size) : result
@@ -91,9 +92,9 @@ export function createApi(options?: ApiClientOptions) {
       data: UpsertDepartmentMemberRequest,
       signal?: AbortSignal,
     ) =>
-      json<DepartmentMember>(`/departments/${departmentId}/members/${data.userId}`, {
+      json<DepartmentMembership>(`/departments/${departmentId}/members`, {
         method: "PUT",
-        json: { accessLevel: data.accessLevel },
+        json: data,
         signal,
       }),
     removeDepartmentMember: (departmentId: number, userId: number, signal?: AbortSignal) =>

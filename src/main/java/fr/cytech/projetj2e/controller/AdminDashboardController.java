@@ -14,14 +14,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import fr.cytech.projetj2e.model.AccountStatus;
+import fr.cytech.projetj2e.model.Company;
 import fr.cytech.projetj2e.model.Department;
 import fr.cytech.projetj2e.model.File;
+import fr.cytech.projetj2e.model.Membership;
 import fr.cytech.projetj2e.model.Node;
 import fr.cytech.projetj2e.model.User;
+import fr.cytech.projetj2e.model.UserRole;
+import fr.cytech.projetj2e.repository.CompanyRepository;
 import fr.cytech.projetj2e.repository.DepartmentRepository;
 import fr.cytech.projetj2e.repository.FileRepository;
+import fr.cytech.projetj2e.repository.MembershipRepository;
 import fr.cytech.projetj2e.repository.NodeRepository;
 import fr.cytech.projetj2e.repository.UserRepository;
+import fr.cytech.projetj2e.service.PlatformAdministrationService;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -29,20 +38,36 @@ import jakarta.servlet.http.HttpSession;
 public class AdminDashboardController {
 
     public record NodeRow(Long id, String type, String name, String owner, Instant createdAt) {}
+    public record CompanyRow(Long id, String name, String code,
+                             List<DepartmentRow> departments, List<UserRow> unassignedUsers) {}
+    public record DepartmentRow(Long id, String name,
+                                List<UserRow> users, List<UserRow> availableUsers) {}
+    public record UserRow(Long id, String username, String displayName, String email,
+                          AccountStatus status, UserRole role, boolean companyAdmin,
+                          Integer accessLevel) {}
 
     private final UserRepository userRepository;
     private final NodeRepository nodeRepository;
     private final FileRepository fileRepository;
     private final DepartmentRepository departmentRepository;
+    private final CompanyRepository companyRepository;
+    private final MembershipRepository membershipRepository;
+    private final PlatformAdministrationService platformAdministration;
 
     public AdminDashboardController(UserRepository userRepository,
                                     NodeRepository nodeRepository,
                                     FileRepository fileRepository,
-                                    DepartmentRepository departmentRepository) {
+                                    DepartmentRepository departmentRepository,
+                                    CompanyRepository companyRepository,
+                                    MembershipRepository membershipRepository,
+                                    PlatformAdministrationService platformAdministration) {
         this.userRepository = userRepository;
         this.nodeRepository = nodeRepository;
         this.fileRepository = fileRepository;
         this.departmentRepository = departmentRepository;
+        this.companyRepository = companyRepository;
+        this.membershipRepository = membershipRepository;
+        this.platformAdministration = platformAdministration;
     }
 
     @GetMapping("/listUsers")
@@ -50,10 +75,94 @@ public class AdminDashboardController {
         if (!isAdmin(session)) {
             return "redirect:/adminLogin";
         }
+        return "redirect:/admin/dashboard/listCompanies";
+    }
 
-        model.addAttribute("users", userRepository.findAll());
+    @GetMapping("/listCompanies")
+    public String listCompanies(HttpSession session, Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/adminLogin";
+        }
+
+        List<CompanyRow> companies = companyRepository.findAll().stream()
+                .map(this::companyRow)
+                .toList();
+        model.addAttribute("companies", companies);
         model.addAttribute("statuses", AccountStatus.values());
-        return "admin-dashboard-listUsers";
+        model.addAttribute("roles", UserRole.values());
+        return "admin-dashboard-listCompanies";
+    }
+
+    @PostMapping("/users/{id}/role")
+    public String setUserRole(@PathVariable Long id,
+                              @RequestParam boolean companyAdmin,
+                              HttpSession session,
+                              RedirectAttributes redirect) {
+        if (!isAdmin(session)) {
+            return "redirect:/adminLogin";
+        }
+        try {
+            platformAdministration.setCompanyAdminRole(id, companyAdmin);
+            redirect.addFlashAttribute("notice",
+                    companyAdmin ? "Utilisateur promu administrateur d'entreprise."
+                                 : "Utilisateur rétrogradé membre.");
+        } catch (RuntimeException exception) {
+            redirect.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/admin/dashboard/listCompanies";
+    }
+
+    @PostMapping("/departments/{departmentId}/users/{userId}/access")
+    public String setUserAccess(@PathVariable Long departmentId,
+                                @PathVariable Long userId,
+                                @RequestParam int accessLevel,
+                                HttpSession session,
+                                RedirectAttributes redirect) {
+        if (!isAdmin(session)) {
+            return "redirect:/adminLogin";
+        }
+        try {
+            platformAdministration.setAccessLevel(userId, departmentId, accessLevel);
+            redirect.addFlashAttribute("notice", "Niveau d'accès modifié.");
+        } catch (RuntimeException exception) {
+            redirect.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/admin/dashboard/listCompanies";
+    }
+
+    @PostMapping("/departments/{departmentId}/members")
+    public String addDepartmentMember(@PathVariable Long departmentId,
+                                      @RequestParam Long userId,
+                                      @RequestParam int accessLevel,
+                                      HttpSession session,
+                                      RedirectAttributes redirect) {
+        if (!isAdmin(session)) {
+            return "redirect:/adminLogin";
+        }
+        try {
+            platformAdministration.setAccessLevel(userId, departmentId, accessLevel);
+            redirect.addFlashAttribute("notice", "Utilisateur affecté au département.");
+        } catch (RuntimeException exception) {
+            redirect.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/admin/dashboard/listCompanies";
+    }
+
+    @PostMapping("/departments/{departmentId}/users/{userId}/access/remove")
+    public String removeUserAccess(@PathVariable Long departmentId,
+                                   @PathVariable Long userId,
+                                   HttpSession session,
+                                   RedirectAttributes redirect) {
+        if (!isAdmin(session)) {
+            return "redirect:/adminLogin";
+        }
+        try {
+            platformAdministration.removeAccessLevel(userId, departmentId);
+            redirect.addFlashAttribute("notice", "Accès du département retiré.");
+        } catch (RuntimeException exception) {
+            redirect.addFlashAttribute("error", exception.getMessage());
+        }
+        return "redirect:/admin/dashboard/listCompanies";
     }
 
     @PostMapping("/users/{id}")
@@ -218,6 +327,43 @@ public class AdminDashboardController {
 
     private boolean isAdmin(HttpSession session) {
         return session.getAttribute("adminId") != null;
+    }
+
+    private CompanyRow companyRow(Company company) {
+        List<User> companyUsers = userRepository.findByCompany(company);
+        Set<Long> usersInDepartments = new HashSet<>();
+        List<DepartmentRow> departments = departmentRepository.findByCompany(company).stream()
+                .map(department -> departmentRow(department, companyUsers, usersInDepartments))
+                .toList();
+        List<UserRow> unassignedUsers = companyUsers.stream()
+                .filter(user -> !usersInDepartments.contains(user.getId()))
+                .map(user -> userRow(user, null))
+                .toList();
+        return new CompanyRow(company.getId(), company.getName(), company.getCode(),
+                departments, unassignedUsers);
+    }
+
+    private DepartmentRow departmentRow(Department department, List<User> companyUsers,
+                                        Set<Long> usersInDepartments) {
+        List<UserRow> departmentUsers = membershipRepository.findByDepartment(department).stream()
+                .peek(membership -> usersInDepartments.add(membership.getUser().getId()))
+                .map(membership -> userRow(membership.getUser(), membership.getAccessLevel()))
+                .toList();
+        Set<Long> assignedIds = departmentUsers.stream().map(UserRow::id).collect(java.util.stream.Collectors.toSet());
+        List<UserRow> availableUsers = companyUsers.stream()
+                .filter(user -> !assignedIds.contains(user.getId()))
+                .map(user -> userRow(user, null))
+                .toList();
+        return new DepartmentRow(department.getId(), department.getName(), departmentUsers, availableUsers);
+    }
+
+    private UserRow userRow(User user, Integer accessLevel) {
+        String displayName = (user.getFirstName() + " " + user.getLastName()).trim();
+        if (displayName.isBlank()) {
+            displayName = user.getUsername();
+        }
+        return new UserRow(user.getId(), user.getUsername(), displayName, user.getEmail(),
+                user.getStatus(), user.getRole(), user.getRole() == UserRole.COMPANY_ADMIN, accessLevel);
     }
 
     private String errorRedirect(RedirectAttributes redirect, String message, String path) {

@@ -59,7 +59,7 @@ public class ProfileRestController {
         return profile(profiles.profile(actor, userId));
     }
 
-    @GetMapping("/users")
+    @GetMapping("/colleagues")
     public List<ColleagueResponse> colleagues(@RequestParam(required = false) String search,
                                               HttpSession session) {
         User actor = identity.requireActiveMember(session);

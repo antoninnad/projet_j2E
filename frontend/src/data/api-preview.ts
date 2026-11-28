@@ -9,6 +9,7 @@ import type {
   CreateCompanyResponse,
   CreateDepartmentRequest,
   Department,
+  DepartmentMembership,
   DepartmentMember,
   ErrorResponse,
   NodeSharingInfo,
@@ -525,6 +526,51 @@ export function createPreviewApi() {
         return Response.json(items satisfies DepartmentMember[])
       }
 
+      if (method === "PUT" && deptMembersMatch) {
+        const departmentId = Number(deptMembersMatch[1])
+        if (!departments.has(departmentId)) return error(404, "NOT_FOUND", "Département introuvable.")
+        const payload = (typeof body === "string" ? JSON.parse(body) : {}) as {
+          userId?: number
+          accessLevel?: number
+        }
+        const member = users.get(Number(payload.userId))
+        if (!member || member.companyId !== admin.companyId) {
+          return error(404, "NOT_FOUND", "Membre introuvable.")
+        }
+        if (member.status !== "ACTIVE") {
+          return error(409, "CONFLICT", "Seul un compte actif peut être affecté à un département.")
+        }
+        const accessLevel = Number(payload.accessLevel)
+        if (!Number.isInteger(accessLevel) || accessLevel < 0) {
+          return error(422, "VALIDATION_FAILED", "Le niveau d'accès doit être un entier positif ou nul.", {
+            accessLevel: "Indiquez un entier supérieur ou égal à 0.",
+          })
+        }
+        const deptMap = memberships.get(departmentId) ?? new Map<number, number>()
+        memberships.set(departmentId, deptMap)
+        deptMap.set(member.id, accessLevel)
+        const dept = departments.get(departmentId)!
+        recordPreviewActivity({
+          action: "MEMBER_ACCESS_SET",
+          category: "ADMINISTRATION",
+          label: "a défini le niveau d'accès d'un membre dans",
+          nodeId: null,
+          nodeName: null,
+          nodeKind: null,
+          departmentId: dept.id,
+          departmentName: dept.name,
+          targetUserId: member.id,
+          targetUserName: `${member.firstName} ${member.lastName}`.trim(),
+          details: `Niveau L = ${accessLevel}`,
+        })
+        return Response.json({
+          id: member.id,
+          userId: member.id,
+          departmentId,
+          accessLevel,
+        } satisfies DepartmentMembership)
+      }
+
       const deptMemberItemMatch = /^\/api\/departments\/(\d+)\/members\/(\d+)$/.exec(pathname)
       if (deptMemberItemMatch) {
         const departmentId = Number(deptMemberItemMatch[1])
@@ -536,42 +582,6 @@ export function createPreviewApi() {
         }
         const deptMap = memberships.get(departmentId) ?? new Map<number, number>()
         memberships.set(departmentId, deptMap)
-
-        if (method === "PUT") {
-          if (member.status !== "ACTIVE") {
-            return error(409, "CONFLICT", "Seul un compte actif peut être affecté à un département.")
-          }
-          const payload = (typeof body === "string" ? JSON.parse(body) : {}) as { accessLevel?: number }
-          const accessLevel = Number(payload.accessLevel)
-          if (!Number.isInteger(accessLevel) || accessLevel < 0) {
-            return error(422, "VALIDATION_FAILED", "Le niveau d'accès doit être un entier positif ou nul.", {
-              accessLevel: "Indiquez un entier supérieur ou égal à 0.",
-            })
-          }
-          deptMap.set(userId, accessLevel)
-          const dept = departments.get(departmentId)!
-          recordPreviewActivity({
-            action: "MEMBER_ACCESS_SET",
-            category: "ADMINISTRATION",
-            label: "a défini le niveau d'accès d'un membre dans",
-            nodeId: null,
-            nodeName: null,
-            nodeKind: null,
-            departmentId: dept.id,
-            departmentName: dept.name,
-            targetUserId: member.id,
-            targetUserName: `${member.firstName} ${member.lastName}`.trim(),
-            details: `Niveau L = ${accessLevel}`,
-          })
-          return Response.json({
-            userId: member.id,
-            username: member.username,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            email: member.email,
-            accessLevel,
-          } satisfies DepartmentMember)
-        }
 
         if (method === "DELETE") {
           deptMap.delete(userId)
@@ -602,6 +612,20 @@ export function createPreviewApi() {
             `${user.firstName} ${user.lastName} ${user.username} ${user.email}`.toLocaleLowerCase("fr").includes(search),
         )
         return list(matches, searchParams)
+      }
+
+      if (method === "GET" && pathname === "/api/colleagues") {
+        const colleagues = [...users.values()]
+          .filter(
+            (user) =>
+              user.companyId === admin.companyId &&
+              user.status === "ACTIVE" &&
+              `${user.firstName} ${user.lastName} ${user.username} ${user.email}`
+                .toLocaleLowerCase("fr")
+                .includes(search),
+          )
+          .map(({ id, username, firstName, lastName }) => ({ id, username, firstName, lastName }))
+        return Response.json(colleagues)
       }
 
       const userMatch = /^\/api\/users\/(\d+)$/.exec(pathname)
