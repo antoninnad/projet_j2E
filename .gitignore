@@ -36,3 +36,4 @@ frontend/dist/
 
 # Contenus des fichiers importés (stockage local privé)
 /storage/
+.postgres-password

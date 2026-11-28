@@ -5,8 +5,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-projetj2e}
       POSTGRES_USER: ${POSTGRES_USER:-projetj2e}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD dans .env}
-    ports:
-      - "5433:5432"
     volumes:
       - projetj2e_postgres:/var/lib/postgresql/data
     healthcheck:
@@ -27,13 +25,45 @@ services:
       POSTGRES_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-projetj2e}
       POSTGRES_USER: ${POSTGRES_USER:-projetj2e}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD dans .env}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       APP_STORAGE_ROOT: /app/storage
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:
       - projetj2e_storage:/app/storage
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  proxy:
+    image: caddy:2.10-alpine
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-localhost}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_UDP_PORT:-443}:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - projetj2e_caddy_data:/data
+      - projetj2e_caddy_config:/config
     restart: unless-stopped
 
 volumes:
   projetj2e_postgres:
   projetj2e_storage:
+  projetj2e_caddy_data:
+  projetj2e_caddy_config:
+
+secrets:
+  postgres_password:
+    environment: POSTGRES_PASSWORD

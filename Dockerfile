@@ -24,8 +24,10 @@ RUN useradd --create-home --uid 1001 appuser \
     && chown -R appuser:appuser /app
 
 COPY --from=backend --chown=appuser:appuser /workspace/target/*.jar app.jar
+COPY --chown=appuser:appuser docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh
 
 USER appuser
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["docker-entrypoint.sh"]

@@ -51,12 +51,19 @@ docker compose -f docker-compose.postgres.yml up -d --build
 ```
 
 L'application écoute sur `http://localhost:8080`. PostgreSQL est accessible uniquement
-dans le réseau Compose sur le port interne 5432. Les données PostgreSQL et les fichiers
+dans le réseau Compose sur le port interne 5432. Caddy publie aussi l'application en
+HTTPS sur `https://localhost` (pour un domaine public, régler `PUBLIC_DOMAIN`). Le mot
+de passe PostgreSQL est fourni à l'application comme secret Docker monté dans
+`/run/secrets/postgres_password`, pas dans une variable app visible. Les données PostgreSQL et les fichiers
 importés sont conservés dans les volumes `projetj2e_postgres` et `projetj2e_storage`.
 
-Pour l'hébergement public, placer un reverse proxy HTTPS devant le port 8080 et activer
-le passage des en-têtes `Forwarded`. La terminaison HTTPS et le passage WebSocket doivent
-être configurés avec le domaine réel; ils ne sont pas disponibles avant T34/T41.
+Pour l'hébergement public, définir `PUBLIC_DOMAIN=demo.example.org`, ouvrir les ports
+80/443 et laisser Caddy obtenir et renouveler le certificat TLS. Caddy proxyfie les
+routes HTTP, les assets `/ui`, les API `/api` et le WebSocket `/ws/chat`; Spring Boot
+accepte les en-têtes `Forwarded` du proxy. Pour une recette locale, `localhost` utilise
+le certificat TLS local de Caddy.
+Si les ports hôtes `80` ou `443` sont déjà occupés sur la machine, ils peuvent être
+redéfinis avec `HTTP_PORT`, `HTTPS_PORT` et `HTTPS_UDP_PORT` dans `.env`.
 
 Dans un second terminal, lancer le frontend :
 
